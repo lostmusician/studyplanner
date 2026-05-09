@@ -1,0 +1,77 @@
+import type { MajorDefinition } from '../types';
+
+const moduleCatalog = {
+  CS1231: { code: 'CS1231', name: 'Discrete Structures', mcs: 4, category: 'Primary Major' },
+  CS2030S: { code: 'CS2030S', name: 'Programming Methodology II', mcs: 4, category: 'Primary Major' },
+  CS2040S: { code: 'CS2040S', name: 'Data Structures and Algorithms', mcs: 4, category: 'Primary Major' },
+  CS2100: { code: 'CS2100', name: 'Computer Organisation', mcs: 4, category: 'Primary Major' },
+  CS2103T: { code: 'CS2103T', name: 'Software Engineering', mcs: 4, category: 'Primary Major' },
+  CS2101: { code: 'CS2101', name: 'Effective Communication for Computing Professionals', mcs: 4, category: 'Primary Major' },
+  CS2102: { code: 'CS2102', name: 'Database Systems', mcs: 4, category: 'Primary Major' },
+  CS2106: { code: 'CS2106', name: 'Introduction to Operating Systems', mcs: 4, category: 'Primary Major' },
+  CS2109S: { code: 'CS2109S', name: 'Introduction to AI and Machine Learning', mcs: 4, category: 'Primary Major' },
+  CS3230: { code: 'CS3230', name: 'Design and Analysis of Algorithms', mcs: 4, category: 'Primary Major' },
+  ST2334: { code: 'ST2334', name: 'Probability and Statistics', mcs: 4, category: 'University Requirements' },
+  MA1521: { code: 'MA1521', name: 'Calculus for Computing', mcs: 4, category: 'University Requirements' },
+  MA1522: { code: 'MA1522', name: 'Linear Algebra for Computing', mcs: 4, category: 'University Requirements' },
+  NTW2035: { code: 'NTW2035', name: 'Writing and Communication', mcs: 4, category: 'SOC/NUSC' },
+  GEA1000N: { code: 'GEA1000N', name: 'Data Literacy', mcs: 4, category: 'SOC/NUSC' },
+  CS1101S: { code: 'CS1101S', name: 'Programming Methodology', mcs: 4, category: 'SOC/NUSC' },
+  IS1108: { code: 'IS1108', name: 'Computing Ethics', mcs: 4, category: 'SOC/NUSC' },
+  CFG1002: { code: 'CFG1002', name: 'Career Catalyst', mcs: 2, category: 'SOC/NUSC' },
+  CFG1003: { code: 'CFG1003', name: 'Career Skills Workshop', mcs: 2, category: 'SOC/NUSC' },
+  CFG1004: { code: 'CFG1004', name: 'Career Portfolio', mcs: 2, category: 'SOC/NUSC' },
+  HS1402: { code: 'HS1402', name: 'Career Preparation Module', mcs: 0, category: 'SOC/NUSC' },
+  HS1403: { code: 'HS1403', name: 'Career Planning and Placement', mcs: 0, category: 'SOC/NUSC' },
+} as const;
+
+export const majorCatalog: Record<string, MajorDefinition> = {
+  'computer-science': {
+    id: 'computer-science',
+    label: 'Computer Science',
+    school: 'School of Computing',
+    specialisation: 'Networking and Distributed Systems',
+    studentName: 'Student Name',
+    matricNo: 'A0123456X',
+    categories: [
+      'Primary Major',
+      'SOC/NUSC',
+      'Other Programmes',
+      'University Requirements',
+      'Unrestricted Electives',
+    ],
+    requirements: [
+      { name: 'Writing', fulfilledBy: ['NTW2035'] },
+      { name: 'GEA: Data Literacy', fulfilledBy: ['GEA1000N'] },
+      { name: 'GEI: Digital Literacy', fulfilledBy: ['CS1101S'] },
+      { name: 'GEX: Critique & Expression', fulfilledBy: ['GEX1015', 'GEX2010'] },
+      { name: 'GESS: Singapore Studies', fulfilledBy: ['GESS1000', 'GESS1029'] },
+      { name: 'GEC: Cultures and Connections', fulfilledBy: ['GEC1000', 'GEC1050'] },
+      { name: 'GEN: Communities and Engagement', fulfilledBy: ['GEN1000', 'GEN2000'] },
+      { name: 'Computing Ethics', fulfilledBy: ['IS1108'] },
+      { name: 'Interdisciplinary: Cross-Disciplinary', fulfilledBy: ['CD1'] },
+      { name: 'Interdisciplinary: Interdisciplinary 1', fulfilledBy: ['ID1'] },
+      { name: 'Interdisciplinary: Interdisciplinary 2', fulfilledBy: ['ID2'] },
+    ],
+    careerTracks: [
+      { code: 'CFG1002', name: 'Career Catalyst', mcs: 2 },
+      { code: 'CFG1003', name: 'Career Skills Workshop', mcs: 2 },
+      { code: 'CFG1004', name: 'Career Portfolio', mcs: 2 },
+      { code: 'HS1402', name: 'Career Preparation Module', mcs: 0 },
+      { code: 'HS1403', name: 'Career Planning and Placement', mcs: 0 },
+    ],
+    moduleCatalog,
+    initialSemesters: [
+      { year: 1, sem: 1, modules: [moduleCatalog.CS1231, moduleCatalog.MA1521] },
+      { year: 1, sem: 2, modules: [moduleCatalog.CS2030S, moduleCatalog.CS2040S, moduleCatalog.MA1522, moduleCatalog.ST2334] },
+      { year: 2, sem: 1, modules: [moduleCatalog.CS2100, moduleCatalog.CS2103T] },
+      { year: 2, sem: 2, modules: [moduleCatalog.CS2101, moduleCatalog.CS2102] },
+      { year: 3, sem: 1, modules: [moduleCatalog.CS2106, moduleCatalog.CS2109S] },
+      { year: 3, sem: 2, modules: [moduleCatalog.CS3230] },
+      { year: 4, sem: 1, modules: [] },
+      { year: 4, sem: 2, modules: [] },
+    ],
+  },
+};
+
+export const availableMajors = Object.values(majorCatalog);

@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: 239 238 231;
+  --paper: 225 218 205;
+  --ink: 20 20 19;
+  --muted: 108 107 104;
+  --line: 199 191 176;
+  --accent: 96 92 78;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: rgb(var(--canvas));
+  color: rgb(var(--ink));
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(20, 20, 19, 0.14);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
