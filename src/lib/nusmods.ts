@@ -19,6 +19,11 @@ export interface NusModsModuleDetail {
   prereqTree?: unknown;
 }
 
+export interface NusModsPrerequisiteAssessment {
+  hasPrerequisiteData: boolean;
+  missingRequirement: string | null;
+}
+
 const API_BASE = 'https://api.nusmods.com/v2';
 const listCache = new Map<string, NusModsModuleSummary[]>();
 
@@ -35,6 +40,13 @@ const getAcadYearCandidates = (): string[] => {
 };
 
 const uniqNumbers = (values: number[]): number[] => Array.from(new Set(values)).sort((a, b) => a - b);
+
+const isModuleCodeLike = (value: string): boolean => /^[A-Z]{2,}[A-Z0-9]*\d[A-Z0-9]*$/.test(value.trim().toUpperCase());
+
+const extractModuleCode = (value: string): string | null => {
+  const match = value.trim().toUpperCase().match(/[A-Z]{2,}[A-Z0-9]*\d[A-Z0-9]*/);
+  return match ? match[0] : null;
+};
 
 const isModuleSummary = (value: unknown): value is { moduleCode: string; title: string; semesters?: number[] } => {
   if (!value || typeof value !== 'object') {
@@ -121,6 +133,63 @@ const formatPrereqTree = (tree: unknown): string | null => {
   return null;
 };
 
+const summarizeMissingPrereqTree = (tree: unknown, completedModuleCodes: Set<string>): string | null => {
+  if (!tree) {
+    return null;
+  }
+
+  if (typeof tree === 'string') {
+    const code = extractModuleCode(tree);
+
+    if (!code) {
+      return null;
+    }
+
+    return completedModuleCodes.has(code) ? null : code;
+  }
+
+  if (Array.isArray(tree)) {
+    const parts = tree
+      .map((child) => summarizeMissingPrereqTree(child, completedModuleCodes))
+      .filter((part): part is string => Boolean(part));
+
+    return parts.length > 0 ? parts.join(' and ') : null;
+  }
+
+  if (typeof tree === 'object') {
+    const record = tree as Record<string, unknown>;
+
+    if (Array.isArray(record.and)) {
+      const parts = record.and
+        .map((child) => summarizeMissingPrereqTree(child, completedModuleCodes))
+        .filter((part): part is string => Boolean(part));
+
+      return parts.length > 0 ? parts.join(' and ') : null;
+    }
+
+    if (Array.isArray(record.or)) {
+      const branchResults = record.or.map((child) => ({
+        missing: summarizeMissingPrereqTree(child, completedModuleCodes),
+        satisfied: summarizeMissingPrereqTree(child, completedModuleCodes) === null,
+      }));
+
+      if (branchResults.some((branch) => branch.satisfied)) {
+        return null;
+      }
+
+      const parts = branchResults.map((branch) => branch.missing).filter((part): part is string => Boolean(part));
+
+      if (parts.length === 0) {
+        return null;
+      }
+
+      return parts.length === 1 ? parts[0] : `(${parts.join(' or ')})`;
+    }
+  }
+
+  return null;
+};
+
 export const formatPrerequisiteSummary = (detail: NusModsModuleDetail): string => {
   if (detail.prerequisite && detail.prerequisite.trim().length > 0) {
     return detail.prerequisite.trim();
@@ -128,6 +197,19 @@ export const formatPrerequisiteSummary = (detail: NusModsModuleDetail): string =
 
   const fromTree = formatPrereqTree(detail.prereqTree);
   return fromTree ?? 'No listed prerequisites.';
+};
+
+export const assessPrerequisiteConflict = (
+  detail: NusModsModuleDetail,
+  completedModuleCodes: Iterable<string>,
+): NusModsPrerequisiteAssessment => {
+  const normalizedCompletedCodes = new Set(Array.from(completedModuleCodes, (code) => code.trim().toUpperCase()));
+  const missingRequirement = summarizeMissingPrereqTree(detail.prereqTree, normalizedCompletedCodes);
+
+  return {
+    hasPrerequisiteData: Boolean(detail.prereqTree || detail.prerequisite),
+    missingRequirement,
+  };
 };
 
 export const searchNusModsModules = async (

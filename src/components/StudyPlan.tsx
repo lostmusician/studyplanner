@@ -6,9 +6,11 @@ import { Draggable } from './Draggable';
 import { Droppable } from './Droppable';
 import { categoryBadgeTone, semesterLabel } from '../lib/studyPlan';
 import {
+  assessPrerequisiteConflict,
   fetchNusModsModuleDetail,
   formatPrerequisiteSummary,
   searchNusModsModules,
+  type NusModsModuleDetail,
   type NusModsModuleSummary,
 } from '../lib/nusmods';
 import type { Category, Module, SemesterKey } from '../types';
@@ -31,7 +33,24 @@ const semesterOptions = Array.from({ length: 8 }, (_, index) => {
 const buildSemesterKey = (year: number, sem: number): SemesterKey => `${year}-${sem}` as SemesterKey;
 
 const draggableId = (semesterKey: SemesterKey, moduleCode: string): string => `drag::${semesterKey}::${moduleCode}`;
-const droppableId = (semesterKey: SemesterKey, category: Category): string => `drop::${semesterKey}::${category}`;
+const droppableId = (columnIndex: number): string => `drop::col${columnIndex}`;
+
+const getCategoryColor = (category: Category): string => {
+  switch (category) {
+    case 'SOC/NUSC':
+      return 'bg-[rgb(198,208,202)] hover:bg-[rgb(188,198,192)] focus-within:bg-[rgb(188,198,192)]';
+    case 'University Requirements':
+      return 'bg-[rgb(171,184,155)] hover:bg-[rgb(161,174,145)] focus-within:bg-[rgb(161,174,145)]';
+    case 'Unrestricted Electives':
+      return 'bg-[rgb(195,186,210)] hover:bg-[rgb(185,176,200)] focus-within:bg-[rgb(185,176,200)]';
+    case 'Primary Major':
+      return 'bg-canvas';
+    case 'Other Programmes':
+      return 'bg-canvas';
+    default:
+      return 'bg-canvas';
+  }
+};
 
 const RequirementChecklist = ({
   title,
@@ -76,16 +95,22 @@ const ModuleCard = ({
   module,
   onRemove,
   onSelect,
+  prerequisiteWarning,
   selected,
 }: {
   module: Module;
   onRemove: (code: string) => void;
   onSelect?: (code: string) => void;
+  prerequisiteWarning?: { summary: string; missingRequirement: string } | null;
   selected?: boolean;
 }) => (
   <div
     onClick={() => onSelect && onSelect(module.code)}
-    className={`group relative z-10 rounded-2xl border border-line bg-canvas px-3 py-3 shadow-sm transition hover:z-40 hover:-translate-y-0.5 hover:shadow-md focus-within:z-40 focus-within:-translate-y-0.5 focus-within:shadow-md ${
+    className={`group relative z-10 rounded-2xl border px-3 py-3 shadow-sm transition hover:z-40 hover:-translate-y-0.5 hover:shadow-md focus-within:z-40 focus-within:-translate-y-0.5 focus-within:shadow-md ${
+      prerequisiteWarning
+        ? 'border-[#cc7d60]'
+        : 'border-line'
+    } ${getCategoryColor(module.category)} ${
       selected ? 'ring-2 ring-ink/30' : ''
     }`}
   >
@@ -112,9 +137,16 @@ const ModuleCard = ({
       </button>
     </div>
 
-    <div className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-44 -translate-x-1/2 rounded-2xl border border-line bg-paper/95 p-3 text-left opacity-0 shadow-soft transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+    <div className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-56 -translate-x-1/2 rounded-2xl border border-line bg-paper/95 p-3 text-left opacity-0 shadow-soft transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Module details</p>
       <div className="mt-2 space-y-2">
+        {prerequisiteWarning && (
+          <div className="rounded-xl border border-[#cc7d60]/30 bg-[rgba(204,125,96,0.12)] p-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8b3d2f]">Prerequisite conflict</p>
+            <p className="mt-1 text-[11px] leading-5 text-ink">Missing: {prerequisiteWarning.missingRequirement}</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">{prerequisiteWarning.summary}</p>
+          </div>
+        )}
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Category</p>
           <span className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${categoryBadgeTone(module.category)}`}>
@@ -138,11 +170,9 @@ export const StudyPlan = () => {
     semesters,
     stats,
     requirements,
-    collapsedCategories,
     allModules,
     addOrMoveModule,
     deleteModule,
-    toggleCategory,
     switchMajor,
     resetPlan,
   } = useStudyPlan();
@@ -157,6 +187,7 @@ export const StudyPlan = () => {
     semesters: number[];
     prerequisiteSummary: string;
   } | null>(null);
+  const [nusModsModuleDetails, setNusModsModuleDetails] = useState<Record<string, { acadYear: string; detail: NusModsModuleDetail }>>({});
 
   const careerProgress = useMemo(
     () =>
@@ -166,6 +197,70 @@ export const StudyPlan = () => {
       })),
     [allModules, major.careerTracks],
   );
+
+  const completedCodesBySemester = useMemo(() => {
+    const completedCodes = new Set<string>();
+
+    return semesters.map((semester) => {
+      const snapshot = new Set(completedCodes);
+
+      for (const module of semester.modules) {
+        completedCodes.add(module.code);
+      }
+
+      return snapshot;
+    });
+  }, [semesters]);
+
+  const missingModuleDetails = useMemo(
+    () => Array.from(new Set(allModules.map((module) => module.code))).filter((code) => !nusModsModuleDetails[code]),
+    [allModules, nusModsModuleDetails],
+  );
+
+  useEffect(() => {
+    if (missingModuleDetails.length === 0) {
+      return;
+    }
+
+    let canceled = false;
+
+    const loadModuleDetails = async () => {
+      const results = await Promise.all(
+        missingModuleDetails.map(async (code) => {
+          try {
+            return [code, await fetchNusModsModuleDetail(code)] as const;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      if (canceled) {
+        return;
+      }
+
+      setNusModsModuleDetails((current) => {
+        const next = { ...current };
+
+        for (const result of results) {
+          if (!result) {
+            continue;
+          }
+
+          const [code, payload] = result;
+          next[code] = payload;
+        }
+
+        return next;
+      });
+    };
+
+    void loadModuleDetails();
+
+    return () => {
+      canceled = true;
+    };
+  }, [missingModuleDetails]);
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -252,6 +347,10 @@ export const StudyPlan = () => {
         semesters: semesters.length > 0 ? semesters : item.semesters,
         prerequisiteSummary: formatPrerequisiteSummary(detail),
       });
+      setNusModsModuleDetails((current) => ({
+        ...current,
+        [detail.moduleCode]: { acadYear, detail },
+      }));
     } catch (error) {
       setModuleSearchError(error instanceof Error ? error.message : 'Unable to fetch module details from NUSMods.');
     } finally {
@@ -284,7 +383,7 @@ export const StudyPlan = () => {
     const activeParts = activeId.split('::');
     const overParts = overId.split('::');
 
-    if (activeParts.length < 3 || overParts.length < 3) {
+    if (activeParts.length < 3 || overParts.length < 2) {
       clearActiveDrag();
       return;
     }
@@ -295,7 +394,15 @@ export const StudyPlan = () => {
 
     const sourceSemester = activeParts[1] as SemesterKey;
     const moduleCode = activeParts.slice(2).join('::');
-    const targetSemester = overParts[1] as SemesterKey;
+    const colIndexStr = overParts[1]?.replace('col', '');
+    const colIndex = parseInt(colIndexStr || '-1');
+    
+    if (colIndex < 0 || colIndex >= semesters.length) {
+      clearActiveDrag();
+      return;
+    }
+    
+    const targetSemester = buildSemesterKey(semesters[colIndex].year, semesters[colIndex].sem);
 
     if (!moduleCode) {
       clearActiveDrag();
@@ -544,81 +651,66 @@ export const StudyPlan = () => {
 
               <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={clearActiveDrag}>
               <div className="overflow-x-auto pb-2">
-                <div className="min-w-[1280px] space-y-4">
-                  <div className="grid grid-cols-[220px_repeat(8,minmax(140px,1fr))] gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
-                    <div />
-                    {semesterOptions.map((semester) => (
-                      <div key={semester.key} className="rounded-2xl border border-line bg-canvas px-3 py-3 text-center">
-                        {semester.label}
+                <div className="grid grid-cols-[repeat(8,minmax(140px,1fr))] gap-3 items-start" style={{ width: 'fit-content' }}>
+                  {/* Header row */}
+                  {semesterOptions.map((semester, idx) => {
+                    const semesterData = semesters[idx];
+                    const semesterMc = semesterData?.modules.reduce((sum, module) => sum + module.mcs, 0) ?? 0;
+                    return (
+                      <div key={semester.key} className="rounded-2xl border border-line bg-canvas px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+                        <div className="text-ink">{semester.label}</div>
+                        <div className="mt-1 text-xs font-normal text-muted">{semesterMc} MCs</div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
 
-                  {major.categories.map((category) => {
-                    const isCollapsed = collapsedCategories[category];
+                  {/* Data columns */}
+                  {semesters.map((semester, columnIndex) => {
+                    const modules = semester.modules;
+                    const completedCodes = completedCodesBySemester[columnIndex] ?? new Set<string>();
 
                     return (
-                      <div key={category} className="rounded-[26px] border border-line bg-canvas/55 p-3">
-                        <button
-                          type="button"
-                          onClick={() => toggleCategory(category)}
-                          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-line bg-paper px-4 py-4 text-left"
-                        >
-                          <div>
-                            <p className="text-sm font-semibold text-ink">{category}</p>
-                            <p className="mt-1 text-xs text-muted">
-                              {isCollapsed ? 'Expand to inspect modules by semester.' : 'Collapse to reduce the grid density.'}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-[#efe8d9] px-3 py-1 text-xs font-semibold text-ink">
-                            {isCollapsed ? 'Show' : 'Hide'}
-                          </span>
-                        </button>
-
-                        {!isCollapsed && (
-                          <div className="mt-3 grid grid-cols-[220px_repeat(8,minmax(140px,1fr))] gap-3">
-                            <div className="rounded-2xl border border-dashed border-line bg-paper px-4 py-4 text-sm text-muted">
-                              {category} modules across the plan.
-                            </div>
-                            {semesters.map((semester) => {
-                              const modules = semester.modules.filter((module) => module.category === category);
-                              const semesterMc = modules.reduce((sum, module) => sum + module.mcs, 0);
+                      <Droppable 
+                        id={droppableId(columnIndex)} 
+                        key={`droppable-${columnIndex}`}
+                      >
+                        <div className="rounded-2xl border border-line bg-paper p-3 space-y-2">
+                          {modules.length > 0 ? (
+                            modules.map((module) => {
+                              const moduleDetail = nusModsModuleDetails[module.code];
+                              const prerequisiteConflict = moduleDetail
+                                ? assessPrerequisiteConflict(moduleDetail.detail, completedCodes)
+                                : null;
+                              const prerequisiteWarning =
+                                moduleDetail && prerequisiteConflict?.missingRequirement
+                                  ? {
+                                      summary: formatPrerequisiteSummary(moduleDetail.detail),
+                                      missingRequirement: prerequisiteConflict.missingRequirement,
+                                    }
+                                  : null;
 
                               return (
-                                <Droppable id={droppableId(buildSemesterKey(semester.year, semester.sem), category)} key={`${category}-${semester.year}-${semester.sem}`}>
-                                  <div className="rounded-2xl border border-line bg-paper p-3">
-                                    <div className="flex items-center justify-between gap-2 text-xs text-muted">
-                                      <span>{semesterLabel(semester)}</span>
-                                      <span>{semesterMc} MCs</span>
-                                    </div>
-                                    <div className="mt-3 space-y-2">
-                                      {modules.length > 0 ? (
-                                        modules.map((module) => (
-                                          <Draggable id={draggableId(buildSemesterKey(semester.year, semester.sem), module.code)} key={module.code}>
-                                            <ModuleCard
-                                              module={module}
-                                              onRemove={deleteModule}
-                                              onSelect={(code) => {
-                                                const id = draggableId(buildSemesterKey(semester.year, semester.sem), code);
-                                                setSelected((curr) => (curr === id ? null : id));
-                                              }}
-                                              selected={selected === draggableId(buildSemesterKey(semester.year, semester.sem), module.code)}
-                                            />
-                                          </Draggable>
-                                        ))
-                                      ) : (
-                                        <div className="rounded-2xl border border-dashed border-line px-3 py-5 text-center text-xs text-muted">
-                                          No modules yet.
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </Droppable>
+                                <Draggable id={draggableId(buildSemesterKey(semester.year, semester.sem), module.code)} key={module.code}>
+                                  <ModuleCard
+                                    module={module}
+                                    onRemove={deleteModule}
+                                    onSelect={(code) => {
+                                      const id = draggableId(buildSemesterKey(semester.year, semester.sem), code);
+                                      setSelected((curr) => (curr === id ? null : id));
+                                    }}
+                                    prerequisiteWarning={prerequisiteWarning}
+                                    selected={selected === draggableId(buildSemesterKey(semester.year, semester.sem), module.code)}
+                                  />
+                                </Draggable>
                               );
-                            })}
-                          </div>
-                        )}
-                      </div>
+                            })
+                          ) : (
+                            <div className="rounded-2xl border border-dashed border-line px-3 py-5 text-center text-xs text-muted">
+                              No modules yet.
+                            </div>
+                          )}
+                        </div>
+                      </Droppable>
                     );
                   })}
                 </div>
