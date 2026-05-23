@@ -1,87 +1,88 @@
-import { useMemo, useState } from 'react';
-import { availableMajors, majorCatalog } from '../data/majors';
-import type { Category, Module, SemesterKey } from '../types';
+import { useState, useEffect, useCallback } from 'react';
+import type { Major, StudentPlan, StudentSemester, PlacedModule } from '@shared/types';
 import {
+  defaultPlanToSemesters,
+  upsertModule,
+  removeModule,
   computeRequirements,
   computeStats,
-  createEmptySemesters,
-  mergePlan,
-  removeModule,
-  semesterKey,
-  upsertModule,
+  getCompletedCodesUpTo,
 } from '../lib/studyPlan';
 
-const defaultMajorId = availableMajors[0]?.id ?? 'computer-science';
+const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
+
+export const loadMajors = (): Major[] =>
+  Object.values(majorModules).map((m) => (m as { default: Major }).default);
+
+const planKey = (majorId: string) => `studyplan:${majorId}`;
+
+const loadSavedPlan = (majorId: string): StudentSemester[] | null => {
+  try {
+    const raw = localStorage.getItem(planKey(majorId));
+    if (!raw) return null;
+    return (JSON.parse(raw) as StudentPlan).semesters;
+  } catch {
+    return null;
+  }
+};
 
 export const useStudyPlan = () => {
-  const [majorId, setMajorId] = useState(defaultMajorId);
-  const [semesters, setSemesters] = useState(() => {
-    const major = majorCatalog[defaultMajorId];
-    return mergePlan(createEmptySemesters(), major.initialSemesters);
-  });
-  const [collapsedCategories, setCollapsedCategories] = useState<Record<Category, boolean>>({
-    'Primary Major': false,
-    'SOC/NUSC': false,
-    'Other Programmes': false,
-    'University Requirements': false,
-    'Unrestricted Electives': false,
+  const majors = loadMajors();
+  const [majorId, setMajorId] = useState<string>(majors[0]?.id ?? '');
+  const major = majors.find((m) => m.id === majorId) ?? majors[0];
+
+  const [semesters, setSemesters] = useState<StudentSemester[]>(() => {
+    if (!major) return [];
+    return loadSavedPlan(major.id) ?? defaultPlanToSemesters(major);
   });
 
-  const major = majorCatalog[majorId] ?? majorCatalog[defaultMajorId];
+  useEffect(() => {
+    if (!major) return;
+    const plan: StudentPlan = {
+      majorId: major.id,
+      semesters,
+      lastUpdated: new Date().toISOString(),
+    };
+    localStorage.setItem(planKey(major.id), JSON.stringify(plan));
+  }, [semesters, major]);
 
-  const stats = useMemo(() => computeStats(semesters), [semesters]);
-  const requirements = useMemo(() => computeRequirements(semesters, major.requirements), [major.requirements, semesters]);
+  const switchMajor = useCallback(
+    (newMajorId: string) => {
+      const newMajor = majors.find((m) => m.id === newMajorId);
+      if (!newMajor) return;
+      setSemesters(loadSavedPlan(newMajorId) ?? defaultPlanToSemesters(newMajor));
+      setMajorId(newMajorId);
+    },
+    [majors],
+  );
 
-  const addOrMoveModule = (semesterKeyValue: SemesterKey, module: Module) => {
-    setSemesters((current) => upsertModule(current, semesterKeyValue, module));
-  };
+  const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule) => {
+    setSemesters((prev) => upsertModule(prev, year, sem, module));
+  }, []);
 
-  const deleteModule = (code: string) => {
-    setSemesters((current) => removeModule(current, code));
-  };
+  const deleteModule = useCallback((moduleCode: string) => {
+    setSemesters((prev) => removeModule(prev, moduleCode));
+  }, []);
 
-  const toggleCategory = (category: Category) => {
-    setCollapsedCategories((current) => ({
-      ...current,
-      [category]: !current[category],
-    }));
-  };
+  const resetPlan = useCallback(() => {
+    if (!major) return;
+    setSemesters(defaultPlanToSemesters(major));
+  }, [major]);
 
-  const switchMajor = (nextMajorId: string) => {
-    const nextMajor = majorCatalog[nextMajorId];
-
-    if (!nextMajor) {
-      return;
-    }
-
-    setMajorId(nextMajorId);
-    setSemesters(mergePlan(createEmptySemesters(), nextMajor.initialSemesters));
-  };
-
-  const resetPlan = () => {
-    setSemesters(mergePlan(createEmptySemesters(), major.initialSemesters));
-  };
-
-  const allModules = semesters.flatMap((semester) => semester.modules);
-
-  const findModuleLocation = (code: string) =>
-    semesters.find((semester) => semester.modules.some((module) => module.code === code));
+  const requirements = major ? computeRequirements(major, semesters) : [];
+  const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
 
   return {
+    majors,
     major,
-    majors: availableMajors,
     majorId,
     semesters,
     stats,
     requirements,
-    collapsedCategories,
-    allModules,
+    switchMajor,
     addOrMoveModule,
     deleteModule,
-    toggleCategory,
-    switchMajor,
     resetPlan,
-    findModuleLocation,
-    semesterKey,
+    getCompletedCodes: (year: number, sem: number) => getCompletedCodesUpTo(semesters, year, sem),
   };
 };
