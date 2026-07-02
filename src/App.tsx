@@ -3,7 +3,13 @@ import { useStudyPlan } from './hooks/useStudyPlan';
 import { useProfile } from './hooks/useProfile';
 import { StudyPlan } from './components/StudyPlan';
 import { ImportModal } from './components/ImportModal';
-import { readImportFromHash, IMPORT_HASH_KEY, SHORT_IMPORT_HASH_KEY, type SharePayload } from '@shared/share';
+import {
+  readImportFromHash,
+  IMPORT_HASH_KEY,
+  SHORT_IMPORT_HASH_KEY,
+  type SharePayload,
+  type ShareProfile,
+} from '@shared/share';
 
 const clearImportHash = () => {
   window.history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -13,6 +19,7 @@ const App = () => {
   const plan = useStudyPlan();
   const { profile, setName, setMatricNumber, setYear, importProfile } = useProfile();
   const [pendingImport, setPendingImport] = useState<SharePayload | null>(null);
+  const [reviewProfile, setReviewProfile] = useState<ShareProfile | null>(null);
   const [importError, setImportError] = useState(false);
 
   useEffect(() => {
@@ -34,8 +41,29 @@ const App = () => {
       pendingImport.plan.semesters,
       pendingImport.plan.waivedModules,
     );
-    if (ok) importProfile(pendingImport.profile);
+    if (ok) {
+      importProfile(pendingImport.profile);
+      setReviewProfile(null);
+    }
     setPendingImport(null);
+  };
+
+  const openReviewImport = () => {
+    if (!pendingImport) return;
+    const ok = plan.openReviewPlan(
+      pendingImport.plan.majorId,
+      pendingImport.plan.semesters,
+      pendingImport.plan.waivedModules,
+    );
+    if (ok) {
+      setReviewProfile(pendingImport.profile);
+      setPendingImport(null);
+    }
+  };
+
+  const exitReviewMode = () => {
+    plan.exitReviewMode();
+    setReviewProfile(null);
   };
 
   if (!plan.major) {
@@ -49,23 +77,38 @@ const App = () => {
   const pendingMajorLabel = pendingImport
     ? plan.majors.find((m) => m.id === pendingImport.plan.majorId)?.label ?? null
     : null;
+  const isReviewMode = plan.isReviewMode && reviewProfile !== null;
+  const displayedProfile = isReviewMode ? reviewProfile : profile;
+  const setDisplayedName = isReviewMode
+    ? (name: string) => setReviewProfile((current) => current ? { ...current, name } : current)
+    : setName;
+  const setDisplayedMatricNumber = isReviewMode
+    ? (matricNumber: string) => setReviewProfile((current) => current ? { ...current, matricNumber } : current)
+    : setMatricNumber;
+  const setDisplayedYear = isReviewMode
+    ? (year: string) => setReviewProfile((current) => current ? { ...current, year } : current)
+    : setYear;
 
   return (
     <>
       <StudyPlan
         {...plan}
-        studentName={profile.name}
-        setStudentName={setName}
-        matricNumber={profile.matricNumber}
-        setMatricNumber={setMatricNumber}
-        studentYear={profile.year}
-        setStudentYear={setYear}
+        studentName={displayedProfile.name}
+        setStudentName={setDisplayedName}
+        matricNumber={displayedProfile.matricNumber}
+        setMatricNumber={setDisplayedMatricNumber}
+        studentYear={displayedProfile.year}
+        setStudentYear={setDisplayedYear}
+        isReviewMode={isReviewMode}
+        reviewOwnerName={reviewProfile?.name}
+        onExitReviewMode={exitReviewMode}
       />
       {pendingImport && (
         <ImportModal
           payload={pendingImport}
           majorLabel={pendingMajorLabel}
           onConfirm={confirmImport}
+          onReview={openReviewImport}
           onCancel={() => setPendingImport(null)}
         />
       )}

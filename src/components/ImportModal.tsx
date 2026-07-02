@@ -5,10 +5,11 @@ interface Props {
   /** Human-readable major label, or null when the major is unknown to this build. */
   majorLabel: string | null;
   onConfirm: () => void;
+  onReview: () => void;
   onCancel: () => void;
 }
 
-export const ImportModal = ({ payload, majorLabel, onConfirm, onCancel }: Props) => {
+export const ImportModal = ({ payload, majorLabel, onConfirm, onReview, onCancel }: Props) => {
   const moduleCount = payload.plan.semesters.reduce((sum, s) => sum + s.modules.length, 0);
   const waivedCount = payload.plan.waivedModules.length;
   const name = payload.profile.name?.trim() || 'A student';
@@ -38,12 +39,13 @@ export const ImportModal = ({ payload, majorLabel, onConfirm, onCancel }: Props)
               )}
             </ul>
             <p className="mt-4 text-xs text-muted">
-              This replaces your current {majorLabel} plan and profile.
+              Importing replaces your current {majorLabel} plan and profile. Review mode opens
+              a temporary editable copy instead.
             </p>
           </>
         )}
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
           <button
             type="button"
             onClick={onCancel}
@@ -52,13 +54,22 @@ export const ImportModal = ({ payload, majorLabel, onConfirm, onCancel }: Props)
             {unknownMajor ? 'Close' : 'Cancel'}
           </button>
           {!unknownMajor && (
-            <button
-              type="button"
-              onClick={onConfirm}
-              className="rounded-2xl bg-ink px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-ink/90"
-            >
-              Import plan
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={onReview}
+                className="rounded-2xl bg-paper px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-paper/70"
+              >
+                Open in review
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                className="rounded-2xl bg-ink px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-ink/90"
+              >
+                Import plan
+              </button>
+            </>
           )}
         </div>
       </div>

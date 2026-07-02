@@ -32,6 +32,9 @@ interface Props {
   setMatricNumber: (matric: string) => void;
   studentYear: string;
   setStudentYear: (year: string) => void;
+  isReviewMode?: boolean;
+  reviewOwnerName?: string;
+  onExitReviewMode?: () => void;
 }
 
 export const StudyPlan = ({
@@ -56,12 +59,16 @@ export const StudyPlan = ({
   setMatricNumber,
   studentYear,
   setStudentYear,
+  isReviewMode = false,
+  reviewOwnerName,
+  onExitReviewMode,
 }: Props) => {
   const [view, setView] = useState<'planner' | 'settings'>('planner');
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'error'>('idle');
   const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
   const [pendingMajorId, setPendingMajorId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const reviewLabel = reviewOwnerName?.trim() || 'Shared plan';
 
   const handleShare = async () => {
     const link = buildShareLink({
@@ -149,6 +156,26 @@ export const StudyPlan = ({
           </div>
         </div>
       </header>
+
+      {isReviewMode && (
+        <div className="border-b border-ink/10 bg-sky-100/70 px-4 py-2 sm:px-6">
+          <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-sky-950">
+              <span className="rounded-full bg-sky-950 px-2 py-0.5 font-medium text-canvas">Review mode</span>
+              <span className="leading-snug">Reviewing {reviewLabel}. Edits stay temporary.</span>
+            </div>
+            {onExitReviewMode && (
+              <button
+                type="button"
+                onClick={onExitReviewMode}
+                className="rounded-xl bg-canvas px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-canvas/75"
+              >
+                Exit review
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {view === 'settings' ? (
         <SettingsPage
