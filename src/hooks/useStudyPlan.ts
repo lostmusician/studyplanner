@@ -155,6 +155,18 @@ export const useStudyPlan = () => {
     setWaivedModules(defaultPlan.waivedModules);
   }, [major]);
 
+  const importSharedPlan = useCallback(
+    (newMajorId: string, importedSemesters: StudentSemester[], importedWaived: WaivedModule[]) => {
+      const newMajor = majors.find((m) => m.id === newMajorId);
+      if (!newMajor) return false;
+      setSemesters(normalizeSemesters(newMajor, importedSemesters));
+      setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
+      setMajorId(newMajorId);
+      return true;
+    },
+    [majors],
+  );
+
   const requirements = major ? computeRequirements(major, semesters, waivedModules) : [];
   const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
 
@@ -173,6 +185,7 @@ export const useStudyPlan = () => {
     addWaivedModule,
     deleteWaivedModule,
     resetPlan,
+    importSharedPlan,
     getCompletedCodes: (year: number, sem: number) => getCompletedCodesUpTo(semesters, year, sem),
   };
 };
