@@ -9,6 +9,7 @@ interface Props {
   waivedModules: WaivedModule[];
   onAdd: (module: WaivedModule) => void;
   onDelete: (code: string) => void;
+  fullWidth?: boolean;
 }
 
 interface FormState {
@@ -18,7 +19,7 @@ interface FormState {
   mcs: string;
 }
 
-export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete }: Props) => {
+export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth = false }: Props) => {
   const [isAdding, setIsAdding] = useState(false);
   const [form, setForm] = useState<FormState>({ query: '', code: '', name: '', mcs: '0' });
   const [suggestions, setSuggestions] = useState<NusModsModuleSummary[]>([]);
@@ -103,8 +104,8 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete }: Props) 
     <div
       className="flex flex-col flex-shrink-0 rounded-3xl p-3"
       style={{
-        minWidth: '172px',
-        width: '172px',
+        minWidth: fullWidth ? undefined : '172px',
+        width: fullWidth ? '100%' : '172px',
         minHeight: '280px',
         backgroundColor: 'rgb(225,218,205)',
       }}
