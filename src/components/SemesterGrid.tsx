@@ -418,6 +418,18 @@ const SemesterAddModuleForm = ({
       {form.name && <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>}
       {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
 
+      <div className="mt-2 flex flex-col gap-1">
+        <label className="text-[10px] uppercase tracking-wide text-muted">MCs</label>
+        <input
+          type="number"
+          min="1"
+          max="20"
+          value={form.mcs}
+          onChange={(event) => setForm((current) => ({ ...current, mcs: event.target.value }))}
+          className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+        />
+      </div>
+
       <select
         value={form.categoryId}
         onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}
