@@ -34,6 +34,7 @@ export const ModuleCard = ({
 
   const [prereqWarning, setPrereqWarning] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipUp, setTooltipUp] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [editingCategory, setEditingCategory] = useState(false);
   const completedStr = completedCodes.join(',');
@@ -73,7 +74,12 @@ export const ModuleCard = ({
       }}
       style={style}
       className="relative group rounded-2xl p-3 select-none touch-none"
-      onMouseEnter={() => setShowTooltip(true)}
+      onMouseEnter={() => {
+        const rect = cardRef.current?.getBoundingClientRect();
+        // Flip the tooltip above the card when there isn't room for it below.
+        if (rect) setTooltipUp(window.innerHeight - rect.bottom < 220);
+        setShowTooltip(true);
+      }}
       onMouseLeave={() => setShowTooltip(false)}
     >
       {/* Drag handle area */}
@@ -160,7 +166,11 @@ export const ModuleCard = ({
 
       {/* Hover tooltip */}
       {showTooltip && !isDragging && !isOverlay && (
-        <div className="absolute z-50 left-0 top-full mt-2 w-64 rounded-2xl bg-ink text-canvas p-4 text-xs shadow-soft pointer-events-none">
+        <div
+          className={`absolute z-50 left-0 w-64 rounded-2xl bg-ink text-canvas p-4 text-xs shadow-soft pointer-events-none ${
+            tooltipUp ? 'bottom-full mb-2' : 'top-full mt-2'
+          }`}
+        >
           <div className="font-bold font-mono">{module.code}</div>
           <div className="mt-0.5 text-canvas/80 leading-snug">{module.name}</div>
           <div className="mt-2 text-canvas/50">

@@ -13,6 +13,9 @@ import {
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
 
+/** Major selected on first load, before the user picks one. */
+const DEFAULT_MAJOR_ID = 'computer-science-nusc';
+
 export const loadMajors = (): Major[] =>
   Object.values(majorModules).map((m) => (m as { default: Major }).default);
 
@@ -90,8 +93,9 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
 
 export const useStudyPlan = () => {
   const majors = loadMajors();
-  const [majorId, setMajorId] = useState<string>(majors[0]?.id ?? '');
-  const major = majors.find((m) => m.id === majorId) ?? majors[0];
+  const defaultMajor = majors.find((m) => m.id === DEFAULT_MAJOR_ID) ?? majors[0];
+  const [majorId, setMajorId] = useState<string>(defaultMajor?.id ?? '');
+  const major = majors.find((m) => m.id === majorId) ?? defaultMajor;
 
   const savedInitialPlan = major ? loadSavedPlan(major) : null;
   const defaultInitialPlan = major ? jsonDefaultPlan(major) : null;
