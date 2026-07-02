@@ -67,6 +67,7 @@ export interface DefaultPlanEntry {
   sem: number;
   moduleCode: string;
   categoryId: string;
+  locked?: boolean;
 }
 
 export interface PlacedModule extends Module {

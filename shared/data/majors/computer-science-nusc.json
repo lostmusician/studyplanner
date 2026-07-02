@@ -279,6 +279,11 @@
       "code": "MA1301",
       "name": "Introductory Mathematics",
       "mcs": 4
+    },
+    "NEP2001A": {
+      "code": "NEP2001A",
+      "name": "Impact Experience Project",
+      "mcs": 2
     }
   },
   "defaultPlan": [
@@ -371,6 +376,34 @@
       "sem": 1,
       "moduleCode": "IS1108",
       "categoryId": "soc-common"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
     }
   ],
   "defaultWaivedModules": [

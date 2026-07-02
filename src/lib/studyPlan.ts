@@ -28,18 +28,36 @@ export const upsertModule = (
   year: number,
   sem: number,
   module: PlacedModule,
+  insertBeforeCode?: string,
 ): StudentSemester[] => {
   const withoutModule = semesters.map((s) => ({
     ...s,
     modules: s.modules.filter((m) => m.code !== module.code),
   }));
-  return withoutModule.map((s) =>
-    s.year === year && s.sem === sem ? { ...s, modules: [...s.modules, module] } : s,
-  );
+  return withoutModule.map((s) => {
+    if (s.year !== year || s.sem !== sem) return s;
+    const modules = [...s.modules];
+    const insertIndex = insertBeforeCode
+      ? modules.findIndex((m) => m.code === insertBeforeCode)
+      : -1;
+    if (insertIndex >= 0) modules.splice(insertIndex, 0, module);
+    else modules.push(module);
+    return { ...s, modules };
+  });
 };
 
-export const removeModule = (semesters: StudentSemester[], moduleCode: string): StudentSemester[] =>
-  semesters.map((s) => ({ ...s, modules: s.modules.filter((m) => m.code !== moduleCode) }));
+export const removeModule = (
+  semesters: StudentSemester[],
+  moduleCode: string,
+  target?: { year: number; sem: number },
+): StudentSemester[] =>
+  semesters.map((s) => {
+    if (target && (s.year !== target.year || s.sem !== target.sem)) return s;
+    return { ...s, modules: s.modules.filter((m) => m.code !== moduleCode) };
+  });
+
+export const isModuleLocked = (major: Major, moduleCode: string): boolean =>
+  major.defaultPlan.some((entry) => entry.moduleCode === moduleCode && entry.locked);
 
 export const renameModule = (
   semesters: StudentSemester[],
