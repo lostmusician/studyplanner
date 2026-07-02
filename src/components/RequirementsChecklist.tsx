@@ -28,7 +28,8 @@ export const RequirementsChecklist = ({ requirements, categories }: Props) => {
     }))
     .filter((g) => g.items.length > 0);
 
-  const uncategorized = requirements.filter((r) => !r.categoryId);
+  const knownIds = new Set(categories.map((c) => c.id));
+  const uncategorized = requirements.filter((r) => !r.categoryId || !knownIds.has(r.categoryId));
   if (uncategorized.length > 0) {
     groups.push({ id: 'uncategorized', label: 'Other', items: uncategorized });
   }
