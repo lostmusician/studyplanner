@@ -53,7 +53,7 @@ export const SemesterGrid = ({
     const target = semesters.find((s) => s.year === year && s.sem === sem);
     if (!target) return;
     if (!canPlaceModule(target, module)) {
-      alert('Year 1 semesters cannot exceed 26 MC.');
+      alert('Y1S1 cannot exceed 26 MC.');
       return;
     }
     addOrMoveModule(year, sem, module);
@@ -91,7 +91,7 @@ export const SemesterGrid = ({
       return {
         key: `${s.year}-${s.sem}`,
         label: `${semesterLabel(s.year, s.sem)} · ${mcs} MC`,
-        warn: Boolean(getLoadWarning(s.year, mcs)),
+        warn: Boolean(getLoadWarning(s.year, s.sem, mcs)),
       };
     }),
   ];
@@ -206,7 +206,7 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
   const { setNodeRef, isOver } = useDroppable({ id });
 
   const totalMcs = getSemesterMcs(semester);
-  const loadWarning = getLoadWarning(semester.year, totalMcs);
+  const loadWarning = getLoadWarning(semester.year, semester.sem, totalMcs);
 
   return (
     <div
@@ -251,7 +251,7 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
             error={addError}
             onAdd={(year, sem, module) => {
               if (!canPlaceModule(semester, module)) {
-                setAddError('Y1 max is 26 MC.');
+                setAddError('Y1S1 max is 26 MC.');
                 return;
               }
               addOrMoveModule(year, sem, module);
@@ -474,12 +474,12 @@ const getProjectedSemesterMcs = (semester: StudentSemester, module: PlacedModule
     .reduce((sum, existingModule) => sum + existingModule.mcs, module.mcs);
 
 const canPlaceModule = (semester: StudentSemester, module: PlacedModule): boolean =>
-  semester.year !== 1 || getProjectedSemesterMcs(semester, module) <= YEAR_ONE_MAX_MCS;
+  semester.year !== 1 || semester.sem !== 1 || getProjectedSemesterMcs(semester, module) <= YEAR_ONE_MAX_MCS;
 
-const getLoadWarning = (year: number, totalMcs: number): LoadWarning | null => {
-  if (year === 1 && totalMcs > YEAR_ONE_MAX_MCS) {
+const getLoadWarning = (year: number, sem: number, totalMcs: number): LoadWarning | null => {
+  if (year === 1 && sem === 1 && totalMcs > YEAR_ONE_MAX_MCS) {
     return {
-      label: 'Y1 cap exceeded',
+      label: 'Y1S1 cap exceeded',
       detail: `Max ${YEAR_ONE_MAX_MCS} MC`,
       className: 'bg-red-100 text-red-800',
     };
