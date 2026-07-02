@@ -80,6 +80,10 @@ export interface Major {
   label: string;
   school: string;
   specialisation?: string;
+  /** Matriculation batches this major's data applies to, e.g. ["AY2025/2026"]
+   * or ["AY2023/2024", "AY2024/2025", "AY2025/2026"] for a curriculum that
+   * hasn't changed across multiple intakes. */
+  batches: string[];
   totalMcTarget: number;
   categories: MajorCategory[];
   requirements: RequirementRule[];

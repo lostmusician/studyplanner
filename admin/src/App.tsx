@@ -11,6 +11,7 @@ const newMajor = (): Major => ({
   id: `major-${Date.now()}`,
   label: 'New Major',
   school: '',
+  batches: ['AY2026/2027'],
   totalMcTarget: 160,
   categories: [
     { id: 'primary-major', label: 'Primary Major', mcTarget: 80, color: '#d4c9b8' },

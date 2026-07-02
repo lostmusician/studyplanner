@@ -2,6 +2,7 @@
   "id": "computer-science-nusc",
   "label": "Computer Science (NUS College)",
   "school": "School of Computing",
+  "batches": ["AY2026/2027"],
   "totalMcTarget": 160,
   "categories": [
     {

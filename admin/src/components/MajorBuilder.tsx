@@ -65,6 +65,21 @@ export const MajorBuilder = ({ major, onChange }: Props) => {
                 placeholder="e.g. Networking and Distributed Systems"
               />
             </LabeledField>
+            <LabeledField label="Batches (comma-separated)">
+              <input
+                value={major.batches.join(', ')}
+                onChange={(e) =>
+                  update({
+                    batches: e.target.value
+                      .split(',')
+                      .map((b) => b.trim())
+                      .filter(Boolean),
+                  })
+                }
+                className={field}
+                placeholder="e.g. AY2026/2027"
+              />
+            </LabeledField>
             <LabeledField label="Total MC Target">
               <input
                 type="number"
