@@ -104,6 +104,16 @@ export const Dropdown = ({ value, options, onChange, variant, ariaLabel, classNa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, highlightedIndex, options]);
 
+  useEffect(() => {
+    if (!closing) return;
+    // Fallback in case `animationend` doesn't fire (e.g. reduced-motion environments).
+    const timeout = setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [closing]);
+
   if (isMobile) {
     if (variant === 'header') {
       return (
