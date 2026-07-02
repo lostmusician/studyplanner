@@ -2,6 +2,7 @@
   "id": "artificial-intelligence-nusc",
   "label": "Artificial Intelligence (NUS College)",
   "school": "School of Computing",
+  "batches": ["AY2026/2027"],
   "totalMcTarget": 160,
   "categories": [
     { "id": "computing-foundation", "label": "Computing Foundation", "mcTarget": 20, "color": "#d4c9b8" },

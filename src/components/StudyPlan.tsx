@@ -4,6 +4,7 @@ import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { buildShareLink } from '@shared/share';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
+import { BatchBadge } from './BatchBadge';
 
 interface Props {
   majors: Major[];
@@ -214,7 +215,10 @@ const MajorHeaderSelect = ({
     {major.specialisation && (
       <span className="text-xs leading-tight text-muted">{major.specialisation}</span>
     )}
-    <span className="text-[10px] leading-tight text-muted/70">{major.school}</span>
+    <div className="flex items-center gap-1.5">
+      <span className="text-[10px] leading-tight text-muted/70">{major.school}</span>
+      <BatchBadge batches={major.batches} />
+    </div>
   </div>
 );
 
@@ -241,6 +245,7 @@ const SettingsPage = ({
   onSwitchMajor: (id: string) => void;
   onResetPlan: () => void;
 }) => {
+  const major = majors.find((m) => m.id === majorId);
   const field =
     'rounded-2xl bg-canvas border border-ink/10 px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20 w-full';
 
@@ -297,11 +302,16 @@ const SettingsPage = ({
               onChange={(event) => onSwitchMajor(event.target.value)}
               className={field}
             >
-              {majors.map((major) => (
-                <option key={major.id} value={major.id}>{major.label}</option>
+              {majors.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
               ))}
             </select>
           </label>
+          {major && (
+            <div className="mt-2">
+              <BatchBadge batches={major.batches} />
+            </div>
+          )}
         </section>
 
         <section className="rounded-4xl bg-paper p-5">

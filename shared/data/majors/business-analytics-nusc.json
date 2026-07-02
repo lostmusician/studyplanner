@@ -2,6 +2,7 @@
   "id": "business-analytics-nusc",
   "label": "Business Analytics (NUS College)",
   "school": "School of Computing",
+  "batches": ["AY2026/2027"],
   "totalMcTarget": 160,
   "categories": [
     { "id": "ba-foundation", "label": "BA Foundation", "mcTarget": 52, "color": "#d4c9b8" },

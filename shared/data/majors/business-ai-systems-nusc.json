@@ -2,6 +2,7 @@
   "id": "business-ai-systems-nusc",
   "label": "Business AI Systems (NUS College)",
   "school": "School of Computing",
+  "batches": ["AY2026/2027"],
   "totalMcTarget": 160,
   "categories": [
     { "id": "bais-foundation", "label": "BAIS Foundation", "mcTarget": 48, "color": "#d4c9b8" },
