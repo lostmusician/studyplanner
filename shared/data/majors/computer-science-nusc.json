@@ -1,0 +1,301 @@
+{
+  "id": "computer-science-nusc",
+  "label": "Computer Science (NUS College)",
+  "school": "School of Computing",
+  "totalMcTarget": 160,
+  "categories": [
+    {
+      "id": "cs-foundation",
+      "label": "CS Foundation",
+      "mcTarget": 36,
+      "color": "#d4c9b8"
+    },
+    {
+      "id": "breadth-depth",
+      "label": "Breadth & Depth (Focus Area)",
+      "mcTarget": 32,
+      "color": "#c9d4b8"
+    },
+    {
+      "id": "math-sciences",
+      "label": "Math & Sciences",
+      "mcTarget": 12,
+      "color": "#c6d0ca"
+    },
+    {
+      "id": "soc-common",
+      "label": "SoC Common Curriculum",
+      "mcTarget": 8,
+      "color": "#abb89b"
+    },
+    {
+      "id": "nus-college",
+      "label": "NUS College",
+      "mcTarget": 52,
+      "color": "#b8c9d4"
+    },
+    {
+      "id": "unrestricted-electives",
+      "label": "Unrestricted Electives",
+      "mcTarget": 20,
+      "color": "#c3bace"
+    }
+  ],
+  "requirements": [
+    {
+      "name": "Programming Methodology (CS1101S)",
+      "fulfilledBy": [
+        "CS1101S"
+      ],
+      "categoryId": "soc-common"
+    },
+    {
+      "name": "Digital and AI Ethics (IS1108)",
+      "fulfilledBy": [
+        "IS1108"
+      ],
+      "categoryId": "soc-common"
+    },
+    {
+      "name": "Thinking with Writing (NTW)",
+      "fulfilledBy": [
+        "NTW*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Understanding the Social World (NSW)",
+      "fulfilledBy": [
+        "NSW*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Reasoning with Data (GEA1000N)",
+      "fulfilledBy": [
+        "GEA1000N"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Global Narratives (NGN)",
+      "fulfilledBy": [
+        "NGN*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Science and Society (NSS)",
+      "fulfilledBy": [
+        "NSS*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Making Connections",
+      "fulfilledBy": [
+        "NHS*",
+        "NFB*",
+        "NST*",
+        "NFC*",
+        "NHT*"
+      ],
+      "count": 6,
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Impact Experience Project (NEP)",
+      "fulfilledBy": [
+        "NEP*"
+      ],
+      "categoryId": "nus-college"
+    }
+  ],
+  "moduleCatalog": {
+    "CS1101S": {
+      "code": "CS1101S",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS1231": {
+      "code": "CS1231",
+      "name": "Discrete Structures",
+      "mcs": 4
+    },
+    "CS2030S": {
+      "code": "CS2030S",
+      "name": "Programming Methodology II",
+      "mcs": 4
+    },
+    "CS2040S": {
+      "code": "CS2040S",
+      "name": "Data Structures and Algorithms",
+      "mcs": 4
+    },
+    "CS2100": {
+      "code": "CS2100",
+      "name": "Computer Organisation",
+      "mcs": 4
+    },
+    "CS2101": {
+      "code": "CS2101",
+      "name": "Effective Communication for Computing Professionals",
+      "mcs": 4
+    },
+    "CS2103T": {
+      "code": "CS2103T",
+      "name": "Software Engineering",
+      "mcs": 4
+    },
+    "CS2106": {
+      "code": "CS2106",
+      "name": "Introduction to Operating Systems",
+      "mcs": 4
+    },
+    "CS2109S": {
+      "code": "CS2109S",
+      "name": "Introduction to AI and Machine Learning",
+      "mcs": 4
+    },
+    "CS3230": {
+      "code": "CS3230",
+      "name": "Design and Analysis of Algorithms",
+      "mcs": 4
+    },
+    "ST2334": {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
+      "mcs": 4
+    },
+    "MA1521": {
+      "code": "MA1521",
+      "name": "Calculus for Computing",
+      "mcs": 4
+    },
+    "MA1522": {
+      "code": "MA1522",
+      "name": "Linear Algebra for Computing",
+      "mcs": 4
+    },
+    "NTW2035": {
+      "code": "NTW2035",
+      "name": "Art and the Attention Economy",
+      "mcs": 4
+    },
+    "GEA1000N": {
+      "code": "GEA1000N",
+      "name": "Quantitative Reasoning with Data",
+      "mcs": 4
+    },
+    "IS1108": {
+      "code": "IS1108",
+      "name": "Digital and AI Ethics",
+      "mcs": 4
+    },
+    "MA1301": {
+      "code": "MA1301",
+      "name": "Introductory Mathematics",
+      "mcs": 4
+    }
+  },
+  "defaultPlan": [
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "MA1521",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "CS1231",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "CS2040S",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "MA1522",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NTW2035",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "CS2030S",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "CS2100",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "ST2334",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "GEA1000N",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "CS2103T",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "CS2101",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "CS2106",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "CS2109S",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "CS3230",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "IS1108",
+      "categoryId": "soc-common"
+    }
+  ],
+  "defaultWaivedModules": [
+    {
+      "code": "MA1301",
+      "name": "Introductory Mathematics",
+      "mcs": 4,
+      "categoryId": "cs-foundation"
+    }
+  ]
+}

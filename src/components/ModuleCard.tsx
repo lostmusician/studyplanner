@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import type { Major, PlacedModule } from '@shared/types';
 import { fetchNusModsModuleDetail, assessPrerequisiteConflict, formatPrerequisiteSummary } from '@shared/nusmods';
+import { XIcon } from './Icons';
 
 interface Props {
   module: PlacedModule;
@@ -101,12 +102,12 @@ export const ModuleCard = ({
       {/* Delete button */}
       {!isOverlay && (
         <button
-          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-canvas flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs leading-none"
+          className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-opacity group-hover:opacity-100"
           onClick={(e) => { e.stopPropagation(); onDelete(module.code); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
         >
-          ×
+          <XIcon className="h-3 w-3" />
         </button>
       )}
 

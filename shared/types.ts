@@ -15,7 +15,14 @@ export interface MajorCategory {
 
 export interface RequirementRule {
   name: string;
+  /** Module codes that satisfy this requirement. An entry ending in "*" matches by prefix
+   * (e.g. "NTW*" matches any NTW-coded section); other entries match exactly. */
   fulfilledBy: string[];
+  /** Number of distinct matching modules needed to satisfy this requirement. Defaults to 1. */
+  count?: number;
+  /** Groups this requirement under a MajorCategory (by id) in the requirements checklist.
+   * Rows without one are rendered under a fallback "Other" group. */
+  categoryId?: string;
 }
 
 export interface DefaultPlanEntry {
@@ -24,6 +31,12 @@ export interface DefaultPlanEntry {
   moduleCode: string;
   categoryId: string;
 }
+
+export interface PlacedModule extends Module {
+  categoryId: string;
+}
+
+export type WaivedModule = PlacedModule;
 
 export interface Major {
   id: string;
@@ -35,10 +48,7 @@ export interface Major {
   requirements: RequirementRule[];
   moduleCatalog: Record<string, Module>;
   defaultPlan: DefaultPlanEntry[];
-}
-
-export interface PlacedModule extends Module {
-  categoryId: string;
+  defaultWaivedModules?: WaivedModule[];
 }
 
 export interface StudentSemester {
@@ -50,5 +60,6 @@ export interface StudentSemester {
 export interface StudentPlan {
   majorId: string;
   semesters: StudentSemester[];
+  waivedModules?: WaivedModule[];
   lastUpdated: string;
 }

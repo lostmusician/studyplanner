@@ -1,4 +1,4 @@
-import type { Major, StudentSemester, PlacedModule } from '@shared/types';
+import type { Major, StudentSemester, PlacedModule, WaivedModule } from '@shared/types';
 
 export const semesterLabel = (year: number, sem: number): string => `Y${year}S${sem}`;
 
@@ -35,15 +35,38 @@ export const upsertModule = (
 export const removeModule = (semesters: StudentSemester[], moduleCode: string): StudentSemester[] =>
   semesters.map((s) => ({ ...s, modules: s.modules.filter((m) => m.code !== moduleCode) }));
 
+const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
+  fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
+
+export interface RequirementStatus {
+  name: string;
+  fulfilled: boolean;
+  categoryId?: string;
+  have: number;
+  need: number;
+}
+
 export const computeRequirements = (
   major: Major,
   semesters: StudentSemester[],
-): Array<{ name: string; fulfilled: boolean }> => {
-  const allCodes = new Set(semesters.flatMap((s) => s.modules.map((m) => m.code)));
-  return major.requirements.map((req) => ({
-    name: req.name,
-    fulfilled: req.fulfilledBy.some((code) => allCodes.has(code)),
-  }));
+  waivedModules: WaivedModule[] = [],
+): RequirementStatus[] => {
+  const plannedCodes = semesters.flatMap((s) => s.modules.map((m) => m.code));
+  const waivedCodes = waivedModules.map((m) => m.code);
+  const allCodes = Array.from(new Set([...plannedCodes, ...waivedCodes]));
+  return major.requirements.map((req) => {
+    const matchCount = allCodes.filter((code) =>
+      req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)),
+    ).length;
+    const need = req.count ?? 1;
+    return {
+      name: req.name,
+      fulfilled: matchCount >= need,
+      categoryId: req.categoryId,
+      have: matchCount,
+      need,
+    };
+  });
 };
 
 export interface Stats {
