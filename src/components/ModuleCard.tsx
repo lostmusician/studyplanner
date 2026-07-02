@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import type { Major, PlacedModule } from '@shared/types';
-import { fetchNusModsModuleDetail, assessPrerequisiteConflict, formatPrerequisiteSummary } from '@shared/nusmods';
-import { XIcon } from './Icons';
+import { fetchNusModsModuleDetail, assessPrerequisiteConflict } from '@shared/nusmods';
+import { XIcon, EditIcon } from './Icons';
+import { CourseDetailModal } from './CourseDetailModal';
 
 interface Props {
   module: PlacedModule;
@@ -11,6 +12,7 @@ interface Props {
   fromYear: number;
   fromSem: number;
   onDelete: (code: string) => void;
+  onChangeCategory?: (code: string, categoryId: string) => void;
   isOverlay?: boolean;
 }
 
@@ -21,6 +23,7 @@ export const ModuleCard = ({
   fromYear,
   fromSem,
   onDelete,
+  onChangeCategory,
   isOverlay = false,
 }: Props) => {
   const { setNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
@@ -30,8 +33,9 @@ export const ModuleCard = ({
   });
 
   const [prereqWarning, setPrereqWarning] = useState<string | null>(null);
-  const [prereqSummary, setPrereqSummary] = useState<string>('');
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(false);
   const completedStr = completedCodes.join(',');
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +47,6 @@ export const ModuleCard = ({
         if (cancelled) return;
         const assessment = assessPrerequisiteConflict(detail, completedCodes);
         setPrereqWarning(assessment.missingRequirement);
-        setPrereqSummary(formatPrerequisiteSummary(detail));
       })
       .catch(() => {
         if (!cancelled) setPrereqWarning(null);
@@ -91,13 +94,44 @@ export const ModuleCard = ({
           )}
         </div>
         <p className="text-[11px] text-ink/70 leading-snug mt-0.5 line-clamp-2">{module.name}</p>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between gap-1 mt-2">
           <span className="text-[10px] text-ink/50">{module.mcs} MC</span>
-          {category && (
-            <span className="text-[10px] text-ink/50 truncate max-w-[80px]">{category.label}</span>
-          )}
+          <div className="flex min-w-0 items-center gap-1">
+            {category && (
+              <span className="truncate max-w-[72px] text-[10px] text-ink/50">{category.label}</span>
+            )}
+            {!isOverlay && onChangeCategory && (
+              <button
+                className="flex-shrink-0 text-ink/40 opacity-0 transition-opacity group-hover:opacity-100 hover:text-ink"
+                onClick={(e) => { e.stopPropagation(); setEditingCategory(true); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                aria-label={`Edit bucket for ${module.code}`}
+                title="Change requirement bucket"
+              >
+                <EditIcon className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Re-bucket category — shown only while editing, outside the drag handle */}
+      {!isOverlay && onChangeCategory && editingCategory && (
+        <select
+          autoFocus
+          value={module.categoryId}
+          onChange={(event) => { onChangeCategory(module.code, event.target.value); setEditingCategory(false); }}
+          onBlur={() => setEditingCategory(false)}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          className="mt-1.5 w-full cursor-pointer rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+          aria-label={`Requirement bucket for ${module.code}`}
+        >
+          {major.categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>{cat.label}</option>
+          ))}
+        </select>
+      )}
 
       {/* Delete button */}
       {!isOverlay && (
@@ -111,6 +145,19 @@ export const ModuleCard = ({
         </button>
       )}
 
+      {/* Details button */}
+      {!isOverlay && (
+        <button
+          className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas opacity-0 transition-opacity group-hover:opacity-100"
+          onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`Details for ${module.code}`}
+          title="Course details"
+        >
+          i
+        </button>
+      )}
+
       {/* Hover tooltip */}
       {showTooltip && !isDragging && !isOverlay && (
         <div className="absolute z-50 left-0 top-full mt-2 w-64 rounded-2xl bg-ink text-canvas p-4 text-xs shadow-soft pointer-events-none">
@@ -119,19 +166,24 @@ export const ModuleCard = ({
           <div className="mt-2 text-canvas/50">
             {module.mcs} MC · {category?.label ?? module.categoryId}
           </div>
-          {prereqSummary && (
-            <div className="mt-2 pt-2 border-t border-canvas/10 text-canvas/60 leading-snug">
-              <span className="text-canvas/40 uppercase text-[10px] tracking-wide block mb-1">Prerequisites</span>
-              {prereqSummary}
-            </div>
-          )}
           {prereqWarning && (
             <div className="mt-2 pt-2 border-t border-canvas/10" style={{ color: 'rgb(252,211,77)' }}>
-              <span className="uppercase text-[10px] tracking-wide block mb-1">Missing</span>
+              <span className="uppercase text-[10px] tracking-wide block mb-1">Missing prereqs</span>
               {prereqWarning}
             </div>
           )}
+          <div className="mt-2 pt-2 border-t border-canvas/10 text-canvas/40">Click ⓘ for full details</div>
         </div>
+      )}
+
+      {/* Course details */}
+      {showDetail && (
+        <CourseDetailModal
+          module={module}
+          major={major}
+          completedCodes={completedCodes}
+          onClose={() => setShowDetail(false)}
+        />
       )}
     </div>
   );

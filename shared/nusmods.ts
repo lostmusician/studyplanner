@@ -13,9 +13,14 @@ export interface NusModsModuleDetail {
   acadYear?: string;
   moduleCode: string;
   title: string;
+  description?: string;
   moduleCredit?: string;
+  department?: string;
+  faculty?: string;
   semesterData?: NusModsSemesterData[];
   prerequisite?: string;
+  preclusion?: string;
+  corequisite?: string;
   prereqTree?: unknown;
 }
 

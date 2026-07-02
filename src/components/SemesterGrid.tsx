@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import { searchNusModsModules, fetchNusModsModuleDetail } from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
-import { semesterLabel } from '../lib/studyPlan';
+import { autoCategoryId, semesterLabel } from '../lib/studyPlan';
 import { ModuleCard } from './ModuleCard';
 import { WaivedCourses } from './WaivedCourses';
 import { PlusIcon, XIcon } from './Icons';
@@ -19,6 +19,7 @@ interface Props {
   waivedModules: WaivedModule[];
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
+  setModuleCategory: (code: string, categoryId: string) => void;
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
   getCompletedCodes: (year: number, sem: number) => string[];
@@ -30,6 +31,7 @@ export const SemesterGrid = ({
   waivedModules,
   addOrMoveModule,
   deleteModule,
+  setModuleCategory,
   addWaivedModule,
   deleteWaivedModule,
   getCompletedCodes,
@@ -78,6 +80,7 @@ export const SemesterGrid = ({
             major={major}
             addOrMoveModule={addOrMoveModule}
             deleteModule={deleteModule}
+            setModuleCategory={setModuleCategory}
             completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
           />
         ))}
@@ -105,10 +108,11 @@ interface ColumnProps {
   major: Major;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
+  setModuleCategory: (code: string, categoryId: string) => void;
   completedCodes: string[];
 }
 
-const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, completedCodes }: ColumnProps) => {
+const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setModuleCategory, completedCodes }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
@@ -179,6 +183,7 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, comple
             fromYear={semester.year}
             fromSem={semester.sem}
             onDelete={deleteModule}
+            onChangeCategory={setModuleCategory}
           />
         ))}
       </div>
@@ -212,7 +217,7 @@ const SemesterAddModuleForm = ({
     code: '',
     name: '',
     mcs: '4',
-    categoryId: major.categories[0]?.id ?? '',
+    categoryId: AUTO_CATEGORY,
   });
   const [suggestions, setSuggestions] = useState<NusModsModuleSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -263,7 +268,6 @@ const SemesterAddModuleForm = ({
         code: item.moduleCode,
         name: item.title,
         mcs: detail.moduleCredit ?? '4',
-        categoryId: inferCategoryId(major, item.moduleCode),
       }));
     } catch {
       setForm((current) => ({
@@ -271,7 +275,6 @@ const SemesterAddModuleForm = ({
         query: item.moduleCode,
         code: item.moduleCode,
         name: item.title,
-        categoryId: inferCategoryId(major, item.moduleCode),
       }));
     } finally {
       setLoading(false);
@@ -283,10 +286,15 @@ const SemesterAddModuleForm = ({
     const code = form.code.trim().toUpperCase();
     const name = form.name.trim() || major.moduleCatalog[code]?.name || code;
     const mcs = parseInt(form.mcs, 10) || major.moduleCatalog[code]?.mcs || 4;
-    if (!code || !form.categoryId) return;
+    if (!code) return;
+    const categoryId =
+      form.categoryId === AUTO_CATEGORY ? autoCategoryId(major, code) : form.categoryId;
 
-    onAdd(year, sem, { code, name, mcs, categoryId: form.categoryId });
+    onAdd(year, sem, { code, name, mcs, categoryId });
   };
+
+  const inferredLabel =
+    major.categories.find((cat) => cat.id === autoCategoryId(major, form.code))?.label ?? '—';
 
   return (
     <form ref={containerRef} onSubmit={handleSubmit} className="relative rounded-2xl bg-canvas/60 p-2">
@@ -326,6 +334,7 @@ const SemesterAddModuleForm = ({
         onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}
         className="mt-2 w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
       >
+        <option value={AUTO_CATEGORY}>{`Auto → ${inferredLabel}`}</option>
         {major.categories.map((cat) => (
           <option key={cat.id} value={cat.id}>{cat.label}</option>
         ))}
@@ -394,15 +403,4 @@ const getLoadWarning = (year: number, totalMcs: number): LoadWarning | null => {
   return null;
 };
 
-const inferCategoryId = (major: Major, moduleCode: string): string => {
-  const defaultEntry = major.defaultPlan.find((entry) => entry.moduleCode === moduleCode);
-  if (defaultEntry) return defaultEntry.categoryId;
-
-  const requirement = major.requirements.find((req) =>
-    req.categoryId && req.fulfilledBy.some((fulfiller) => matchesFulfiller(moduleCode, fulfiller)),
-  );
-  return requirement?.categoryId ?? major.categories[0]?.id ?? '';
-};
-
-const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
-  fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
+const AUTO_CATEGORY = '__auto__';
