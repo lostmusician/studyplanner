@@ -13,7 +13,10 @@ interface Props {
   fromYear: number;
   fromSem: number;
   onDelete: (code: string) => void;
-  onChangeCategory?: (code: string, categoryId: string) => void;
+  onEditModule?: (
+    oldCode: string,
+    updates: { code: string; name: string; mcs: number; categoryId: string },
+  ) => { ok: true } | { ok: false; error: string };
   isOverlay?: boolean;
   moveTargets?: { year: number; sem: number; label: string }[];
   onMove?: (year: number, sem: number) => void;
@@ -26,7 +29,7 @@ export const ModuleCard = ({
   fromYear,
   fromSem,
   onDelete,
-  onChangeCategory,
+  onEditModule,
   isOverlay = false,
   moveTargets = [],
   onMove,
@@ -118,7 +121,7 @@ export const ModuleCard = ({
             {category && (
               <span className="truncate max-w-[72px] text-[10px] text-ink/50">{category.label}</span>
             )}
-            {!isOverlay && onChangeCategory && (
+            {!isOverlay && onEditModule && (
               <button
                 className={`flex-shrink-0 text-ink/40 ${controlVisibility} transition-opacity hover:text-ink`}
                 onClick={(e) => { e.stopPropagation(); setEditingCategory(true); }}
@@ -134,11 +137,19 @@ export const ModuleCard = ({
       </div>
 
       {/* Re-bucket category — shown only while editing, outside the drag handle */}
-      {!isOverlay && onChangeCategory && editingCategory && (
+      {!isOverlay && onEditModule && editingCategory && (
         <select
           autoFocus
           value={module.categoryId}
-          onChange={(event) => { onChangeCategory(module.code, event.target.value); setEditingCategory(false); }}
+          onChange={(event) => {
+            onEditModule(module.code, {
+              code: module.code,
+              name: module.name,
+              mcs: module.mcs,
+              categoryId: event.target.value,
+            });
+            setEditingCategory(false);
+          }}
           onBlur={() => setEditingCategory(false)}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}

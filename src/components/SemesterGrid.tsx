@@ -20,7 +20,10 @@ interface Props {
   waivedModules: WaivedModule[];
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
-  setModuleCategory: (code: string, categoryId: string) => void;
+  updateModule: (
+    oldCode: string,
+    updates: { code: string; name: string; mcs: number; categoryId: string },
+  ) => { ok: true } | { ok: false; error: string };
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
   getCompletedCodes: (year: number, sem: number) => string[];
@@ -32,7 +35,7 @@ export const SemesterGrid = ({
   waivedModules,
   addOrMoveModule,
   deleteModule,
-  setModuleCategory,
+  updateModule,
   addWaivedModule,
   deleteWaivedModule,
   getCompletedCodes,
@@ -129,7 +132,7 @@ export const SemesterGrid = ({
               major={major}
               addOrMoveModule={addOrMoveModule}
               deleteModule={deleteModule}
-              setModuleCategory={setModuleCategory}
+              updateModule={updateModule}
               completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(selectedSemester.year, selectedSemester.sem)]))}
               isMobile={isMobile}
               moveTargets={moveTargets}
@@ -153,7 +156,7 @@ export const SemesterGrid = ({
               major={major}
               addOrMoveModule={addOrMoveModule}
               deleteModule={deleteModule}
-              setModuleCategory={setModuleCategory}
+              updateModule={updateModule}
               completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
               isMobile={isMobile}
               moveTargets={moveTargets}
@@ -185,7 +188,10 @@ interface ColumnProps {
   major: Major;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
-  setModuleCategory: (code: string, categoryId: string) => void;
+  updateModule: (
+    oldCode: string,
+    updates: { code: string; name: string; mcs: number; categoryId: string },
+  ) => { ok: true } | { ok: false; error: string };
   completedCodes: string[];
   isMobile: boolean;
   moveTargets: { year: number; sem: number; label: string }[];
@@ -193,7 +199,7 @@ interface ColumnProps {
   fullWidth?: boolean;
 }
 
-const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setModuleCategory, completedCodes, isMobile, moveTargets, onMoveModule, fullWidth = false }: ColumnProps) => {
+const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, fullWidth = false }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
@@ -264,7 +270,7 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setMod
             fromYear={semester.year}
             fromSem={semester.sem}
             onDelete={deleteModule}
-            onChangeCategory={setModuleCategory}
+            onEditModule={updateModule}
             moveTargets={moveTargets}
             onMove={(year, sem) => onMoveModule(module, year, sem)}
           />
