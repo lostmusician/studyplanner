@@ -67,7 +67,7 @@ export const StudyPlan = ({
     const link = buildShareLink({
       profile: { name: studentName, matricNumber, year: studentYear },
       plan: { majorId, semesters, waivedModules },
-    });
+    }, major.moduleCatalog);
     try {
       await navigator.clipboard.writeText(link);
       setShareState('copied');

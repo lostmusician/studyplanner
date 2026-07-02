@@ -28,6 +28,8 @@ interface SavedPlanState {
   waivedModules: WaivedModule[];
 }
 
+type PlanMode = 'personal' | 'review';
+
 const inferCategoryId = (major: Major, moduleCode: string, categoryId?: string): string => {
   if (categoryId && major.categories.some((cat) => cat.id === categoryId)) return categoryId;
   return autoCategoryId(major, moduleCode);
@@ -83,6 +85,15 @@ const jsonDefaultPlan = (major: Major): SavedPlanState => ({
   waivedModules: normalizeWaivedModules(major, major.defaultWaivedModules),
 });
 
+const loadPlanForMajor = (major: Major): SavedPlanState => {
+  const savedPlan = loadSavedPlan(major);
+  const defaultPlan = jsonDefaultPlan(major);
+  return {
+    semesters: savedPlan?.semesters ?? defaultPlan.semesters,
+    waivedModules: savedPlan?.waivedModules ?? defaultPlan.waivedModules,
+  };
+};
+
 const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
   const plan: StudentPlan = {
     majorId,
@@ -97,34 +108,35 @@ export const useStudyPlan = () => {
   const majors = loadMajors();
   const defaultMajor = majors.find((m) => m.id === DEFAULT_MAJOR_ID) ?? majors[0];
   const [majorId, setMajorId] = useState<string>(defaultMajor?.id ?? '');
+  const [personalMajorId, setPersonalMajorId] = useState<string>(defaultMajor?.id ?? '');
+  const [mode, setMode] = useState<PlanMode>('personal');
   const major = majors.find((m) => m.id === majorId) ?? defaultMajor;
 
-  const savedInitialPlan = major ? loadSavedPlan(major) : null;
-  const defaultInitialPlan = major ? jsonDefaultPlan(major) : null;
+  const initialPlan = major ? loadPlanForMajor(major) : null;
   const [semesters, setSemesters] = useState<StudentSemester[]>(() => {
     if (!major) return [];
-    return savedInitialPlan?.semesters ?? defaultInitialPlan?.semesters ?? [];
+    return initialPlan?.semesters ?? [];
   });
   const [waivedModules, setWaivedModules] = useState<WaivedModule[]>(() =>
-    savedInitialPlan?.waivedModules ?? defaultInitialPlan?.waivedModules ?? [],
+    initialPlan?.waivedModules ?? [],
   );
 
   useEffect(() => {
-    if (!major) return;
+    if (!major || mode !== 'personal') return;
     writeSavedPlan(major.id, { semesters, waivedModules });
-  }, [semesters, waivedModules, major]);
+  }, [semesters, waivedModules, major, mode]);
 
   const switchMajor = useCallback(
     (newMajorId: string) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return;
-      const savedPlan = loadSavedPlan(newMajor);
-      const defaultPlan = jsonDefaultPlan(newMajor);
-      setSemesters(savedPlan?.semesters ?? defaultPlan.semesters);
-      setWaivedModules(savedPlan?.waivedModules ?? defaultPlan.waivedModules);
+      const nextPlan = mode === 'personal' ? loadPlanForMajor(newMajor) : jsonDefaultPlan(newMajor);
+      setSemesters(nextPlan.semesters);
+      setWaivedModules(nextPlan.waivedModules);
       setMajorId(newMajorId);
+      if (mode === 'personal') setPersonalMajorId(newMajorId);
     },
-    [majors],
+    [majors, mode],
   );
 
   const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => {
@@ -187,6 +199,21 @@ export const useStudyPlan = () => {
     (newMajorId: string, importedSemesters: StudentSemester[], importedWaived: WaivedModule[]) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
+      setMode('personal');
+      setSemesters(normalizeSemesters(newMajor, importedSemesters));
+      setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
+      setMajorId(newMajorId);
+      setPersonalMajorId(newMajorId);
+      return true;
+    },
+    [majors],
+  );
+
+  const openReviewPlan = useCallback(
+    (newMajorId: string, importedSemesters: StudentSemester[], importedWaived: WaivedModule[]) => {
+      const newMajor = majors.find((m) => m.id === newMajorId);
+      if (!newMajor) return false;
+      setMode('review');
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
       setMajorId(newMajorId);
@@ -194,6 +221,16 @@ export const useStudyPlan = () => {
     },
     [majors],
   );
+
+  const exitReviewMode = useCallback(() => {
+    const personalMajor = majors.find((m) => m.id === personalMajorId) ?? defaultMajor;
+    if (!personalMajor) return;
+    const personalPlan = loadPlanForMajor(personalMajor);
+    setMode('personal');
+    setSemesters(personalPlan.semesters);
+    setWaivedModules(personalPlan.waivedModules);
+    setMajorId(personalMajor.id);
+  }, [majors, personalMajorId, defaultMajor]);
 
   const requirements = major ? computeRequirements(major, semesters, waivedModules) : [];
   const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
@@ -214,6 +251,9 @@ export const useStudyPlan = () => {
     deleteWaivedModule,
     resetPlan,
     importSharedPlan,
+    openReviewPlan,
+    exitReviewMode,
+    isReviewMode: mode === 'review',
     getCompletedCodes: (year: number, sem: number) => getCompletedCodesUpTo(semesters, year, sem),
   };
 };

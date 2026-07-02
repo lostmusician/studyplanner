@@ -1,4 +1,4 @@
-import type { StudentSemester, WaivedModule } from './types';
+import type { Module, PlacedModule, StudentSemester, WaivedModule } from './types';
 
 /** Personal identity carried in a share link. */
 export interface ShareProfile {
@@ -22,9 +22,23 @@ export interface SharePayload {
 }
 
 const CURRENT_VERSION = 1 as const;
+const COMPACT_VERSION = 2 as const;
 
 /** URL hash key under which the encoded payload lives, e.g. `#import=<data>`. */
 export const IMPORT_HASH_KEY = 'import';
+export const SHORT_IMPORT_HASH_KEY = 'i';
+
+type ModuleCatalog = Record<string, Module>;
+type CompactModule = [code: string, categoryId: string] | [code: string, categoryId: string, name: string, mcs: number];
+type CompactSemester = [year: number, sem: number, modules: CompactModule[]];
+
+interface CompactSharePayload {
+  v: typeof COMPACT_VERSION;
+  p: [name: string, matricNumber: string, year: string];
+  m: string;
+  s: CompactSemester[];
+  w: CompactModule[];
+}
 
 const toBase64Url = (json: string): string => {
   const bytes = new TextEncoder().encode(json);
@@ -36,11 +50,53 @@ const toBase64Url = (json: string): string => {
 };
 
 const fromBase64Url = (encoded: string): string => {
-  const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(encoded.length / 4) * 4, '=');
   const binary = atob(base64);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 };
+
+const isCatalogEquivalent = (module: PlacedModule, catalog?: ModuleCatalog): boolean => {
+  const catalogModule = catalog?.[module.code];
+  return Boolean(catalogModule && catalogModule.name === module.name && catalogModule.mcs === module.mcs);
+};
+
+const compactModule = (module: PlacedModule, catalog?: ModuleCatalog): CompactModule =>
+  isCatalogEquivalent(module, catalog)
+    ? [module.code, module.categoryId]
+    : [module.code, module.categoryId, module.name, module.mcs];
+
+const expandModule = (module: unknown): PlacedModule | null => {
+  if (!Array.isArray(module)) return null;
+  const [code, categoryId, name, mcs] = module;
+  const normalizedCode = String(code ?? '').trim().toUpperCase();
+  if (!normalizedCode) return null;
+  return {
+    code: normalizedCode,
+    categoryId: String(categoryId ?? ''),
+    name: typeof name === 'string' && name.trim() ? name : normalizedCode,
+    mcs: Number.isFinite(Number(mcs)) ? Number(mcs) : 0,
+  };
+};
+
+const expandModules = (modules: unknown): PlacedModule[] =>
+  Array.isArray(modules)
+    ? modules.map(expandModule).filter((module): module is PlacedModule => Boolean(module))
+    : [];
+
+const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalog): CompactSharePayload => ({
+  v: COMPACT_VERSION,
+  p: [payload.profile.name, payload.profile.matricNumber, payload.profile.year],
+  m: payload.plan.majorId,
+  s: payload.plan.semesters
+    .map((semester): CompactSemester => [
+      semester.year,
+      semester.sem,
+      semester.modules.map((module) => compactModule(module, catalog)),
+    ])
+    .filter((semester) => semester[2].length > 0),
+  w: payload.plan.waivedModules.map((module) => compactModule(module, catalog)),
+});
 
 /** Encodes a payload into a base64url string suitable for a URL hash. */
 export const encodePlan = (payload: Omit<SharePayload, 'v'>): string =>
@@ -72,15 +128,53 @@ export const decodePlan = (encoded: string): SharePayload | null => {
   }
 };
 
+/** Encodes a compact payload into a shorter URL-safe share string. */
+export const encodeCompactPlan = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalog): string =>
+  toBase64Url(JSON.stringify(compactPayload(payload, catalog)));
+
+/** Decodes the compact v2 share string. Returns null on parse, shape, or version failure. */
+export const decodeCompactPlan = (encoded: string): SharePayload | null => {
+  try {
+    const parsed = JSON.parse(fromBase64Url(encoded)) as Partial<CompactSharePayload>;
+    if (parsed.v !== COMPACT_VERSION) return null;
+    if (!Array.isArray(parsed.p) || typeof parsed.m !== 'string' || !Array.isArray(parsed.s)) return null;
+
+    return {
+      v: CURRENT_VERSION,
+      profile: {
+        name: String(parsed.p[0] ?? ''),
+        matricNumber: String(parsed.p[1] ?? ''),
+        year: String(parsed.p[2] ?? ''),
+      },
+      plan: {
+        majorId: parsed.m,
+        semesters: parsed.s
+          .filter((semester): semester is CompactSemester => Array.isArray(semester) && semester.length >= 3)
+          .map(([year, sem, modules]) => ({
+            year: Number(year),
+            sem: Number(sem),
+            modules: expandModules(modules),
+          }))
+          .filter((semester) => Number.isFinite(semester.year) && Number.isFinite(semester.sem)),
+        waivedModules: expandModules(parsed.w),
+      },
+    };
+  } catch {
+    return null;
+  }
+};
+
 /** Builds a full share link for the current page from a payload. */
-export const buildShareLink = (payload: Omit<SharePayload, 'v'>): string => {
+export const buildShareLink = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalog): string => {
   const { origin, pathname } = window.location;
-  return `${origin}${pathname}#${IMPORT_HASH_KEY}=${encodePlan(payload)}`;
+  return `${origin}${pathname}#${SHORT_IMPORT_HASH_KEY}=${encodeCompactPlan(payload, catalog)}`;
 };
 
 /** Reads and decodes an import payload from a URL hash string (e.g. location.hash). */
 export const readImportFromHash = (hash: string): SharePayload | null => {
-  const match = hash.replace(/^#/, '').match(new RegExp(`(?:^|&)${IMPORT_HASH_KEY}=([^&]+)`));
-  if (!match) return null;
-  return decodePlan(match[1]);
+  const normalizedHash = hash.replace(/^#/, '');
+  const shortMatch = normalizedHash.match(new RegExp(`(?:^|&)${SHORT_IMPORT_HASH_KEY}=([^&]+)`));
+  if (shortMatch) return decodeCompactPlan(shortMatch[1]);
+  const match = normalizedHash.match(new RegExp(`(?:^|&)${IMPORT_HASH_KEY}=([^&]+)`));
+  return match ? decodePlan(match[1]) : null;
 };

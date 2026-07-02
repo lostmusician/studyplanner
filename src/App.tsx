@@ -3,7 +3,7 @@ import { useStudyPlan } from './hooks/useStudyPlan';
 import { useProfile } from './hooks/useProfile';
 import { StudyPlan } from './components/StudyPlan';
 import { ImportModal } from './components/ImportModal';
-import { readImportFromHash, IMPORT_HASH_KEY, type SharePayload } from '@shared/share';
+import { readImportFromHash, IMPORT_HASH_KEY, SHORT_IMPORT_HASH_KEY, type SharePayload } from '@shared/share';
 
 const clearImportHash = () => {
   window.history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -16,7 +16,9 @@ const App = () => {
   const [importError, setImportError] = useState(false);
 
   useEffect(() => {
-    const hasImport = window.location.hash.includes(`${IMPORT_HASH_KEY}=`);
+    const hasImport =
+      window.location.hash.includes(`${IMPORT_HASH_KEY}=`) ||
+      window.location.hash.includes(`${SHORT_IMPORT_HASH_KEY}=`);
     if (!hasImport) return;
     const payload = readImportFromHash(window.location.hash);
     if (payload) setPendingImport(payload);
