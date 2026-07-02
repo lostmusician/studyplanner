@@ -22,6 +22,20 @@ export default {
         '3xl': '24px',
         '4xl': '32px',
       },
+      keyframes: {
+        'dropdown-in': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'dropdown-out': {
+          '0%': { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '0', transform: 'scale(0.95)' },
+        },
+      },
+      animation: {
+        'dropdown-in': 'dropdown-in 120ms ease-out',
+        'dropdown-out': 'dropdown-out 100ms ease-in forwards',
+      },
     },
   },
   plugins: [],

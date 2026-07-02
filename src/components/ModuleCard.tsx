@@ -6,6 +6,7 @@ import { XIcon, EditIcon, LockIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
 import { AppDialog } from './AppDialog';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { Dropdown } from './Dropdown';
 import { isModuleLocked } from '../lib/studyPlan';
 
 interface Props {
@@ -231,16 +232,14 @@ export const ModuleCard = ({
             className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
             aria-label={`MCs for ${module.code}`}
           />
-          <select
+          <Dropdown
+            variant="field"
+            ariaLabel={`Requirement bucket for ${module.code}`}
             value={editCategoryId}
-            onChange={(e) => setEditCategoryId(e.target.value)}
+            onChange={setEditCategoryId}
             className="w-full cursor-pointer rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
-            aria-label={`Requirement bucket for ${module.code}`}
-          >
-            {major.categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.label}</option>
-            ))}
-          </select>
+            options={major.categories.map((cat) => ({ value: cat.id, label: cat.label }))}
+          />
           {editError && (
             <p className="text-[10px] font-medium leading-snug text-red-700">{editError}</p>
           )}
