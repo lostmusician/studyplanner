@@ -9,10 +9,20 @@ const errors = [];
 const seenIds = new Set();
 
 for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
-  const major = JSON.parse(readFileSync(join(dir, file), 'utf8'));
-  const fail = (msg) => errors.push(`FAIL ${major.id ?? file}: ${msg}`);
+  let major;
+  try {
+    major = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+  } catch (err) {
+    console.error(`FAIL ${file}: invalid JSON (${err.message})`);
+    errors.push(`FAIL ${file}: invalid JSON (${err.message})`);
+    continue;
+  }
+
+  const idKey = major.id ?? file;
+  const fail = (msg) => errors.push(`FAIL ${idKey}: ${msg}`);
 
   if (!major.id) fail('missing id');
+  if ((major.categories ?? []).length === 0) fail('missing or empty categories');
   if (seenIds.has(major.id)) fail(`duplicate id "${major.id}"`);
   seenIds.add(major.id);
 
@@ -49,8 +59,8 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
     if (mod.code !== code) fail(`catalog key "${code}" !== module.code "${mod.code}"`);
   }
 
-  if (errors.every((e) => !e.startsWith(`FAIL ${major.id}:`))) {
-    console.log(`OK ${major.id} (${major.categories.length} categories, ${major.totalMcTarget} MC)`);
+  if (errors.every((e) => !e.startsWith(`FAIL ${idKey}:`))) {
+    console.log(`OK ${idKey} (${(major.categories ?? []).length} categories, ${major.totalMcTarget} MC)`);
   }
 }
 
