@@ -6,7 +6,6 @@ import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
 import { BatchBadge } from './BatchBadge';
 import { AppDialog } from './AppDialog';
-import { Dropdown } from './Dropdown';
 
 interface Props {
   majors: Major[];
@@ -348,13 +347,33 @@ const MajorHeaderSelect = ({
   onChange: (id: string) => void;
 }) => (
   <div className="flex flex-col items-start gap-0.5">
-    <Dropdown
-      variant="header"
-      ariaLabel="Major"
-      value={majorId}
-      onChange={onChange}
-      options={majors.map((item) => ({ value: item.id, label: item.label }))}
-    />
+    <label className="relative block leading-tight">
+      <span className="pointer-events-none flex items-center gap-1 pr-5 text-sm font-medium leading-tight text-ink">
+        {major.label}
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-3 w-3 text-ink/70"
+          aria-hidden="true"
+        >
+          <path d="m4 6 4 4 4-4" />
+        </svg>
+      </span>
+      <select
+        value={majorId}
+        onChange={(event) => onChange(event.target.value)}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        aria-label="Major"
+      >
+        {majors.map((item) => (
+          <option key={item.id} value={item.id}>{item.label}</option>
+        ))}
+      </select>
+    </label>
     {major.specialisation && (
       <span className="text-xs leading-tight text-muted">{major.specialisation}</span>
     )}
@@ -423,14 +442,15 @@ const SettingsPage = ({
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-[10px] uppercase tracking-wide text-muted">Year</span>
-              <Dropdown
-                variant="field"
-                ariaLabel="Year"
+              <select
                 value={studentYear}
-                onChange={setStudentYear}
+                onChange={(event) => setStudentYear(event.target.value)}
                 className={field}
-                options={[1, 2, 3, 4].map((year) => ({ value: `Year ${year}`, label: `Year ${year}` }))}
-              />
+              >
+                {[1, 2, 3, 4].map((year) => (
+                  <option key={year} value={`Year ${year}`}>Year {year}</option>
+                ))}
+              </select>
             </label>
           </div>
         </section>
@@ -439,14 +459,15 @@ const SettingsPage = ({
           <h2 className="mb-4 text-sm font-semibold text-ink">Programme</h2>
           <label className="flex flex-col gap-1">
             <span className="text-[10px] uppercase tracking-wide text-muted">Major</span>
-            <Dropdown
-              variant="field"
-              ariaLabel="Major"
+            <select
               value={majorId}
-              onChange={onSwitchMajor}
+              onChange={(event) => onSwitchMajor(event.target.value)}
               className={field}
-              options={majors.map((item) => ({ value: item.id, label: item.label }))}
-            />
+            >
+              {majors.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
           </label>
           {major && (
             <div className="mt-2">

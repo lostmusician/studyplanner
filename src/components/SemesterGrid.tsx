@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { Dropdown } from './Dropdown';
 import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import { searchNusModsModules, fetchNusModsModuleDetail } from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
@@ -460,17 +459,16 @@ const SemesterAddModuleForm = ({
         />
       </div>
 
-      <Dropdown
-        variant="field"
-        ariaLabel="Category"
+      <select
         value={form.categoryId}
-        onChange={(value) => setForm((current) => ({ ...current, categoryId: value }))}
+        onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}
         className="mt-2 w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
-        options={[
-          { value: AUTO_CATEGORY, label: `Auto → ${inferredLabel}` },
-          ...major.categories.map((cat) => ({ value: cat.id, label: cat.label })),
-        ]}
-      />
+      >
+        <option value={AUTO_CATEGORY}>{`Auto → ${inferredLabel}`}</option>
+        {major.categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>{cat.label}</option>
+        ))}
+      </select>
 
       <button
         type="submit"
