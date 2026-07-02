@@ -66,7 +66,7 @@ const TotalStatCard = ({
 
   return (
     <div
-      className="flex min-w-[160px] flex-col gap-1.5 rounded-3xl bg-white px-5 py-4 text-left shadow-soft"
+      className="flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl bg-white px-4 py-3 text-left shadow-soft sm:grow-0 sm:basis-auto sm:min-w-[160px] sm:px-5 sm:py-4"
       style={{ border: '1px solid rgba(20,20,19,0.08)' }}
     >
       <span className="text-xs text-ink/60 font-medium tracking-wide uppercase">Total MCs</span>
@@ -102,7 +102,8 @@ const StatCard = ({
   onClick?: () => void;
 }) => {
   const pct = target ? Math.min(100, (value / target) * 100) : null;
-  const className = 'flex min-w-[140px] flex-col gap-1.5 rounded-3xl px-5 py-4 text-left transition';
+  const className =
+    'flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl px-4 py-3 text-left transition sm:grow-0 sm:basis-auto sm:min-w-[140px] sm:px-5 sm:py-4';
   const style = {
     backgroundColor: color,
     boxShadow: isOpen ? `0 0 0 2px ${color}, 0 0 0 5px rgba(20,20,19,0.16)` : 'none',
