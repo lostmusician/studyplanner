@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useDraggable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { Major, PlacedModule } from '@shared/types';
 import { fetchNusModsModuleDetail, assessPrerequisiteConflict } from '@shared/nusmods';
-import { XIcon, EditIcon } from './Icons';
+import { XIcon, EditIcon, LockIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
+import { AppDialog } from './AppDialog';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { isModuleLocked } from '../lib/studyPlan';
 
 interface Props {
   module: PlacedModule;
@@ -12,7 +14,7 @@ interface Props {
   completedCodes: string[];
   fromYear: number;
   fromSem: number;
-  onDelete: (code: string) => void;
+  onDelete: (code: string, year?: number, sem?: number) => void;
   onEditModule?: (
     oldCode: string,
     updates: { code: string; name: string; mcs: number; categoryId: string },
@@ -34,9 +36,14 @@ export const ModuleCard = ({
   moveTargets = [],
   onMove,
 }: Props) => {
-  const { setNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
+  const { setNodeRef: setDraggableNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
     id: module.code,
     data: { module, fromYear, fromSem },
+    disabled: isOverlay || isModuleLocked(major, module.code),
+  });
+  const { setNodeRef: setDroppableNodeRef, isOver: isDropTarget } = useDroppable({
+    id: `module-${fromYear}-${fromSem}-${module.code}`,
+    data: { type: 'module-card', year: fromYear, sem: fromSem, moduleCode: module.code },
     disabled: isOverlay,
   });
 
@@ -54,6 +61,8 @@ export const ModuleCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [showMoveMenu, setShowMoveMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const isLocked = isModuleLocked(major, module.code);
 
   useEffect(() => {
     if (isOverlay) return;
@@ -80,6 +89,19 @@ export const ModuleCard = ({
     setEditCategoryId(module.categoryId);
     setEditError(null);
     setEditing(true);
+  };
+
+  const handleDeleteClick = () => {
+    if (isLocked) {
+      setShowDeleteConfirm(true);
+      return;
+    }
+    onDelete(module.code, fromYear, fromSem);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteConfirm(false);
+    onDelete(module.code, fromYear, fromSem);
   };
 
   const handleSaveEdit = () => {
@@ -110,11 +132,13 @@ export const ModuleCard = ({
 
   // On touch there is no hover, so reveal the card controls unconditionally.
   const controlVisibility = isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100';
+  const showInsertBar = isDropTarget && !isDragging && !isOverlay;
 
   return (
     <div
       ref={(node) => {
-        setNodeRef(node);
+        setDraggableNodeRef(node);
+        setDroppableNodeRef(node);
         (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       style={style}
@@ -127,11 +151,15 @@ export const ModuleCard = ({
       }}
       onMouseLeave={() => setShowTooltip(false)}
     >
+      {showInsertBar && (
+        <div className="pointer-events-none absolute -top-1.5 left-2 right-2 z-40 h-1 rounded-full bg-ink shadow-soft" />
+      )}
+
       {/* Drag handle area */}
       <div
         {...listeners}
         {...attributes}
-        className="cursor-grab active:cursor-grabbing"
+        className={isLocked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}
         style={{ userSelect: 'none' }}
       >
         <div className="flex items-start justify-between gap-1">
@@ -151,7 +179,12 @@ export const ModuleCard = ({
             {category && (
               <span className="truncate max-w-[72px] text-[10px] text-ink/50">{category.label}</span>
             )}
-            {!isOverlay && onEditModule && (
+            {isLocked && (
+              <span className="flex-shrink-0 text-ink/40" title="Compulsory NEP module" aria-label="Compulsory NEP module">
+                <LockIcon className="h-3 w-3" />
+              </span>
+            )}
+            {!isOverlay && !isLocked && onEditModule && (
               <button
                 className={`flex-shrink-0 text-ink/40 ${controlVisibility} transition-opacity hover:text-ink`}
                 onClick={(e) => { e.stopPropagation(); openEditor(); }}
@@ -167,7 +200,7 @@ export const ModuleCard = ({
       </div>
 
       {/* Re-bucket category — shown only while editing, outside the drag handle */}
-      {!isOverlay && onEditModule && editing && (
+      {!isOverlay && !isLocked && onEditModule && editing && (
         <div
           className="mt-1.5 flex flex-col gap-1"
           onPointerDown={(event) => event.stopPropagation()}
@@ -234,12 +267,26 @@ export const ModuleCard = ({
       {!isOverlay && (
         <button
           className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity`}
-          onClick={(e) => { e.stopPropagation(); onDelete(module.code); }}
+          onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
         >
           <XIcon className="h-3 w-3" />
         </button>
+      )}
+
+      {showDeleteConfirm && (
+        <AppDialog
+          title="NEP is compulsory"
+          labelledBy={`delete-${module.code}-title`}
+          onClose={() => setShowDeleteConfirm(false)}
+          actions={[
+            { label: 'Keep NEP', onClick: () => setShowDeleteConfirm(false), variant: 'primary' },
+            { label: 'Delete anyway', onClick: handleConfirmDelete, variant: 'danger' },
+          ]}
+        >
+          {module.code} is part of the NUS College Impact Experience Project sequence. Delete this planned slot anyway?
+        </AppDialog>
       )}
 
       {/* Details button */}
@@ -288,7 +335,7 @@ export const ModuleCard = ({
       )}
 
       {/* Move menu — touch-friendly alternative to dragging */}
-      {!isOverlay && isMobile && onMove && moveTargets.length > 0 && (
+      {!isOverlay && !isLocked && isMobile && onMove && moveTargets.length > 0 && (
         <div className="relative mt-2">
           <button
             type="button"

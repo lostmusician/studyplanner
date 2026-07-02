@@ -10,6 +10,7 @@ import {
   computeStats,
   getCompletedCodesUpTo,
   autoCategoryId,
+  isModuleLocked,
 } from '../lib/studyPlan';
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
@@ -126,13 +127,15 @@ export const useStudyPlan = () => {
     [majors],
   );
 
-  const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule) => {
-    setSemesters((prev) => upsertModule(prev, year, sem, module));
+  const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => {
+    if (major && isModuleLocked(major, module.code)) return;
+    setSemesters((prev) => upsertModule(prev, year, sem, module, insertBeforeCode));
     setWaivedModules((prev) => prev.filter((m) => m.code !== module.code));
-  }, []);
+  }, [major]);
 
-  const deleteModule = useCallback((moduleCode: string) => {
-    setSemesters((prev) => removeModule(prev, moduleCode));
+  const deleteModule = useCallback((moduleCode: string, year?: number, sem?: number) => {
+    const target = year && sem ? { year, sem } : undefined;
+    setSemesters((prev) => removeModule(prev, moduleCode, target));
   }, []);
 
   const updateModule = useCallback(
@@ -142,6 +145,9 @@ export const useStudyPlan = () => {
     ): { ok: true } | { ok: false; error: string } => {
       const code = updates.code.trim().toUpperCase();
       if (!code) return { ok: false, error: 'Course code is required.' };
+      if (major && isModuleLocked(major, oldCode)) {
+        return { ok: false, error: 'This NEP module is compulsory.' };
+      }
 
       const existing = semesters.flatMap((s) => s.modules).find((m) => m.code === oldCode);
       const name = updates.name.trim() || code;
@@ -157,13 +163,14 @@ export const useStudyPlan = () => {
       setSemesters((prev) => renameModule(prev, oldCode, { code, name, mcs, categoryId: updates.categoryId }));
       return { ok: true };
     },
-    [semesters, waivedModules],
+    [major, semesters, waivedModules],
   );
 
   const addWaivedModule = useCallback((module: WaivedModule) => {
+    if (major && isModuleLocked(major, module.code)) return;
     setWaivedModules((prev) => [...prev.filter((m) => m.code !== module.code), module]);
     setSemesters((prev) => removeModule(prev, module.code));
-  }, []);
+  }, [major]);
 
   const deleteWaivedModule = useCallback((moduleCode: string) => {
     setWaivedModules((prev) => prev.filter((m) => m.code !== moduleCode));

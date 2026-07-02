@@ -51,7 +51,8 @@
     "IS1108": { "code": "IS1108", "name": "Digital and AI Ethics", "mcs": 4 },
     "NTW2035": { "code": "NTW2035", "name": "Art and the Attention Economy", "mcs": 4 },
     "GEA1000N": { "code": "GEA1000N", "name": "Quantitative Reasoning with Data", "mcs": 4 },
-    "MA1301": { "code": "MA1301", "name": "Introductory Mathematics", "mcs": 4 }
+    "MA1301": { "code": "MA1301", "name": "Introductory Mathematics", "mcs": 4 },
+    "NEP2001A": { "code": "NEP2001A", "name": "Impact Experience Project", "mcs": 2 }
   },
   "defaultPlan": [
     { "year": 1, "sem": 1, "moduleCode": "CS1101S", "categoryId": "soc-common" },
@@ -72,6 +73,10 @@
     { "year": 3, "sem": 1, "moduleCode": "CS3264", "categoryId": "ai-foundation" },
     { "year": 3, "sem": 1, "moduleCode": "IS1108", "categoryId": "soc-common" },
     { "year": 3, "sem": 2, "moduleCode": "CS3268", "categoryId": "ai-foundation" },
-    { "year": 3, "sem": 2, "moduleCode": "CS4243", "categoryId": "ai-foundation" }
+    { "year": 3, "sem": 2, "moduleCode": "CS4243", "categoryId": "ai-foundation" },
+    { "year": 1, "sem": 2, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true },
+    { "year": 2, "sem": 1, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true },
+    { "year": 2, "sem": 2, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true },
+    { "year": 3, "sem": 1, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true }
   ]
 }

@@ -5,6 +5,7 @@ import { buildShareLink } from '@shared/share';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
 import { BatchBadge } from './BatchBadge';
+import { AppDialog } from './AppDialog';
 
 interface Props {
   majors: Major[];
@@ -15,8 +16,8 @@ interface Props {
   stats: Stats;
   requirements: RequirementStatus[];
   switchMajor: (id: string) => void;
-  addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
-  deleteModule: (code: string) => void;
+  addOrMoveModule: (year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => void;
+  deleteModule: (code: string, year?: number, sem?: number) => void;
   updateModule: (
     oldCode: string,
     updates: { code: string; name: string; mcs: number; categoryId: string },
@@ -58,6 +59,9 @@ export const StudyPlan = ({
 }: Props) => {
   const [view, setView] = useState<'planner' | 'settings'>('planner');
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
+  const [pendingMajorId, setPendingMajorId] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleShare = async () => {
     const link = buildShareLink({
@@ -67,23 +71,44 @@ export const StudyPlan = ({
     try {
       await navigator.clipboard.writeText(link);
       setShareState('copied');
+      window.setTimeout(() => setShareState('idle'), 2000);
     } catch {
       // Clipboard can be blocked (e.g. insecure context); surface the link so it's still usable.
-      window.prompt('Copy this share link:', link);
+      setShareDialogLink(link);
       setShareState('error');
     }
-    window.setTimeout(() => setShareState('idle'), 2000);
+  };
+
+  const handleCopyShareDialogLink = async () => {
+    if (!shareDialogLink) return;
+    try {
+      await navigator.clipboard.writeText(shareDialogLink);
+      setShareDialogLink(null);
+      setShareState('copied');
+      window.setTimeout(() => setShareState('idle'), 2000);
+    } catch {
+      setShareState('error');
+    }
   };
 
   const handleSwitchMajor = (id: string) => {
     if (id === majorId) return;
-    if (confirm('Switching major will reset your plan. Continue?')) {
-      switchMajor(id);
-    }
+    setPendingMajorId(id);
+  };
+
+  const confirmSwitchMajor = () => {
+    if (!pendingMajorId) return;
+    switchMajor(pendingMajorId);
+    setPendingMajorId(null);
   };
 
   const handleResetPlan = () => {
-    if (confirm('Reset plan to default?')) resetPlan();
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetPlan = () => {
+    resetPlan();
+    setShowResetConfirm(false);
   };
 
   return (
@@ -168,6 +193,51 @@ export const StudyPlan = ({
             </div>
           </div>
         </>
+      )}
+
+      {pendingMajorId && (
+        <AppDialog
+          title="Switch major?"
+          onClose={() => setPendingMajorId(null)}
+          actions={[
+            { label: 'Stay here', onClick: () => setPendingMajorId(null), variant: 'primary' },
+            { label: 'Switch major', onClick: confirmSwitchMajor, variant: 'danger' },
+          ]}
+        >
+          Switching major will reset your plan.
+        </AppDialog>
+      )}
+
+      {showResetConfirm && (
+        <AppDialog
+          title="Reset plan?"
+          onClose={() => setShowResetConfirm(false)}
+          actions={[
+            { label: 'Keep plan', onClick: () => setShowResetConfirm(false), variant: 'primary' },
+            { label: 'Reset default', onClick: confirmResetPlan, variant: 'danger' },
+          ]}
+        >
+          This will restore the default plan for your current major.
+        </AppDialog>
+      )}
+
+      {shareDialogLink && (
+        <AppDialog
+          title="Copy share link"
+          onClose={() => setShareDialogLink(null)}
+          actions={[
+            { label: 'Close', onClick: () => setShareDialogLink(null), variant: 'secondary' },
+            { label: 'Copy link', onClick: handleCopyShareDialogLink, variant: 'primary' },
+          ]}
+        >
+          <input
+            readOnly
+            value={shareDialogLink}
+            onFocus={(event) => event.currentTarget.select()}
+            className="mt-1 w-full rounded-2xl border border-ink/10 bg-paper px-3 py-2 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+            aria-label="Share link"
+          />
+        </AppDialog>
       )}
     </div>
   );

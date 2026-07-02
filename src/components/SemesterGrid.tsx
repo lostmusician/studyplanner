@@ -8,6 +8,7 @@ import type { NusModsModuleSummary } from '@shared/nusmods';
 import { autoCategoryId, semesterLabel } from '../lib/studyPlan';
 import { ModuleCard } from './ModuleCard';
 import { WaivedCourses } from './WaivedCourses';
+import { AppDialog } from './AppDialog';
 import { PlusIcon, XIcon } from './Icons';
 
 const UNDERLOAD_MCS = 16;
@@ -18,8 +19,8 @@ interface Props {
   semesters: StudentSemester[];
   major: Major;
   waivedModules: WaivedModule[];
-  addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
-  deleteModule: (code: string) => void;
+  addOrMoveModule: (year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => void;
+  deleteModule: (code: string, year?: number, sem?: number) => void;
   updateModule: (
     oldCode: string,
     updates: { code: string; name: string; mcs: number; categoryId: string },
@@ -41,6 +42,7 @@ export const SemesterGrid = ({
   getCompletedCodes,
 }: Props) => {
   const [activeDrag, setActiveDrag] = useState<PlacedModule | null>(null);
+  const [moveError, setMoveError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const sensors = useSensors(
@@ -49,14 +51,14 @@ export const SemesterGrid = ({
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
-  const moveModule = (module: PlacedModule, year: number, sem: number) => {
+  const moveModule = (module: PlacedModule, year: number, sem: number, insertBeforeCode?: string) => {
     const target = semesters.find((s) => s.year === year && s.sem === sem);
     if (!target) return;
     if (!canPlaceModule(target, module)) {
-      alert('Y1S1 cannot exceed 26 MC.');
+      setMoveError('Y1S1 cannot exceed 26 MC.');
       return;
     }
-    addOrMoveModule(year, sem, module);
+    addOrMoveModule(year, sem, module, insertBeforeCode);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -69,6 +71,12 @@ export const SemesterGrid = ({
     const { active, over } = event;
     if (!over) return;
     const module = active.data.current?.module as PlacedModule;
+    const dropData = over.data.current as ModuleDropData | undefined;
+    if (dropData?.type === 'module-card') {
+      if (dropData.moduleCode === module.code) return;
+      moveModule(module, dropData.year, dropData.sem, dropData.moduleCode);
+      return;
+    }
     const [year, sem] = (over.id as string).split('-').map(Number);
     moveModule(module, year, sem);
   };
@@ -166,6 +174,16 @@ export const SemesterGrid = ({
         </div>
       )}
 
+      {moveError && (
+        <AppDialog
+          title="Move unavailable"
+          onClose={() => setMoveError(null)}
+          actions={[{ label: 'OK', onClick: () => setMoveError(null), variant: 'primary' }]}
+        >
+          {moveError}
+        </AppDialog>
+      )}
+
       <DragOverlay dropAnimation={null}>
         {activeDrag && (
           <ModuleCard
@@ -183,11 +201,19 @@ export const SemesterGrid = ({
   );
 };
 
+
+interface ModuleDropData {
+  type: 'module-card';
+  year: number;
+  sem: number;
+  moduleCode: string;
+}
+
 interface ColumnProps {
   semester: StudentSemester;
   major: Major;
-  addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
-  deleteModule: (code: string) => void;
+  addOrMoveModule: (year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => void;
+  deleteModule: (code: string, year?: number, sem?: number) => void;
   updateModule: (
     oldCode: string,
     updates: { code: string; name: string; mcs: number; categoryId: string },
@@ -195,7 +221,7 @@ interface ColumnProps {
   completedCodes: string[];
   isMobile: boolean;
   moveTargets: { year: number; sem: number; label: string }[];
-  onMoveModule: (module: PlacedModule, year: number, sem: number) => void;
+  onMoveModule: (module: PlacedModule, year: number, sem: number, insertBeforeCode?: string) => void;
   fullWidth?: boolean;
 }
 
@@ -211,13 +237,13 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col flex-shrink-0 rounded-3xl p-3 transition-colors"
+      className="relative flex flex-col flex-shrink-0 rounded-3xl p-3 transition-colors"
       style={{
         minWidth: fullWidth ? undefined : '172px',
         width: fullWidth ? '100%' : '172px',
         minHeight: '280px',
         backgroundColor: isOver ? 'rgb(210,203,190)' : 'rgb(225,218,205)',
-        outline: isOver ? '2px dashed rgb(108,107,104)' : 'none',
+        outline: 'none',
         outlineOffset: '-2px',
       }}
     >
@@ -275,6 +301,9 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
             onMove={(year, sem) => onMoveModule(module, year, sem)}
           />
         ))}
+        {isOver && (
+          <div className="pointer-events-none mx-2 my-1 h-1 rounded-full bg-ink shadow-soft" />
+        )}
       </div>
     </div>
   );
