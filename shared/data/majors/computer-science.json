@@ -11,10 +11,16 @@
     { "id": "unrestricted-electives", "label": "Unrestricted Electives", "color": "#c3bace" }
   ],
   "requirements": [
-    { "name": "Writing: NTW2035", "fulfilledBy": ["NTW2035"] },
-    { "name": "GEA: Data Literacy (GEA1000N)", "fulfilledBy": ["GEA1000N"] },
-    { "name": "GEI: Digital Literacy (CS1101S)", "fulfilledBy": ["CS1101S"] },
-    { "name": "Computing Ethics (IS1108)", "fulfilledBy": ["IS1108"] }
+    { "name": "GE: Digital Literacy (CS1101S)", "fulfilledBy": ["CS1101S"] },
+    { "name": "Computing Ethics (IS1108)", "fulfilledBy": ["IS1108"] },
+    { "name": "Writing (Thinking with Writing / ES2660)", "fulfilledBy": ["NTW*", "ES2660"] },
+    { "name": "GE: Data Literacy (Reasoning with Data / GEA1000)", "fulfilledBy": ["GEA1000*"] },
+    { "name": "GE: Singapore Studies (Understanding the Social World / GES)", "fulfilledBy": ["NSW*", "GES*"] },
+    { "name": "GE: Critique & Expression (Global Narratives)", "fulfilledBy": ["NGN*"] },
+    { "name": "SOC Cross-Disciplinary Course (Science and Society)", "fulfilledBy": ["NSS*"] },
+    { "name": "Interdisciplinary Courses x2 (Making Connections)", "fulfilledBy": ["NHS*", "NFB*", "NST*", "NFC*", "NHT*"], "count": 2 },
+    { "name": "GE: Cultures & Connections (GEC, or tagged Making Connections course)", "fulfilledBy": ["GEC*"] },
+    { "name": "GE: Communities & Engagement (Impact Experience Project)", "fulfilledBy": ["NEP*", "GEN*"] }
   ],
   "moduleCatalog": {
     "CS1101S": { "code": "CS1101S", "name": "Programming Methodology", "mcs": 4 },
@@ -33,7 +39,7 @@
     "MA1522": { "code": "MA1522", "name": "Linear Algebra for Computing", "mcs": 4 },
     "NTW2035": { "code": "NTW2035", "name": "Writing and Critical Thinking in the Sciences", "mcs": 4 },
     "GEA1000N": { "code": "GEA1000N", "name": "Quantitative Reasoning with Data", "mcs": 4 },
-    "IS1108": { "code": "IS1108", "name": "Ethical Reasoning in Computing", "mcs": 4 }
+    "IS1108": { "code": "IS1108", "name": "Digital and AI Ethics", "mcs": 4 }
   },
   "defaultPlan": [
     { "year": 1, "sem": 1, "moduleCode": "CS1101S", "categoryId": "primary-major" },

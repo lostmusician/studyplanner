@@ -35,15 +35,20 @@ export const upsertModule = (
 export const removeModule = (semesters: StudentSemester[], moduleCode: string): StudentSemester[] =>
   semesters.map((s) => ({ ...s, modules: s.modules.filter((m) => m.code !== moduleCode) }));
 
+const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
+  fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
+
 export const computeRequirements = (
   major: Major,
   semesters: StudentSemester[],
 ): Array<{ name: string; fulfilled: boolean }> => {
-  const allCodes = new Set(semesters.flatMap((s) => s.modules.map((m) => m.code)));
-  return major.requirements.map((req) => ({
-    name: req.name,
-    fulfilled: req.fulfilledBy.some((code) => allCodes.has(code)),
-  }));
+  const allCodes = Array.from(new Set(semesters.flatMap((s) => s.modules.map((m) => m.code))));
+  return major.requirements.map((req) => {
+    const matchCount = allCodes.filter((code) =>
+      req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)),
+    ).length;
+    return { name: req.name, fulfilled: matchCount >= (req.count ?? 1) };
+  });
 };
 
 export interface Stats {

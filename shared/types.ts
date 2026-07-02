@@ -15,7 +15,11 @@ export interface MajorCategory {
 
 export interface RequirementRule {
   name: string;
+  /** Module codes that satisfy this requirement. An entry ending in "*" matches by prefix
+   * (e.g. "NTW*" matches any NTW-coded section); other entries match exactly. */
   fulfilledBy: string[];
+  /** Number of distinct matching modules needed to satisfy this requirement. Defaults to 1. */
+  count?: number;
 }
 
 export interface DefaultPlanEntry {
