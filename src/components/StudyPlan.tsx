@@ -66,13 +66,16 @@ export const StudyPlan = ({
   const [view, setView] = useState<'planner' | 'settings'>('planner');
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'error'>('idle');
   const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
+  const [showShareNameDialog, setShowShareNameDialog] = useState(false);
+  const [shareNameDraft, setShareNameDraft] = useState('');
+  const [shareNameError, setShareNameError] = useState(false);
   const [pendingMajorId, setPendingMajorId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const reviewLabel = reviewOwnerName?.trim() || 'Shared plan';
 
-  const handleShare = async () => {
+  const copyShareLink = async (name: string) => {
     const link = buildShareLink({
-      profile: { name: studentName, matricNumber, year: studentYear },
+      profile: { name, matricNumber, year: studentYear },
       plan: { majorId, semesters, waivedModules },
     }, major.moduleCatalog);
     try {
@@ -84,6 +87,29 @@ export const StudyPlan = ({
       setShareDialogLink(link);
       setShareState('error');
     }
+  };
+
+  const handleShare = async () => {
+    if (needsShareName(studentName)) {
+      setShareNameDraft('');
+      setShareNameError(false);
+      setShowShareNameDialog(true);
+      return;
+    }
+
+    await copyShareLink(studentName.trim());
+  };
+
+  const handleConfirmShareName = async () => {
+    const nextName = shareNameDraft.trim();
+    if (!nextName) {
+      setShareNameError(true);
+      return;
+    }
+
+    setStudentName(nextName);
+    setShowShareNameDialog(false);
+    await copyShareLink(nextName);
   };
 
   const handleCopyShareDialogLink = async () => {
@@ -126,7 +152,7 @@ export const StudyPlan = ({
             <div className="flex flex-col gap-0.5 sm:min-w-[138px]">
               <span className="text-base font-semibold leading-tight text-ink">{studentName || 'Student Name'}</span>
               <span className="text-xs leading-tight text-muted">
-                {matricNumber ? `${studentYear} · ${matricNumber}` : studentYear}
+                {matricNumber ? <>{studentYear} &middot; {matricNumber}</> : studentYear}
               </span>
             </div>
 
@@ -266,8 +292,47 @@ export const StudyPlan = ({
           />
         </AppDialog>
       )}
+
+      {showShareNameDialog && (
+        <AppDialog
+          title="Set your name"
+          onClose={() => setShowShareNameDialog(false)}
+          actions={[
+            { label: 'Cancel', onClick: () => setShowShareNameDialog(false), variant: 'secondary' },
+            { label: 'Continue', onClick: handleConfirmShareName, variant: 'primary' },
+          ]}
+        >
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wide text-muted">Name</span>
+            <input
+              type="text"
+              value={shareNameDraft}
+              onChange={(event) => {
+                setShareNameDraft(event.target.value);
+                setShareNameError(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void handleConfirmShareName();
+                }
+              }}
+              className="w-full rounded-2xl border border-ink/10 bg-paper px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+              autoFocus
+            />
+          </label>
+          {shareNameError && (
+            <p className="mt-2 text-xs font-medium text-red-700">Enter a name before sharing.</p>
+          )}
+        </AppDialog>
+      )}
     </div>
   );
+};
+
+const needsShareName = (name: string): boolean => {
+  const normalized = name.trim().toLowerCase();
+  return normalized === '' || normalized === 'student name';
 };
 
 const MajorHeaderSelect = ({
