@@ -5,6 +5,7 @@ import {
   defaultPlanToSemesters,
   upsertModule,
   removeModule,
+  renameModule,
   computeRequirements,
   computeStats,
   getCompletedCodesUpTo,
@@ -134,14 +135,30 @@ export const useStudyPlan = () => {
     setSemesters((prev) => removeModule(prev, moduleCode));
   }, []);
 
-  const setModuleCategory = useCallback((moduleCode: string, categoryId: string) => {
-    setSemesters((prev) =>
-      prev.map((s) => ({
-        ...s,
-        modules: s.modules.map((m) => (m.code === moduleCode ? { ...m, categoryId } : m)),
-      })),
-    );
-  }, []);
+  const updateModule = useCallback(
+    (
+      oldCode: string,
+      updates: { code: string; name: string; mcs: number; categoryId: string },
+    ): { ok: true } | { ok: false; error: string } => {
+      const code = updates.code.trim().toUpperCase();
+      if (!code) return { ok: false, error: 'Course code is required.' };
+
+      const existing = semesters.flatMap((s) => s.modules).find((m) => m.code === oldCode);
+      const name = updates.name.trim() || code;
+      const mcs = Number.isFinite(updates.mcs) && updates.mcs > 0 ? updates.mcs : existing?.mcs ?? 0;
+
+      if (code !== oldCode) {
+        const codeTaken =
+          semesters.some((s) => s.modules.some((m) => m.code === code)) ||
+          waivedModules.some((m) => m.code === code);
+        if (codeTaken) return { ok: false, error: 'Module already in your plan.' };
+      }
+
+      setSemesters((prev) => renameModule(prev, oldCode, { code, name, mcs, categoryId: updates.categoryId }));
+      return { ok: true };
+    },
+    [semesters, waivedModules],
+  );
 
   const addWaivedModule = useCallback((module: WaivedModule) => {
     setWaivedModules((prev) => [...prev.filter((m) => m.code !== module.code), module]);
@@ -185,7 +202,7 @@ export const useStudyPlan = () => {
     switchMajor,
     addOrMoveModule,
     deleteModule,
-    setModuleCategory,
+    updateModule,
     addWaivedModule,
     deleteWaivedModule,
     resetPlan,

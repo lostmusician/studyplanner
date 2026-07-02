@@ -19,6 +19,12 @@
       "runtimeArgs": ["run", "dev", "--", "--port", "5175"],
       "port": 5175,
       "cwd": "admin"
+    },
+    {
+      "name": "student-app-verify",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5177"],
+      "port": 5177
     }
   ]
 }

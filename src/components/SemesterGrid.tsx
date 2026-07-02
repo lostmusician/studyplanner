@@ -20,7 +20,10 @@ interface Props {
   waivedModules: WaivedModule[];
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
-  setModuleCategory: (code: string, categoryId: string) => void;
+  updateModule: (
+    oldCode: string,
+    updates: { code: string; name: string; mcs: number; categoryId: string },
+  ) => { ok: true } | { ok: false; error: string };
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
   getCompletedCodes: (year: number, sem: number) => string[];
@@ -32,7 +35,7 @@ export const SemesterGrid = ({
   waivedModules,
   addOrMoveModule,
   deleteModule,
-  setModuleCategory,
+  updateModule,
   addWaivedModule,
   deleteWaivedModule,
   getCompletedCodes,
@@ -50,7 +53,7 @@ export const SemesterGrid = ({
     const target = semesters.find((s) => s.year === year && s.sem === sem);
     if (!target) return;
     if (!canPlaceModule(target, module)) {
-      alert('Year 1 semesters cannot exceed 26 MC.');
+      alert('Y1S1 cannot exceed 26 MC.');
       return;
     }
     addOrMoveModule(year, sem, module);
@@ -88,7 +91,7 @@ export const SemesterGrid = ({
       return {
         key: `${s.year}-${s.sem}`,
         label: `${semesterLabel(s.year, s.sem)} · ${mcs} MC`,
-        warn: Boolean(getLoadWarning(s.year, mcs)),
+        warn: Boolean(getLoadWarning(s.year, s.sem, mcs)),
       };
     }),
   ];
@@ -129,7 +132,7 @@ export const SemesterGrid = ({
               major={major}
               addOrMoveModule={addOrMoveModule}
               deleteModule={deleteModule}
-              setModuleCategory={setModuleCategory}
+              updateModule={updateModule}
               completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(selectedSemester.year, selectedSemester.sem)]))}
               isMobile={isMobile}
               moveTargets={moveTargets}
@@ -153,7 +156,7 @@ export const SemesterGrid = ({
               major={major}
               addOrMoveModule={addOrMoveModule}
               deleteModule={deleteModule}
-              setModuleCategory={setModuleCategory}
+              updateModule={updateModule}
               completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
               isMobile={isMobile}
               moveTargets={moveTargets}
@@ -185,7 +188,10 @@ interface ColumnProps {
   major: Major;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
-  setModuleCategory: (code: string, categoryId: string) => void;
+  updateModule: (
+    oldCode: string,
+    updates: { code: string; name: string; mcs: number; categoryId: string },
+  ) => { ok: true } | { ok: false; error: string };
   completedCodes: string[];
   isMobile: boolean;
   moveTargets: { year: number; sem: number; label: string }[];
@@ -193,14 +199,14 @@ interface ColumnProps {
   fullWidth?: boolean;
 }
 
-const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setModuleCategory, completedCodes, isMobile, moveTargets, onMoveModule, fullWidth = false }: ColumnProps) => {
+const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, fullWidth = false }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
   const { setNodeRef, isOver } = useDroppable({ id });
 
   const totalMcs = getSemesterMcs(semester);
-  const loadWarning = getLoadWarning(semester.year, totalMcs);
+  const loadWarning = getLoadWarning(semester.year, semester.sem, totalMcs);
 
   return (
     <div
@@ -245,7 +251,7 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setMod
             error={addError}
             onAdd={(year, sem, module) => {
               if (!canPlaceModule(semester, module)) {
-                setAddError('Y1 max is 26 MC.');
+                setAddError('Y1S1 max is 26 MC.');
                 return;
               }
               addOrMoveModule(year, sem, module);
@@ -264,7 +270,7 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setMod
             fromYear={semester.year}
             fromSem={semester.sem}
             onDelete={deleteModule}
-            onChangeCategory={setModuleCategory}
+            onEditModule={updateModule}
             moveTargets={moveTargets}
             onMove={(year, sem) => onMoveModule(module, year, sem)}
           />
@@ -412,6 +418,18 @@ const SemesterAddModuleForm = ({
       {form.name && <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>}
       {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
 
+      <div className="mt-2 flex flex-col gap-1">
+        <label className="text-[10px] uppercase tracking-wide text-muted">MCs</label>
+        <input
+          type="number"
+          min="1"
+          max="20"
+          value={form.mcs}
+          onChange={(event) => setForm((current) => ({ ...current, mcs: event.target.value }))}
+          className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+        />
+      </div>
+
       <select
         value={form.categoryId}
         onChange={(event) => setForm((current) => ({ ...current, categoryId: event.target.value }))}
@@ -456,12 +474,12 @@ const getProjectedSemesterMcs = (semester: StudentSemester, module: PlacedModule
     .reduce((sum, existingModule) => sum + existingModule.mcs, module.mcs);
 
 const canPlaceModule = (semester: StudentSemester, module: PlacedModule): boolean =>
-  semester.year !== 1 || getProjectedSemesterMcs(semester, module) <= YEAR_ONE_MAX_MCS;
+  semester.year !== 1 || semester.sem !== 1 || getProjectedSemesterMcs(semester, module) <= YEAR_ONE_MAX_MCS;
 
-const getLoadWarning = (year: number, totalMcs: number): LoadWarning | null => {
-  if (year === 1 && totalMcs > YEAR_ONE_MAX_MCS) {
+const getLoadWarning = (year: number, sem: number, totalMcs: number): LoadWarning | null => {
+  if (year === 1 && sem === 1 && totalMcs > YEAR_ONE_MAX_MCS) {
     return {
-      label: 'Y1 cap exceeded',
+      label: 'Y1S1 cap exceeded',
       detail: `Max ${YEAR_ONE_MAX_MCS} MC`,
       className: 'bg-red-100 text-red-800',
     };

@@ -16,7 +16,10 @@ interface Props {
   switchMajor: (id: string) => void;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
-  setModuleCategory: (code: string, categoryId: string) => void;
+  updateModule: (
+    oldCode: string,
+    updates: { code: string; name: string; mcs: number; categoryId: string },
+  ) => { ok: true } | { ok: false; error: string };
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
   resetPlan: () => void;
@@ -40,7 +43,7 @@ export const StudyPlan = ({
   switchMajor,
   addOrMoveModule,
   deleteModule,
-  setModuleCategory,
+  updateModule,
   addWaivedModule,
   deleteWaivedModule,
   resetPlan,
@@ -156,7 +159,7 @@ export const StudyPlan = ({
                 waivedModules={waivedModules}
                 addOrMoveModule={addOrMoveModule}
                 deleteModule={deleteModule}
-                setModuleCategory={setModuleCategory}
+                updateModule={updateModule}
                 addWaivedModule={addWaivedModule}
                 deleteWaivedModule={deleteWaivedModule}
                 getCompletedCodes={getCompletedCodes}

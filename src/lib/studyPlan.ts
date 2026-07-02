@@ -41,6 +41,16 @@ export const upsertModule = (
 export const removeModule = (semesters: StudentSemester[], moduleCode: string): StudentSemester[] =>
   semesters.map((s) => ({ ...s, modules: s.modules.filter((m) => m.code !== moduleCode) }));
 
+export const renameModule = (
+  semesters: StudentSemester[],
+  oldCode: string,
+  updates: PlacedModule,
+): StudentSemester[] =>
+  semesters.map((s) => ({
+    ...s,
+    modules: s.modules.map((m) => (m.code === oldCode ? { ...updates } : m)),
+  }));
+
 const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
   fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
 
