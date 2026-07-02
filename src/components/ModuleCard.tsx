@@ -4,6 +4,7 @@ import type { Major, PlacedModule } from '@shared/types';
 import { fetchNusModsModuleDetail, assessPrerequisiteConflict } from '@shared/nusmods';
 import { XIcon, EditIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface Props {
   module: PlacedModule;
@@ -39,6 +40,7 @@ export const ModuleCard = ({
   const [editingCategory, setEditingCategory] = useState(false);
   const completedStr = completedCodes.join(',');
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (isOverlay) return;
@@ -64,7 +66,12 @@ export const ModuleCard = ({
     backgroundColor: category?.color ?? '#d4c9b8',
     outline: prereqWarning ? '2px solid rgb(245,158,11)' : 'none',
     outlineOffset: '-2px',
+    // Allow vertical scrolling over the card on touch; press-hold still triggers drag.
+    touchAction: 'pan-y',
   };
+
+  // On touch there is no hover, so reveal the card controls unconditionally.
+  const controlVisibility = isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100';
 
   return (
     <div
@@ -73,7 +80,7 @@ export const ModuleCard = ({
         (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       style={style}
-      className="relative group rounded-2xl p-3 select-none touch-none"
+      className="relative group rounded-2xl p-3 select-none"
       onMouseEnter={() => {
         const rect = cardRef.current?.getBoundingClientRect();
         // Flip the tooltip above the card when there isn't room for it below.
@@ -108,7 +115,7 @@ export const ModuleCard = ({
             )}
             {!isOverlay && onChangeCategory && (
               <button
-                className="flex-shrink-0 text-ink/40 opacity-0 transition-opacity group-hover:opacity-100 hover:text-ink"
+                className={`flex-shrink-0 text-ink/40 ${controlVisibility} transition-opacity hover:text-ink`}
                 onClick={(e) => { e.stopPropagation(); setEditingCategory(true); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 aria-label={`Edit bucket for ${module.code}`}
@@ -142,7 +149,7 @@ export const ModuleCard = ({
       {/* Delete button */}
       {!isOverlay && (
         <button
-          className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-opacity group-hover:opacity-100"
+          className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity`}
           onClick={(e) => { e.stopPropagation(); onDelete(module.code); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
@@ -154,7 +161,7 @@ export const ModuleCard = ({
       {/* Details button */}
       {!isOverlay && (
         <button
-          className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas opacity-0 transition-opacity group-hover:opacity-100"
+          className={`absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas ${controlVisibility} transition-opacity`}
           onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Details for ${module.code}`}
