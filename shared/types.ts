@@ -32,6 +32,12 @@ export interface DefaultPlanEntry {
   categoryId: string;
 }
 
+export interface PlacedModule extends Module {
+  categoryId: string;
+}
+
+export type WaivedModule = PlacedModule;
+
 export interface Major {
   id: string;
   label: string;
@@ -42,13 +48,8 @@ export interface Major {
   requirements: RequirementRule[];
   moduleCatalog: Record<string, Module>;
   defaultPlan: DefaultPlanEntry[];
+  defaultWaivedModules?: WaivedModule[];
 }
-
-export interface PlacedModule extends Module {
-  categoryId: string;
-}
-
-export type WaivedModule = PlacedModule;
 
 export interface StudentSemester {
   year: number;

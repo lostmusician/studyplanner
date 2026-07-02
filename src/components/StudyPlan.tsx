@@ -21,8 +21,8 @@ interface Props {
   getCompletedCodes: (year: number, sem: number) => string[];
   studentName: string;
   setStudentName: (name: string) => void;
-  matricNo: string;
-  setMatricNo: (no: string) => void;
+  studentYear: string;
+  setStudentYear: (year: string) => void;
 }
 
 export const StudyPlan = ({
@@ -42,8 +42,8 @@ export const StudyPlan = ({
   getCompletedCodes,
   studentName,
   setStudentName,
-  matricNo,
-  setMatricNo,
+  studentYear,
+  setStudentYear,
 }: Props) => {
   const [view, setView] = useState<'planner' | 'settings'>('planner');
 
@@ -65,7 +65,7 @@ export const StudyPlan = ({
           <div className="flex items-center gap-6">
             <div className="flex min-w-[138px] flex-col gap-0.5">
               <span className="text-base font-semibold leading-tight text-ink">{studentName || 'Student Name'}</span>
-              <span className="font-mono text-xs leading-tight text-muted">{matricNo || 'Matric No.'}</span>
+              <span className="text-xs leading-tight text-muted">{studentYear}</span>
             </div>
 
             <div className="h-10 w-px" style={{ backgroundColor: 'rgba(20,20,19,0.1)' }} />
@@ -93,8 +93,8 @@ export const StudyPlan = ({
           majorId={majorId}
           studentName={studentName}
           setStudentName={setStudentName}
-          matricNo={matricNo}
-          setMatricNo={setMatricNo}
+          studentYear={studentYear}
+          setStudentYear={setStudentYear}
           onSwitchMajor={handleSwitchMajor}
           onResetPlan={handleResetPlan}
         />
@@ -145,9 +145,20 @@ const MajorHeaderSelect = ({
 }) => (
   <div className="flex flex-col items-start gap-0.5">
     <label className="relative block leading-tight">
-      <span className="pointer-events-none block pr-5 text-sm font-medium leading-tight text-ink">
+      <span className="pointer-events-none flex items-center gap-1 pr-5 text-sm font-medium leading-tight text-ink">
         {major.label}
-        <span className="ml-1 text-ink/70">⌄</span>
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-3 w-3 text-ink/70"
+          aria-hidden="true"
+        >
+          <path d="m4 6 4 4 4-4" />
+        </svg>
       </span>
       <select
         value={majorId}
@@ -172,8 +183,8 @@ const SettingsPage = ({
   majorId,
   studentName,
   setStudentName,
-  matricNo,
-  setMatricNo,
+  studentYear,
+  setStudentYear,
   onSwitchMajor,
   onResetPlan,
 }: {
@@ -181,8 +192,8 @@ const SettingsPage = ({
   majorId: string;
   studentName: string;
   setStudentName: (name: string) => void;
-  matricNo: string;
-  setMatricNo: (no: string) => void;
+  studentYear: string;
+  setStudentYear: (year: string) => void;
   onSwitchMajor: (id: string) => void;
   onResetPlan: () => void;
 }) => {
@@ -209,13 +220,16 @@ const SettingsPage = ({
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-wide text-muted">Matric No.</span>
-              <input
-                type="text"
-                value={matricNo}
-                onChange={(event) => setMatricNo(event.target.value)}
-                className={`${field} font-mono`}
-              />
+              <span className="text-[10px] uppercase tracking-wide text-muted">Year</span>
+              <select
+                value={studentYear}
+                onChange={(event) => setStudentYear(event.target.value)}
+                className={field}
+              >
+                {[1, 2, 3, 4].map((year) => (
+                  <option key={year} value={`Year ${year}`}>Year {year}</option>
+                ))}
+              </select>
             </label>
           </div>
         </section>
@@ -242,9 +256,9 @@ const SettingsPage = ({
             <button
               type="button"
               onClick={onResetPlan}
-              className="rounded-2xl bg-ink px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-ink/80"
+              className="rounded-2xl bg-canvas px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-canvas/70"
             >
-              Reset plan
+              Reset to default
             </button>
           </div>
         </section>

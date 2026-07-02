@@ -5,7 +5,7 @@ import { StudyPlan } from './components/StudyPlan';
 const App = () => {
   const plan = useStudyPlan();
   const [studentName, setStudentName] = useState('Student Name');
-  const [matricNo, setMatricNo] = useState('A0000000X');
+  const [studentYear, setStudentYear] = useState('Year 1');
 
   if (!plan.major) {
     return (
@@ -20,8 +20,8 @@ const App = () => {
       {...plan}
       studentName={studentName}
       setStudentName={setStudentName}
-      matricNo={matricNo}
-      setMatricNo={setMatricNo}
+      studentYear={studentYear}
+      setStudentYear={setStudentYear}
     />
   );
 };
