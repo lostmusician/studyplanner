@@ -15,6 +15,8 @@ interface Props {
   onDelete: (code: string) => void;
   onChangeCategory?: (code: string, categoryId: string) => void;
   isOverlay?: boolean;
+  moveTargets?: { year: number; sem: number; label: string }[];
+  onMove?: (year: number, sem: number) => void;
 }
 
 export const ModuleCard = ({
@@ -26,6 +28,8 @@ export const ModuleCard = ({
   onDelete,
   onChangeCategory,
   isOverlay = false,
+  moveTargets = [],
+  onMove,
 }: Props) => {
   const { setNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
     id: module.code,
@@ -41,6 +45,7 @@ export const ModuleCard = ({
   const completedStr = completedCodes.join(',');
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
 
   useEffect(() => {
     if (isOverlay) return;
@@ -201,6 +206,43 @@ export const ModuleCard = ({
           completedCodes={completedCodes}
           onClose={() => setShowDetail(false)}
         />
+      )}
+
+      {/* Move menu — touch-friendly alternative to dragging */}
+      {!isOverlay && isMobile && onMove && moveTargets.length > 0 && (
+        <div className="relative mt-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowMoveMenu((open) => !open); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex w-full items-center justify-center gap-1 rounded-xl bg-ink/10 px-2 py-1 text-[10px] font-medium text-ink/70"
+            aria-haspopup="listbox"
+            aria-expanded={showMoveMenu}
+          >
+            ⇄ Move
+          </button>
+          {showMoveMenu && (
+            <ul className="absolute z-40 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-2xl bg-ink shadow-soft" role="listbox">
+              {moveTargets
+                .filter((target) => !(target.year === fromYear && target.sem === fromSem))
+                .map((target) => (
+                  <li key={`${target.year}-${target.sem}`}>
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-xs text-canvas hover:bg-canvas/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(target.year, target.sem);
+                        setShowMoveMenu(false);
+                      }}
+                    >
+                      {target.label}
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );
