@@ -44,7 +44,12 @@ export const ModuleCard = ({
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipUp, setTooltipUp] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editCode, setEditCode] = useState(module.code);
+  const [editName, setEditName] = useState(module.name);
+  const [editMcs, setEditMcs] = useState(String(module.mcs));
+  const [editCategoryId, setEditCategoryId] = useState(module.categoryId);
+  const [editError, setEditError] = useState<string | null>(null);
   const completedStr = completedCodes.join(',');
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -67,6 +72,31 @@ export const ModuleCard = ({
   }, [module.code, completedStr, isOverlay]);
 
   const category = major.categories.find((c) => c.id === module.categoryId);
+
+  const openEditor = () => {
+    setEditCode(module.code);
+    setEditName(module.name);
+    setEditMcs(String(module.mcs));
+    setEditCategoryId(module.categoryId);
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!onEditModule) return;
+    const result = onEditModule(module.code, {
+      code: editCode,
+      name: editName,
+      mcs: parseInt(editMcs, 10),
+      categoryId: editCategoryId,
+    });
+    if (!result.ok) {
+      setEditError(result.error);
+      return;
+    }
+    setEditing(false);
+    setEditError(null);
+  };
 
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -124,10 +154,10 @@ export const ModuleCard = ({
             {!isOverlay && onEditModule && (
               <button
                 className={`flex-shrink-0 text-ink/40 ${controlVisibility} transition-opacity hover:text-ink`}
-                onClick={(e) => { e.stopPropagation(); setEditingCategory(true); }}
+                onClick={(e) => { e.stopPropagation(); openEditor(); }}
                 onPointerDown={(e) => e.stopPropagation()}
-                aria-label={`Edit bucket for ${module.code}`}
-                title="Change requirement bucket"
+                aria-label={`Edit ${module.code}`}
+                title="Edit module"
               >
                 <EditIcon className="h-3 w-3" />
               </button>
@@ -137,29 +167,67 @@ export const ModuleCard = ({
       </div>
 
       {/* Re-bucket category — shown only while editing, outside the drag handle */}
-      {!isOverlay && onEditModule && editingCategory && (
-        <select
-          autoFocus
-          value={module.categoryId}
-          onChange={(event) => {
-            onEditModule(module.code, {
-              code: module.code,
-              name: module.name,
-              mcs: module.mcs,
-              categoryId: event.target.value,
-            });
-            setEditingCategory(false);
-          }}
-          onBlur={() => setEditingCategory(false)}
+      {!isOverlay && onEditModule && editing && (
+        <div
+          className="mt-1.5 flex flex-col gap-1"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => event.stopPropagation()}
-          className="mt-1.5 w-full cursor-pointer rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
-          aria-label={`Requirement bucket for ${module.code}`}
         >
-          {major.categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.label}</option>
-          ))}
-        </select>
+          <input
+            autoFocus
+            value={editCode}
+            onChange={(e) => setEditCode(e.target.value)}
+            placeholder="Code"
+            className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+            aria-label={`Course code for ${module.code}`}
+          />
+          <input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="Name"
+            className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+            aria-label={`Course name for ${module.code}`}
+          />
+          <input
+            type="number"
+            min="1"
+            max="20"
+            value={editMcs}
+            onChange={(e) => setEditMcs(e.target.value)}
+            placeholder="MCs"
+            className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+            aria-label={`MCs for ${module.code}`}
+          />
+          <select
+            value={editCategoryId}
+            onChange={(e) => setEditCategoryId(e.target.value)}
+            className="w-full cursor-pointer rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+            aria-label={`Requirement bucket for ${module.code}`}
+          >
+            {major.categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.label}</option>
+            ))}
+          </select>
+          {editError && (
+            <p className="text-[10px] font-medium leading-snug text-red-700">{editError}</p>
+          )}
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handleSaveEdit}
+              className="flex-1 rounded-lg bg-ink py-1 text-[10px] font-medium text-canvas"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEditing(false); setEditError(null); }}
+              className="flex-1 rounded-lg bg-ink/10 py-1 text-[10px] font-medium text-ink/70"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Delete button */}
