@@ -11,7 +11,7 @@ interface Props {
   majorId: string;
   semesters: StudentSemester[];
   stats: Stats;
-  requirements: Array<{ name: string; fulfilled: boolean }>;
+  requirements: Array<{ name: string; fulfilled: boolean; categoryId?: string }>;
   switchMajor: (id: string) => void;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
