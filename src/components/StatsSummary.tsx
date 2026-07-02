@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import type { Major, MajorCategory, Module, StudentSemester, WaivedModule } from '@shared/types';
-import type { RequirementStatus, Stats } from '../lib/studyPlan';
+import type { ConstraintStatus, FocusAreaStatus, RequirementStatus, Stats } from '../lib/studyPlan';
+import { computeBreadthDepth, computeFocusAreas } from '../lib/studyPlan';
+import { FocusAreaExplorer } from './FocusAreaExplorer';
+
+/** Category that hosts the focus-area tracker. */
+const FOCUS_AREA_CATEGORY_ID = 'breadth-depth';
 
 interface Props {
   major: Major;
@@ -172,6 +177,8 @@ const CategoryPanel = ({
   const waivedCodes = new Set(waivedForCategory.map((module) => module.code));
   const placedMc = stats.byCategory[category.id] ?? 0;
   const remainingMc = Math.max(0, (category.mcTarget ?? 0) - placedMc);
+  const showFocusAreas =
+    category.id === FOCUS_AREA_CATEGORY_ID && Boolean(major.focusAreas?.length);
 
   return (
     <section
@@ -185,6 +192,10 @@ const CategoryPanel = ({
           <span className="text-xs text-muted">{placedMc}/{category.mcTarget} MC</span>
         )}
       </div>
+
+      {showFocusAreas && (
+        <BreadthDepthPanel major={major} semesters={semesters} waivedModules={waivedModules} />
+      )}
 
       {categoryRequirements.length > 0 ? (
         <div className="flex flex-col gap-4">
@@ -226,6 +237,138 @@ const CategoryPanel = ({
         </div>
       )}
     </section>
+  );
+};
+
+const BreadthDepthPanel = ({
+  major,
+  semesters,
+  waivedModules,
+}: {
+  major: Major;
+  semesters: StudentSemester[];
+  waivedModules: WaivedModule[];
+}) => {
+  const bd = computeBreadthDepth(major, semesters, waivedModules);
+  const metCount = bd ? bd.constraints.filter((c) => c.fulfilled).length : 0;
+
+  return (
+    <div className="mb-4 flex flex-col gap-3">
+      {bd && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[11px] font-semibold text-ink">
+            Constraints
+            <span className="ml-1 font-normal text-muted">{metCount}/{bd.constraints.length}</span>
+          </span>
+          {bd.constraints.map((constraint) => (
+            <ConstraintChip key={constraint.id} constraint={constraint} />
+          ))}
+        </div>
+      )}
+
+      <FocusAreaTracker major={major} semesters={semesters} waivedModules={waivedModules} />
+    </div>
+  );
+};
+
+const ConstraintChip = ({ constraint }: { constraint: ConstraintStatus }) => {
+  const bg = constraint.warn
+    ? 'rgb(254,243,199)'
+    : constraint.fulfilled
+      ? 'rgb(20,20,19)'
+      : 'rgba(20,20,19,0.06)';
+  const fg = constraint.warn
+    ? 'rgb(180,83,9)'
+    : constraint.fulfilled
+      ? 'rgb(239,238,231)'
+      : 'rgb(108,107,104)';
+  return (
+    <span
+      title={constraint.label}
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none"
+      style={{ backgroundColor: bg, color: fg }}
+    >
+      {constraint.fulfilled && !constraint.warn && (
+        <svg viewBox="0 0 10 8" fill="none" stroke={fg} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-2 w-2.5">
+          <path d="M1 4l2.5 2.5L9 1" />
+        </svg>
+      )}
+      <span className="font-medium">{constraint.short}</span>
+      {constraint.detail && <span className="opacity-70">{constraint.detail}</span>}
+    </span>
+  );
+};
+
+const FocusAreaTracker = ({
+  major,
+  semesters,
+  waivedModules,
+}: {
+  major: Major;
+  semesters: StudentSemester[];
+  waivedModules: WaivedModule[];
+}) => {
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const { areas, anyFulfilled } = computeFocusAreas(major, semesters, waivedModules);
+  const started = areas.filter((area) => area.matched.length > 0);
+  const untouched = areas.length - started.length;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span
+        className="mr-1 text-[11px] font-semibold text-ink"
+        title="Satisfy one focus area: 3 primaries with at least one at level-4000."
+      >
+        Focus area
+        <span className="ml-1 font-normal text-muted">
+          {anyFulfilled ? 'done' : 'pick 1'}
+        </span>
+      </span>
+
+      {started.length > 0 &&
+        started.map((area) => <FocusAreaChip key={area.id} area={area} />)}
+
+      <button
+        type="button"
+        onClick={() => setExplorerOpen(true)}
+        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium text-ink underline-offset-2 transition-colors hover:bg-ink/5 hover:underline"
+      >
+        {started.length > 0
+          ? untouched > 0
+            ? `+${untouched} more`
+            : 'View all'
+          : 'Browse focus areas'}
+        <span aria-hidden="true">→</span>
+      </button>
+
+      {explorerOpen && (
+        <FocusAreaExplorer
+          major={major}
+          semesters={semesters}
+          waivedModules={waivedModules}
+          onClose={() => setExplorerOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+const FocusAreaChip = ({ area }: { area: FocusAreaStatus }) => {
+  const needSenior =
+    !area.fulfilled && area.matched.length >= area.need && area.seniorMatched.length < area.needSenior;
+  const bg = area.fulfilled ? 'rgb(20,20,19)' : needSenior ? 'rgb(254,243,199)' : 'rgba(20,20,19,0.06)';
+  const fg = area.fulfilled ? 'rgb(239,238,231)' : needSenior ? 'rgb(180,83,9)' : 'rgb(108,107,104)';
+  return (
+    <span
+      title={needSenior ? `${area.label} — needs a level-4000 course` : area.label}
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none"
+      style={{ backgroundColor: bg, color: fg }}
+    >
+      <span className="font-medium">{area.label}</span>
+      <span className="opacity-70">
+        {needSenior ? 'need L4000' : `${area.matched.length}/${area.need}`}
+      </span>
+    </span>
   );
 };
 

@@ -8,6 +8,7 @@ import {
   computeRequirements,
   computeStats,
   getCompletedCodesUpTo,
+  autoCategoryId,
 } from '../lib/studyPlan';
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
@@ -22,19 +23,9 @@ interface SavedPlanState {
   waivedModules: WaivedModule[];
 }
 
-const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
-  fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
-
 const inferCategoryId = (major: Major, moduleCode: string, categoryId?: string): string => {
   if (categoryId && major.categories.some((cat) => cat.id === categoryId)) return categoryId;
-
-  const defaultEntry = major.defaultPlan.find((entry) => entry.moduleCode === moduleCode);
-  if (defaultEntry) return defaultEntry.categoryId;
-
-  const requirement = major.requirements.find((req) =>
-    req.categoryId && req.fulfilledBy.some((fulfiller) => matchesFulfiller(moduleCode, fulfiller)),
-  );
-  return requirement?.categoryId ?? major.categories[0]?.id ?? '';
+  return autoCategoryId(major, moduleCode);
 };
 
 const normalizeModule = (major: Major, module: Partial<PlacedModule>): PlacedModule | null => {
@@ -139,6 +130,15 @@ export const useStudyPlan = () => {
     setSemesters((prev) => removeModule(prev, moduleCode));
   }, []);
 
+  const setModuleCategory = useCallback((moduleCode: string, categoryId: string) => {
+    setSemesters((prev) =>
+      prev.map((s) => ({
+        ...s,
+        modules: s.modules.map((m) => (m.code === moduleCode ? { ...m, categoryId } : m)),
+      })),
+    );
+  }, []);
+
   const addWaivedModule = useCallback((module: WaivedModule) => {
     setWaivedModules((prev) => [...prev.filter((m) => m.code !== module.code), module]);
     setSemesters((prev) => removeModule(prev, module.code));
@@ -169,6 +169,7 @@ export const useStudyPlan = () => {
     switchMajor,
     addOrMoveModule,
     deleteModule,
+    setModuleCategory,
     addWaivedModule,
     deleteWaivedModule,
     resetPlan,
