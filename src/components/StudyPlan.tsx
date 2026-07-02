@@ -1,9 +1,8 @@
+import { useState } from 'react';
 import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
-import { AddModuleForm } from './AddModuleForm';
-import { WaivedCourses } from './WaivedCourses';
 
 interface Props {
   majors: Major[];
@@ -46,6 +45,8 @@ export const StudyPlan = ({
   matricNo,
   setMatricNo,
 }: Props) => {
+  const [view, setView] = useState<'planner' | 'settings'>('planner');
+
   const handleSwitchMajor = (id: string) => {
     if (id === majorId) return;
     if (confirm('Switching major will reset your plan. Continue?')) {
@@ -53,108 +54,201 @@ export const StudyPlan = ({
     }
   };
 
+  const handleResetPlan = () => {
+    if (confirm('Reset plan to default?')) resetPlan();
+  };
+
   return (
     <div className="min-h-screen bg-canvas">
-      {/* Header */}
       <header className="px-6 py-5" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
         <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-            <div className="flex flex-col gap-0.5">
-              <EditableField
-                value={studentName}
-                onChange={setStudentName}
-                className="text-base font-semibold text-ink"
-                placeholder="Student Name"
-              />
-              <EditableField
-                value={matricNo}
-                onChange={setMatricNo}
-                className="text-xs text-muted font-mono"
-                placeholder="Matric No."
-              />
+            <div className="flex min-w-[138px] flex-col gap-0.5">
+              <span className="text-base font-semibold leading-tight text-ink">{studentName || 'Student Name'}</span>
+              <span className="font-mono text-xs leading-tight text-muted">{matricNo || 'Matric No.'}</span>
             </div>
 
-            <div className="h-8 w-px" style={{ backgroundColor: 'rgba(20,20,19,0.1)' }} />
+            <div className="h-10 w-px" style={{ backgroundColor: 'rgba(20,20,19,0.1)' }} />
 
-            <div className="flex flex-col gap-0.5">
-              <select
-                value={majorId}
-                onChange={(e) => handleSwitchMajor(e.target.value)}
-                className="text-sm font-medium text-ink bg-transparent border-none focus:outline-none cursor-pointer"
-              >
-                {majors.map((m) => (
-                  <option key={m.id} value={m.id}>{m.label}</option>
-                ))}
-              </select>
-              {major.specialisation && (
-                <span className="text-xs text-muted">{major.specialisation}</span>
-              )}
-              <span className="text-[10px] text-muted/70">{major.school}</span>
-            </div>
+            <MajorHeaderSelect
+              majors={majors}
+              major={major}
+              majorId={majorId}
+              onChange={handleSwitchMajor}
+            />
           </div>
 
           <button
-            onClick={() => { if (confirm('Reset plan to default?')) resetPlan(); }}
+            onClick={() => setView((current) => (current === 'settings' ? 'planner' : 'settings'))}
             className="text-xs text-muted hover:text-ink transition-colors px-3 py-1.5 rounded-xl hover:bg-paper"
           >
-            Reset plan
+            {view === 'settings' ? 'Planner' : 'Settings'}
           </button>
         </div>
       </header>
 
-      {/* Stats bar */}
-      <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
-        <div className="max-w-screen-2xl mx-auto">
-          <StatsSummary
-            major={major}
-            stats={stats}
-            semesters={semesters}
-            waivedModules={waivedModules}
-            requirements={requirements}
-          />
-        </div>
-      </div>
+      {view === 'settings' ? (
+        <SettingsPage
+          majors={majors}
+          majorId={majorId}
+          studentName={studentName}
+          setStudentName={setStudentName}
+          matricNo={matricNo}
+          setMatricNo={setMatricNo}
+          onSwitchMajor={handleSwitchMajor}
+          onResetPlan={handleResetPlan}
+        />
+      ) : (
+        <>
+          <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
+            <div className="max-w-screen-2xl mx-auto">
+              <StatsSummary
+                major={major}
+                stats={stats}
+                semesters={semesters}
+                waivedModules={waivedModules}
+                requirements={requirements}
+              />
+            </div>
+          </div>
 
-      {/* Main content */}
-      <div className="max-w-screen-2xl mx-auto px-6 py-6">
-        <div className="flex min-w-0 flex-col gap-5">
-          <WaivedCourses
-            major={major}
-            waivedModules={waivedModules}
-            onAdd={addWaivedModule}
-            onDelete={deleteWaivedModule}
-          />
-          <SemesterGrid
-            semesters={semesters}
-            major={major}
-            addOrMoveModule={addOrMoveModule}
-            deleteModule={deleteModule}
-            getCompletedCodes={getCompletedCodes}
-          />
-          <AddModuleForm major={major} onAdd={addOrMoveModule} />
-        </div>
-      </div>
+          <div className="max-w-screen-2xl mx-auto px-6 py-6">
+            <div className="flex min-w-0 flex-col gap-5">
+              <SemesterGrid
+                semesters={semesters}
+                major={major}
+                waivedModules={waivedModules}
+                addOrMoveModule={addOrMoveModule}
+                deleteModule={deleteModule}
+                addWaivedModule={addWaivedModule}
+                deleteWaivedModule={deleteWaivedModule}
+                getCompletedCodes={getCompletedCodes}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
-const EditableField = ({
-  value,
+const MajorHeaderSelect = ({
+  majors,
+  major,
+  majorId,
   onChange,
-  className,
-  placeholder,
 }: {
-  value: string;
-  onChange: (v: string) => void;
-  className: string;
-  placeholder: string;
+  majors: Major[];
+  major: Major;
+  majorId: string;
+  onChange: (id: string) => void;
 }) => (
-  <input
-    type="text"
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    placeholder={placeholder}
-    className={`bg-transparent border-none focus:outline-none focus:ring-0 p-0 ${className}`}
-    style={{ width: `${Math.max(value.length, placeholder.length, 8)}ch` }}
-  />
+  <div className="flex flex-col items-start gap-0.5">
+    <label className="relative block leading-tight">
+      <span className="pointer-events-none block pr-5 text-sm font-medium leading-tight text-ink">
+        {major.label}
+        <span className="ml-1 text-ink/70">⌄</span>
+      </span>
+      <select
+        value={majorId}
+        onChange={(event) => onChange(event.target.value)}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        aria-label="Major"
+      >
+        {majors.map((item) => (
+          <option key={item.id} value={item.id}>{item.label}</option>
+        ))}
+      </select>
+    </label>
+    {major.specialisation && (
+      <span className="text-xs leading-tight text-muted">{major.specialisation}</span>
+    )}
+    <span className="text-[10px] leading-tight text-muted/70">{major.school}</span>
+  </div>
 );
+
+const SettingsPage = ({
+  majors,
+  majorId,
+  studentName,
+  setStudentName,
+  matricNo,
+  setMatricNo,
+  onSwitchMajor,
+  onResetPlan,
+}: {
+  majors: Major[];
+  majorId: string;
+  studentName: string;
+  setStudentName: (name: string) => void;
+  matricNo: string;
+  setMatricNo: (no: string) => void;
+  onSwitchMajor: (id: string) => void;
+  onResetPlan: () => void;
+}) => {
+  const field =
+    'rounded-2xl bg-canvas border border-ink/10 px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20 w-full';
+
+  return (
+    <main className="max-w-3xl mx-auto px-6 py-8">
+      <div className="mb-6 flex items-baseline justify-between gap-4">
+        <h1 className="text-lg font-semibold text-ink">Settings</h1>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <section className="rounded-4xl bg-paper p-5">
+          <h2 className="mb-4 text-sm font-semibold text-ink">Profile</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-wide text-muted">Name</span>
+              <input
+                type="text"
+                value={studentName}
+                onChange={(event) => setStudentName(event.target.value)}
+                className={field}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-wide text-muted">Matric No.</span>
+              <input
+                type="text"
+                value={matricNo}
+                onChange={(event) => setMatricNo(event.target.value)}
+                className={`${field} font-mono`}
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="rounded-4xl bg-paper p-5">
+          <h2 className="mb-4 text-sm font-semibold text-ink">Programme</h2>
+          <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wide text-muted">Major</span>
+            <select
+              value={majorId}
+              onChange={(event) => onSwitchMajor(event.target.value)}
+              className={field}
+            >
+              {majors.map((major) => (
+                <option key={major.id} value={major.id}>{major.label}</option>
+              ))}
+            </select>
+          </label>
+        </section>
+
+        <section className="rounded-4xl bg-paper p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-ink">Plan</h2>
+            <button
+              type="button"
+              onClick={onResetPlan}
+              className="rounded-2xl bg-ink px-4 py-2 text-sm font-medium text-canvas transition-colors hover:bg-ink/80"
+            >
+              Reset plan
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+};

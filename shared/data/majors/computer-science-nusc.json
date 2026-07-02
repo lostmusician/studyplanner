@@ -2,7 +2,6 @@
   "id": "computer-science-nusc",
   "label": "Computer Science (NUS College)",
   "school": "School of Computing",
-  "specialisation": "Networking and Distributed Systems",
   "totalMcTarget": 160,
   "categories": [
     { "id": "cs-foundation", "label": "CS Foundation", "mcTarget": 36, "color": "#d4c9b8" },
