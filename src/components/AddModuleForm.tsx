@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import type { Major, PlacedModule } from '@shared/types';
 import { searchNusModsModules, fetchNusModsModuleDetail } from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
-import { Dropdown } from './Dropdown';
 
 interface Props {
   major: Major;
@@ -162,41 +161,40 @@ export const AddModuleForm = ({ major, onAdd }: Props) => {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] uppercase tracking-wide text-muted">Year</label>
-          <Dropdown
-            variant="field"
-            ariaLabel="Year"
+          <select
             value={form.year}
-            onChange={(value) => setForm((f) => ({ ...f, year: value }))}
+            onChange={(e) => setForm((f) => ({ ...f, year: e.target.value }))}
             className={field}
-            options={[1, 2, 3, 4].map((y) => ({ value: String(y), label: `Y${y}` }))}
-          />
+          >
+            {[1, 2, 3, 4].map((y) => (
+              <option key={y} value={y}>Y{y}</option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-[10px] uppercase tracking-wide text-muted">Sem</label>
-          <Dropdown
-            variant="field"
-            ariaLabel="Semester"
+          <select
             value={form.sem}
-            onChange={(value) => setForm((f) => ({ ...f, sem: value }))}
+            onChange={(e) => setForm((f) => ({ ...f, sem: e.target.value }))}
             className={field}
-            options={[
-              { value: '1', label: 'S1' },
-              { value: '2', label: 'S2' },
-            ]}
-          />
+          >
+            <option value="1">S1</option>
+            <option value="2">S2</option>
+          </select>
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
         <label className="text-[10px] uppercase tracking-wide text-muted">Category</label>
-        <Dropdown
-          variant="field"
-          ariaLabel="Category"
+        <select
           value={form.categoryId}
-          onChange={(value) => setForm((f) => ({ ...f, categoryId: value }))}
+          onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
           className={field}
-          options={major.categories.map((cat) => ({ value: cat.id, label: cat.label }))}
-        />
+        >
+          {major.categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>{cat.label}</option>
+          ))}
+        </select>
       </div>
 
       <button
