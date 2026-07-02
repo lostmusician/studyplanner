@@ -4,6 +4,7 @@ import type { Major, PlacedModule } from '@shared/types';
 import { fetchNusModsModuleDetail, assessPrerequisiteConflict } from '@shared/nusmods';
 import { XIcon, EditIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface Props {
   module: PlacedModule;
@@ -14,6 +15,8 @@ interface Props {
   onDelete: (code: string) => void;
   onChangeCategory?: (code: string, categoryId: string) => void;
   isOverlay?: boolean;
+  moveTargets?: { year: number; sem: number; label: string }[];
+  onMove?: (year: number, sem: number) => void;
 }
 
 export const ModuleCard = ({
@@ -25,6 +28,8 @@ export const ModuleCard = ({
   onDelete,
   onChangeCategory,
   isOverlay = false,
+  moveTargets = [],
+  onMove,
 }: Props) => {
   const { setNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
     id: module.code,
@@ -39,6 +44,8 @@ export const ModuleCard = ({
   const [editingCategory, setEditingCategory] = useState(false);
   const completedStr = completedCodes.join(',');
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
 
   useEffect(() => {
     if (isOverlay) return;
@@ -64,7 +71,12 @@ export const ModuleCard = ({
     backgroundColor: category?.color ?? '#d4c9b8',
     outline: prereqWarning ? '2px solid rgb(245,158,11)' : 'none',
     outlineOffset: '-2px',
+    // Allow vertical scrolling over the card on touch; press-hold still triggers drag.
+    touchAction: 'pan-y',
   };
+
+  // On touch there is no hover, so reveal the card controls unconditionally.
+  const controlVisibility = isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100';
 
   return (
     <div
@@ -73,7 +85,7 @@ export const ModuleCard = ({
         (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       style={style}
-      className="relative group rounded-2xl p-3 select-none touch-none"
+      className="relative group rounded-2xl p-3 select-none"
       onMouseEnter={() => {
         const rect = cardRef.current?.getBoundingClientRect();
         // Flip the tooltip above the card when there isn't room for it below.
@@ -108,7 +120,7 @@ export const ModuleCard = ({
             )}
             {!isOverlay && onChangeCategory && (
               <button
-                className="flex-shrink-0 text-ink/40 opacity-0 transition-opacity group-hover:opacity-100 hover:text-ink"
+                className={`flex-shrink-0 text-ink/40 ${controlVisibility} transition-opacity hover:text-ink`}
                 onClick={(e) => { e.stopPropagation(); setEditingCategory(true); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 aria-label={`Edit bucket for ${module.code}`}
@@ -142,7 +154,7 @@ export const ModuleCard = ({
       {/* Delete button */}
       {!isOverlay && (
         <button
-          className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-opacity group-hover:opacity-100"
+          className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity`}
           onClick={(e) => { e.stopPropagation(); onDelete(module.code); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
@@ -154,7 +166,7 @@ export const ModuleCard = ({
       {/* Details button */}
       {!isOverlay && (
         <button
-          className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas opacity-0 transition-opacity group-hover:opacity-100"
+          className={`absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas ${controlVisibility} transition-opacity`}
           onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Details for ${module.code}`}
@@ -194,6 +206,43 @@ export const ModuleCard = ({
           completedCodes={completedCodes}
           onClose={() => setShowDetail(false)}
         />
+      )}
+
+      {/* Move menu — touch-friendly alternative to dragging */}
+      {!isOverlay && isMobile && onMove && moveTargets.length > 0 && (
+        <div className="relative mt-2">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowMoveMenu((open) => !open); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex w-full items-center justify-center gap-1 rounded-xl bg-ink/10 px-2 py-1 text-[10px] font-medium text-ink/70"
+            aria-haspopup="listbox"
+            aria-expanded={showMoveMenu}
+          >
+            ⇄ Move
+          </button>
+          {showMoveMenu && (
+            <ul className="absolute z-40 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-2xl bg-ink shadow-soft" role="listbox">
+              {moveTargets
+                .filter((target) => !(target.year === fromYear && target.sem === fromSem))
+                .map((target) => (
+                  <li key={`${target.year}-${target.sem}`}>
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-left text-xs text-canvas hover:bg-canvas/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(target.year, target.sem);
+                        setShowMoveMenu(false);
+                      }}
+                    >
+                      {target.label}
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );

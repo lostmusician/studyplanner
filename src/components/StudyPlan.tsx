@@ -84,17 +84,17 @@ export const StudyPlan = ({
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="px-6 py-5" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
-        <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="flex min-w-[138px] flex-col gap-0.5">
+      <header className="px-4 py-3 sm:px-6 sm:py-5" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
+        <div className="max-w-screen-2xl mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex flex-col gap-0.5 sm:min-w-[138px]">
               <span className="text-base font-semibold leading-tight text-ink">{studentName || 'Student Name'}</span>
               <span className="text-xs leading-tight text-muted">
                 {matricNumber ? `${studentYear} · ${matricNumber}` : studentYear}
               </span>
             </div>
 
-            <div className="h-10 w-px" style={{ backgroundColor: 'rgba(20,20,19,0.1)' }} />
+            <div className="hidden sm:block h-10 w-px" style={{ backgroundColor: 'rgba(20,20,19,0.1)' }} />
 
             <MajorHeaderSelect
               majors={majors}

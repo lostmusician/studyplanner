@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
+import { useIsMobile } from '../hooks/useIsMobile';
 import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import { searchNusModsModules, fetchNusModsModuleDetail } from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
@@ -37,10 +38,23 @@ export const SemesterGrid = ({
   getCompletedCodes,
 }: Props) => {
   const [activeDrag, setActiveDrag] = useState<PlacedModule | null>(null);
+  const isMobile = useIsMobile();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // Press-and-hold to drag on touch, so a normal swipe still scrolls the page.
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
+
+  const moveModule = (module: PlacedModule, year: number, sem: number) => {
+    const target = semesters.find((s) => s.year === year && s.sem === sem);
+    if (!target) return;
+    if (!canPlaceModule(target, module)) {
+      alert('Year 1 semesters cannot exceed 26 MC.');
+      return;
+    }
+    addOrMoveModule(year, sem, module);
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const module = event.active.data.current?.module as PlacedModule | undefined;
@@ -53,38 +67,101 @@ export const SemesterGrid = ({
     if (!over) return;
     const module = active.data.current?.module as PlacedModule;
     const [year, sem] = (over.id as string).split('-').map(Number);
-    const targetSemester = semesters.find((semester) => semester.year === year && semester.sem === sem);
-    if (!targetSemester) return;
-    if (!canPlaceModule(targetSemester, module)) {
-      alert('Year 1 semesters cannot exceed 26 MC.');
-      return;
-    }
-    addOrMoveModule(year, sem, module);
+    moveModule(module, year, sem);
   };
 
   const waivedCodes = waivedModules.map((module) => module.code);
+  const moveTargets = semesters.map((s) => ({
+    year: s.year,
+    sem: s.sem,
+    label: semesterLabel(s.year, s.sem),
+  }));
+
+  // Mobile shows one semester at a time; 'waived' selects the waived panel.
+  const [selectedKey, setSelectedKey] = useState<string>(
+    semesters[0] ? `${semesters[0].year}-${semesters[0].sem}` : 'waived',
+  );
+  const chips = [
+    { key: 'waived', label: 'Waived', warn: false },
+    ...semesters.map((s) => {
+      const mcs = getSemesterMcs(s);
+      return {
+        key: `${s.year}-${s.sem}`,
+        label: `${semesterLabel(s.year, s.sem)} · ${mcs} MC`,
+        warn: Boolean(getLoadWarning(s.year, mcs)),
+      };
+    }),
+  ];
+  const selectedSemester = semesters.find((s) => `${s.year}-${s.sem}` === selectedKey) ?? null;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-3 overflow-x-auto pb-3">
-        <WaivedCourses
-          major={major}
-          waivedModules={waivedModules}
-          onAdd={addWaivedModule}
-          onDelete={deleteWaivedModule}
-        />
-        {semesters.map((semester) => (
-          <SemesterColumn
-            key={`${semester.year}-${semester.sem}`}
-            semester={semester}
+      {isMobile ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setSelectedKey(chip.key)}
+                className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedKey === chip.key ? 'bg-ink text-canvas' : 'bg-paper text-ink/70'
+                }`}
+              >
+                {chip.label}
+                {chip.warn && <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
+              </button>
+            ))}
+          </div>
+
+          {selectedKey === 'waived' ? (
+            <WaivedCourses
+              major={major}
+              waivedModules={waivedModules}
+              onAdd={addWaivedModule}
+              onDelete={deleteWaivedModule}
+              fullWidth
+            />
+          ) : selectedSemester ? (
+            <SemesterColumn
+              key={selectedKey}
+              semester={selectedSemester}
+              major={major}
+              addOrMoveModule={addOrMoveModule}
+              deleteModule={deleteModule}
+              setModuleCategory={setModuleCategory}
+              completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(selectedSemester.year, selectedSemester.sem)]))}
+              isMobile={isMobile}
+              moveTargets={moveTargets}
+              onMoveModule={moveModule}
+              fullWidth
+            />
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-3">
+          <WaivedCourses
             major={major}
-            addOrMoveModule={addOrMoveModule}
-            deleteModule={deleteModule}
-            setModuleCategory={setModuleCategory}
-            completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
+            waivedModules={waivedModules}
+            onAdd={addWaivedModule}
+            onDelete={deleteWaivedModule}
           />
-        ))}
-      </div>
+          {semesters.map((semester) => (
+            <SemesterColumn
+              key={`${semester.year}-${semester.sem}`}
+              semester={semester}
+              major={major}
+              addOrMoveModule={addOrMoveModule}
+              deleteModule={deleteModule}
+              setModuleCategory={setModuleCategory}
+              completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
+              isMobile={isMobile}
+              moveTargets={moveTargets}
+              onMoveModule={moveModule}
+            />
+          ))}
+        </div>
+      )}
 
       <DragOverlay dropAnimation={null}>
         {activeDrag && (
@@ -110,9 +187,13 @@ interface ColumnProps {
   deleteModule: (code: string) => void;
   setModuleCategory: (code: string, categoryId: string) => void;
   completedCodes: string[];
+  isMobile: boolean;
+  moveTargets: { year: number; sem: number; label: string }[];
+  onMoveModule: (module: PlacedModule, year: number, sem: number) => void;
+  fullWidth?: boolean;
 }
 
-const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setModuleCategory, completedCodes }: ColumnProps) => {
+const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setModuleCategory, completedCodes, isMobile, moveTargets, onMoveModule, fullWidth = false }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
@@ -126,8 +207,8 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setMod
       ref={setNodeRef}
       className="flex flex-col flex-shrink-0 rounded-3xl p-3 transition-colors"
       style={{
-        minWidth: '172px',
-        width: '172px',
+        minWidth: fullWidth ? undefined : '172px',
+        width: fullWidth ? '100%' : '172px',
         minHeight: '280px',
         backgroundColor: isOver ? 'rgb(210,203,190)' : 'rgb(225,218,205)',
         outline: isOver ? '2px dashed rgb(108,107,104)' : 'none',
@@ -184,6 +265,8 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, setMod
             fromSem={semester.sem}
             onDelete={deleteModule}
             onChangeCategory={setModuleCategory}
+            moveTargets={moveTargets}
+            onMove={(year, sem) => onMoveModule(module, year, sem)}
           />
         ))}
       </div>
