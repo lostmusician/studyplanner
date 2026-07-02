@@ -1,20 +1,23 @@
-import type { Major, PlacedModule, StudentSemester } from '@shared/types';
-import type { Stats } from '../lib/studyPlan';
+import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
+import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
 import { AddModuleForm } from './AddModuleForm';
-import { RequirementsChecklist } from './RequirementsChecklist';
+import { WaivedCourses } from './WaivedCourses';
 
 interface Props {
   majors: Major[];
   major: Major;
   majorId: string;
   semesters: StudentSemester[];
+  waivedModules: WaivedModule[];
   stats: Stats;
-  requirements: Array<{ name: string; fulfilled: boolean; categoryId?: string }>;
+  requirements: RequirementStatus[];
   switchMajor: (id: string) => void;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule) => void;
   deleteModule: (code: string) => void;
+  addWaivedModule: (module: WaivedModule) => void;
+  deleteWaivedModule: (code: string) => void;
   resetPlan: () => void;
   getCompletedCodes: (year: number, sem: number) => string[];
   studentName: string;
@@ -28,11 +31,14 @@ export const StudyPlan = ({
   major,
   majorId,
   semesters,
+  waivedModules,
   stats,
   requirements,
   switchMajor,
   addOrMoveModule,
   deleteModule,
+  addWaivedModule,
+  deleteWaivedModule,
   resetPlan,
   getCompletedCodes,
   studentName,
@@ -99,14 +105,25 @@ export const StudyPlan = ({
       {/* Stats bar */}
       <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
         <div className="max-w-screen-2xl mx-auto">
-          <StatsSummary major={major} stats={stats} />
+          <StatsSummary
+            major={major}
+            stats={stats}
+            semesters={semesters}
+            waivedModules={waivedModules}
+            requirements={requirements}
+          />
         </div>
       </div>
 
       {/* Main content */}
-      <div className="max-w-screen-2xl mx-auto px-6 py-6 flex gap-6">
-        {/* Left: semester grid + add form */}
-        <div className="flex-1 min-w-0 flex flex-col gap-5">
+      <div className="max-w-screen-2xl mx-auto px-6 py-6">
+        <div className="flex min-w-0 flex-col gap-5">
+          <WaivedCourses
+            major={major}
+            waivedModules={waivedModules}
+            onAdd={addWaivedModule}
+            onDelete={deleteWaivedModule}
+          />
           <SemesterGrid
             semesters={semesters}
             major={major}
@@ -116,11 +133,6 @@ export const StudyPlan = ({
           />
           <AddModuleForm major={major} onAdd={addOrMoveModule} />
         </div>
-
-        {/* Right sidebar */}
-        <aside className="w-64 flex-shrink-0">
-          <RequirementsChecklist requirements={requirements} categories={major.categories} />
-        </aside>
       </div>
     </div>
   );

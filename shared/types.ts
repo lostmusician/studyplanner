@@ -48,6 +48,8 @@ export interface PlacedModule extends Module {
   categoryId: string;
 }
 
+export type WaivedModule = PlacedModule;
+
 export interface StudentSemester {
   year: number;
   sem: number;
@@ -57,5 +59,6 @@ export interface StudentSemester {
 export interface StudentPlan {
   majorId: string;
   semesters: StudentSemester[];
+  waivedModules?: WaivedModule[];
   lastUpdated: string;
 }
