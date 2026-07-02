@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
+import { buildShareLink } from '@shared/share';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
 
@@ -22,6 +23,8 @@ interface Props {
   getCompletedCodes: (year: number, sem: number) => string[];
   studentName: string;
   setStudentName: (name: string) => void;
+  matricNumber: string;
+  setMatricNumber: (matric: string) => void;
   studentYear: string;
   setStudentYear: (year: string) => void;
 }
@@ -44,10 +47,29 @@ export const StudyPlan = ({
   getCompletedCodes,
   studentName,
   setStudentName,
+  matricNumber,
+  setMatricNumber,
   studentYear,
   setStudentYear,
 }: Props) => {
   const [view, setView] = useState<'planner' | 'settings'>('planner');
+  const [shareState, setShareState] = useState<'idle' | 'copied' | 'error'>('idle');
+
+  const handleShare = async () => {
+    const link = buildShareLink({
+      profile: { name: studentName, matricNumber, year: studentYear },
+      plan: { majorId, semesters, waivedModules },
+    });
+    try {
+      await navigator.clipboard.writeText(link);
+      setShareState('copied');
+    } catch {
+      // Clipboard can be blocked (e.g. insecure context); surface the link so it's still usable.
+      window.prompt('Copy this share link:', link);
+      setShareState('error');
+    }
+    window.setTimeout(() => setShareState('idle'), 2000);
+  };
 
   const handleSwitchMajor = (id: string) => {
     if (id === majorId) return;
@@ -67,7 +89,9 @@ export const StudyPlan = ({
           <div className="flex items-center gap-6">
             <div className="flex min-w-[138px] flex-col gap-0.5">
               <span className="text-base font-semibold leading-tight text-ink">{studentName || 'Student Name'}</span>
-              <span className="text-xs leading-tight text-muted">{studentYear}</span>
+              <span className="text-xs leading-tight text-muted">
+                {matricNumber ? `${studentYear} · ${matricNumber}` : studentYear}
+              </span>
             </div>
 
             <div className="h-10 w-px" style={{ backgroundColor: 'rgba(20,20,19,0.1)' }} />
@@ -80,12 +104,20 @@ export const StudyPlan = ({
             />
           </div>
 
-          <button
-            onClick={() => setView((current) => (current === 'settings' ? 'planner' : 'settings'))}
-            className="text-xs text-muted hover:text-ink transition-colors px-3 py-1.5 rounded-xl hover:bg-paper"
-          >
-            {view === 'settings' ? 'Planner' : 'Settings'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="text-xs text-muted hover:text-ink transition-colors px-3 py-1.5 rounded-xl hover:bg-paper"
+            >
+              {shareState === 'copied' ? 'Link copied' : shareState === 'error' ? 'Copy manually' : 'Share'}
+            </button>
+            <button
+              onClick={() => setView((current) => (current === 'settings' ? 'planner' : 'settings'))}
+              className="text-xs text-muted hover:text-ink transition-colors px-3 py-1.5 rounded-xl hover:bg-paper"
+            >
+              {view === 'settings' ? 'Planner' : 'Settings'}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -95,6 +127,8 @@ export const StudyPlan = ({
           majorId={majorId}
           studentName={studentName}
           setStudentName={setStudentName}
+          matricNumber={matricNumber}
+          setMatricNumber={setMatricNumber}
           studentYear={studentYear}
           setStudentYear={setStudentYear}
           onSwitchMajor={handleSwitchMajor}
@@ -186,6 +220,8 @@ const SettingsPage = ({
   majorId,
   studentName,
   setStudentName,
+  matricNumber,
+  setMatricNumber,
   studentYear,
   setStudentYear,
   onSwitchMajor,
@@ -195,6 +231,8 @@ const SettingsPage = ({
   majorId: string;
   studentName: string;
   setStudentName: (name: string) => void;
+  matricNumber: string;
+  setMatricNumber: (matric: string) => void;
   studentYear: string;
   setStudentYear: (year: string) => void;
   onSwitchMajor: (id: string) => void;
@@ -219,6 +257,16 @@ const SettingsPage = ({
                 type="text"
                 value={studentName}
                 onChange={(event) => setStudentName(event.target.value)}
+                className={field}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-wide text-muted">Matric Number</span>
+              <input
+                type="text"
+                value={matricNumber}
+                onChange={(event) => setMatricNumber(event.target.value)}
+                placeholder="A0123456X"
                 className={field}
               />
             </label>
