@@ -77,30 +77,91 @@ export const SemesterGrid = ({
     label: semesterLabel(s.year, s.sem),
   }));
 
+  // Mobile shows one semester at a time; 'waived' selects the waived panel.
+  const [selectedKey, setSelectedKey] = useState<string>(
+    semesters[0] ? `${semesters[0].year}-${semesters[0].sem}` : 'waived',
+  );
+  const chips = [
+    { key: 'waived', label: 'Waived', warn: false },
+    ...semesters.map((s) => {
+      const mcs = getSemesterMcs(s);
+      return {
+        key: `${s.year}-${s.sem}`,
+        label: `${semesterLabel(s.year, s.sem)} · ${mcs} MC`,
+        warn: Boolean(getLoadWarning(s.year, mcs)),
+      };
+    }),
+  ];
+  const selectedSemester = semesters.find((s) => `${s.year}-${s.sem}` === selectedKey) ?? null;
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-3 overflow-x-auto pb-3">
-        <WaivedCourses
-          major={major}
-          waivedModules={waivedModules}
-          onAdd={addWaivedModule}
-          onDelete={deleteWaivedModule}
-        />
-        {semesters.map((semester) => (
-          <SemesterColumn
-            key={`${semester.year}-${semester.sem}`}
-            semester={semester}
+      {isMobile ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setSelectedKey(chip.key)}
+                className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  selectedKey === chip.key ? 'bg-ink text-canvas' : 'bg-paper text-ink/70'
+                }`}
+              >
+                {chip.label}
+                {chip.warn && <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
+              </button>
+            ))}
+          </div>
+
+          {selectedKey === 'waived' ? (
+            <WaivedCourses
+              major={major}
+              waivedModules={waivedModules}
+              onAdd={addWaivedModule}
+              onDelete={deleteWaivedModule}
+              fullWidth
+            />
+          ) : selectedSemester ? (
+            <SemesterColumn
+              key={selectedKey}
+              semester={selectedSemester}
+              major={major}
+              addOrMoveModule={addOrMoveModule}
+              deleteModule={deleteModule}
+              setModuleCategory={setModuleCategory}
+              completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(selectedSemester.year, selectedSemester.sem)]))}
+              isMobile={isMobile}
+              moveTargets={moveTargets}
+              onMoveModule={moveModule}
+              fullWidth
+            />
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-3">
+          <WaivedCourses
             major={major}
-            addOrMoveModule={addOrMoveModule}
-            deleteModule={deleteModule}
-            setModuleCategory={setModuleCategory}
-            completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
-            isMobile={isMobile}
-            moveTargets={moveTargets}
-            onMoveModule={moveModule}
+            waivedModules={waivedModules}
+            onAdd={addWaivedModule}
+            onDelete={deleteWaivedModule}
           />
-        ))}
-      </div>
+          {semesters.map((semester) => (
+            <SemesterColumn
+              key={`${semester.year}-${semester.sem}`}
+              semester={semester}
+              major={major}
+              addOrMoveModule={addOrMoveModule}
+              deleteModule={deleteModule}
+              setModuleCategory={setModuleCategory}
+              completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
+              isMobile={isMobile}
+              moveTargets={moveTargets}
+              onMoveModule={moveModule}
+            />
+          ))}
+        </div>
+      )}
 
       <DragOverlay dropAnimation={null}>
         {activeDrag && (
