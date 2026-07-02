@@ -119,7 +119,7 @@ export const StudyPlan = ({
 
         {/* Right sidebar */}
         <aside className="w-64 flex-shrink-0">
-          <RequirementsChecklist requirements={requirements} />
+          <RequirementsChecklist requirements={requirements} categories={major.categories} />
         </aside>
       </div>
     </div>

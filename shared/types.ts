@@ -20,6 +20,9 @@ export interface RequirementRule {
   fulfilledBy: string[];
   /** Number of distinct matching modules needed to satisfy this requirement. Defaults to 1. */
   count?: number;
+  /** Groups this requirement under a MajorCategory (by id) in the requirements checklist.
+   * Rows without one are rendered under a fallback "Other" group. */
+  categoryId?: string;
 }
 
 export interface DefaultPlanEntry {

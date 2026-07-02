@@ -41,13 +41,13 @@ const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
 export const computeRequirements = (
   major: Major,
   semesters: StudentSemester[],
-): Array<{ name: string; fulfilled: boolean }> => {
+): Array<{ name: string; fulfilled: boolean; categoryId?: string }> => {
   const allCodes = Array.from(new Set(semesters.flatMap((s) => s.modules.map((m) => m.code))));
   return major.requirements.map((req) => {
     const matchCount = allCodes.filter((code) =>
       req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)),
     ).length;
-    return { name: req.name, fulfilled: matchCount >= (req.count ?? 1) };
+    return { name: req.name, fulfilled: matchCount >= (req.count ?? 1), categoryId: req.categoryId };
   });
 };
 
