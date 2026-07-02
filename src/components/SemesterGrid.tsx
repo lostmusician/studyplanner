@@ -9,6 +9,10 @@ import { ModuleCard } from './ModuleCard';
 import { WaivedCourses } from './WaivedCourses';
 import { PlusIcon, XIcon } from './Icons';
 
+const UNDERLOAD_MCS = 16;
+const OVERLOAD_MCS = 20;
+const YEAR_ONE_MAX_MCS = 26;
+
 interface Props {
   semesters: StudentSemester[];
   major: Major;
@@ -47,6 +51,12 @@ export const SemesterGrid = ({
     if (!over) return;
     const module = active.data.current?.module as PlacedModule;
     const [year, sem] = (over.id as string).split('-').map(Number);
+    const targetSemester = semesters.find((semester) => semester.year === year && semester.sem === sem);
+    if (!targetSemester) return;
+    if (!canPlaceModule(targetSemester, module)) {
+      alert('Year 1 semesters cannot exceed 26 MC.');
+      return;
+    }
     addOrMoveModule(year, sem, module);
   };
 
@@ -100,10 +110,12 @@ interface ColumnProps {
 
 const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, completedCodes }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
   const { setNodeRef, isOver } = useDroppable({ id });
 
-  const totalMcs = semester.modules.reduce((sum, m) => sum + m.mcs, 0);
+  const totalMcs = getSemesterMcs(semester);
+  const loadWarning = getLoadWarning(semester.year, totalMcs);
 
   return (
     <div
@@ -118,13 +130,16 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, comple
         outlineOffset: '-2px',
       }}
     >
-      <div className="flex items-center justify-between mb-3 px-1">
+      <div className="flex items-center justify-between mb-2 px-1">
         <span className="text-xs font-semibold text-ink">{semesterLabel(semester.year, semester.sem)}</span>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-muted">{totalMcs} MC</span>
           <button
             type="button"
-            onClick={() => setIsAdding((open) => !open)}
+            onClick={() => {
+              setAddError(null);
+              setIsAdding((open) => !open);
+            }}
             className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-canvas transition-colors hover:bg-ink/80"
             aria-label={isAdding ? `Close add module for ${semesterLabel(semester.year, semester.sem)}` : `Add module to ${semesterLabel(semester.year, semester.sem)}`}
             aria-expanded={isAdding}
@@ -134,14 +149,22 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, comple
         </div>
       </div>
 
+      {loadWarning && <LoadWarningChip warning={loadWarning} />}
+
       <div className="flex flex-col gap-2 flex-1">
         {isAdding && (
           <SemesterAddModuleForm
             major={major}
             year={semester.year}
             sem={semester.sem}
+            error={addError}
             onAdd={(year, sem, module) => {
+              if (!canPlaceModule(semester, module)) {
+                setAddError('Y1 max is 26 MC.');
+                return;
+              }
               addOrMoveModule(year, sem, module);
+              setAddError(null);
               setIsAdding(false);
             }}
           />
@@ -175,11 +198,13 @@ const SemesterAddModuleForm = ({
   major,
   year,
   sem,
+  error,
   onAdd,
 }: {
   major: Major;
   year: number;
   sem: number;
+  error: string | null;
   onAdd: (year: number, sem: number, module: PlacedModule) => void;
 }) => {
   const [form, setForm] = useState<AddFormState>({
@@ -294,6 +319,7 @@ const SemesterAddModuleForm = ({
       )}
 
       {form.name && <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>}
+      {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
 
       <select
         value={form.categoryId}
@@ -314,6 +340,58 @@ const SemesterAddModuleForm = ({
       </button>
     </form>
   );
+};
+
+interface LoadWarning {
+  label: string;
+  detail: string;
+  className: string;
+}
+
+const LoadWarningChip = ({ warning }: { warning: LoadWarning }) => (
+  <div className={`${warning.className} mb-2 rounded-xl px-2.5 py-1.5 text-[10px] font-medium leading-tight`}>
+    <span className="block">{warning.label}</span>
+    <span className="block font-normal opacity-75">{warning.detail}</span>
+  </div>
+);
+
+const getSemesterMcs = (semester: StudentSemester): number =>
+  semester.modules.reduce((sum, module) => sum + module.mcs, 0);
+
+const getProjectedSemesterMcs = (semester: StudentSemester, module: PlacedModule): number =>
+  semester.modules
+    .filter((existingModule) => existingModule.code !== module.code)
+    .reduce((sum, existingModule) => sum + existingModule.mcs, module.mcs);
+
+const canPlaceModule = (semester: StudentSemester, module: PlacedModule): boolean =>
+  semester.year !== 1 || getProjectedSemesterMcs(semester, module) <= YEAR_ONE_MAX_MCS;
+
+const getLoadWarning = (year: number, totalMcs: number): LoadWarning | null => {
+  if (year === 1 && totalMcs > YEAR_ONE_MAX_MCS) {
+    return {
+      label: 'Y1 cap exceeded',
+      detail: `Max ${YEAR_ONE_MAX_MCS} MC`,
+      className: 'bg-red-100 text-red-800',
+    };
+  }
+
+  if (totalMcs > OVERLOAD_MCS) {
+    return {
+      label: 'Overload',
+      detail: `Above ${OVERLOAD_MCS} MC`,
+      className: 'bg-orange-100 text-orange-800',
+    };
+  }
+
+  if (totalMcs > 0 && totalMcs < UNDERLOAD_MCS) {
+    return {
+      label: 'Underload',
+      detail: `Below ${UNDERLOAD_MCS} MC`,
+      className: 'bg-sky-100 text-sky-800',
+    };
+  }
+
+  return null;
 };
 
 const inferCategoryId = (major: Major, moduleCode: string): string => {
