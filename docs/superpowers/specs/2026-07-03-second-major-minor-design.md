@@ -41,7 +41,7 @@ wherever possible.
   primary major, with the same "approximate, verify against your own
   degree audit" caveat the existing major specs already carry.
 - Full per-module curriculum research for every one of the 16 programmes.
-  Math, Statistics (second major), and Business Analytics (minor) have
+  Mathematics (second major + minor) and Statistics (second major) have
   confirmed module-level detail below; the remaining programmes' exact
   module lists are authored during implementation, one data file at a
   time, against their official department curriculum pages.
@@ -83,17 +83,19 @@ ST2137 Computer-Aided Data Analysis, 3 modules from ST3131/ST32xx/ST42xx +
 1 more from ST32xx/ST42xx. Not open to students already majoring or
 minoring in Statistics/Data Science &amp; Analytics.
 
-**Minor in Business Analytics** (20 MC): Core (12 MC) — BT1101, BT2101,
-CS1010S (or +4 MC elective if CS1010S is waived); Electives (8 MC) from
-BT2102, BT3103, BT4014, BT4211, BT4212, BT4221, BT4222, BT4240, IS4241,
-ST3131.
+(Minor in Business Analytics was found during research but is a SoC-internal
+minor, not one of the 9 approved "other faculty" minors in scope above —
+excluded here for the same reason the SoC-internal second majors were
+excluded in Scope: it's likely closed to students already holding one of
+the app's 5 modeled majors, matching the restriction pattern confirmed for
+SoC's own second majors.)
 
 The remaining 5 second majors (Data Analytics, Economics, Psychology,
-Management, Public Health) and 6 remaining minors (Data Analytics,
-Economics, Psychology, Management, Public Health, Quantitative Finance,
-Entrepreneurship) are confirmed to exist at the stated MC totals, but their
-exact module lists are not yet researched to this level of detail — that
-research happens per-file during implementation.
+Management, Public Health) and 8 remaining minors (Statistics, Data
+Analytics, Economics, Psychology, Management, Public Health, Quantitative
+Finance, Entrepreneurship) are confirmed to exist at the stated MC totals,
+but their exact module lists are not yet researched to this level of
+detail — that research happens per-file during implementation.
 
 ## Data model
 
