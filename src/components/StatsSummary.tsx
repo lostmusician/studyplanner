@@ -272,7 +272,7 @@ const BreadthDepthPanel = ({
   );
 };
 
-const ConstraintChip = ({ constraint }: { constraint: ConstraintStatus }) => {
+export const ConstraintChip = ({ constraint }: { constraint: ConstraintStatus }) => {
   const bg = constraint.warn
     ? 'rgb(254,243,199)'
     : constraint.fulfilled
@@ -373,7 +373,7 @@ const FocusAreaChip = ({ area }: { area: FocusAreaStatus }) => {
   );
 };
 
-const RequirementRow = ({ req }: { req: RequirementStatus }) => (
+export const RequirementRow = ({ req }: { req: RequirementStatus }) => (
   <li className="flex min-h-10 items-start gap-2.5 rounded-2xl bg-canvas/60 px-3 py-2">
     <StatusDot fulfilled={req.fulfilled} />
     <span
@@ -425,7 +425,7 @@ const ModuleStatusRow = ({
   </li>
 );
 
-const StatusDot = ({ fulfilled }: { fulfilled: boolean }) => (
+export const StatusDot = ({ fulfilled }: { fulfilled: boolean }) => (
   <span
     className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[10px]"
     style={{
