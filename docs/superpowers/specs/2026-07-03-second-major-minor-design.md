@@ -165,10 +165,10 @@ declaring a programme or marking a requirement complete:
 
 ```ts
 export interface DoubleCountStatus {
-  overlapMc: number;
+  doubleCountMc: number;
   capMc: number;         // secondary.mcTarget * 0.4 (16 or 8 at standard sizes)
-  warn: boolean;         // overlapMc > capMc
-  overlapCodes: string[];
+  warn: boolean;         // doubleCountMc > capMc
+  doubleCountedCodes: string[];
 }
 
 export const computeDoubleCount = (
@@ -180,7 +180,7 @@ export const computeDoubleCount = (
   // 1. Codes satisfying ≥1 requirement in `primary`.
   // 2. Codes satisfying ≥1 requirement in `secondary`.
   // 3. Intersect, sum MC via the plan's PlacedModule.mcs.
-  // 4. capMc = secondary.mcTarget * 0.4; warn = overlapMc > capMc.
+  // 4. capMc = secondary.mcTarget * 0.4; warn = doubleCountMc > capMc.
 };
 ```
 
@@ -189,10 +189,10 @@ MC requirement," which equals 16/8 only because second majors/minors are
 standardized at 40/20 MC) rather than hard-coded, so it stays correct if a
 future programme ever ships at a non-standard size.
 
-**Triple-counting flag**: any code that overlaps the primary *and 2+*
-declared secondary programmes at once is called out as its own separate
-warning line (NUS explicitly forbids triple counting), rather than folded
-into either programme's overlap chip.
+**Triple-counting flag**: any code that double-counts against the primary
+*and 2+* declared secondary programmes at once is called out as its own
+separate warning line (NUS explicitly forbids triple counting), rather
+than folded into either programme's double-count chip.
 
 ## UI/UX
 
@@ -211,9 +211,8 @@ visual pattern of the existing batch-indicator badge
 **Secondary requirements panels**: one collapsible card per declared
 programme (second major + each minor), rendered below the primary
 Requirements panel, reusing the existing checklist row component, scoped
-to that programme's `requirements`. Each card shows its double-count
-overlap chip (e.g. "12/16 MC double-counted"), styled as a warning when
-`warn` is true.
+to that programme's `requirements`. Each card shows its double-count chip
+(e.g. "12/16 MC double-counted"), styled as a warning when `warn` is true.
 
 ## Testing / verification
 
