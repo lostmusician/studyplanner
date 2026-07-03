@@ -71,7 +71,7 @@ export const renameModule = (
     modules: s.modules.map((m) => (m.code === oldCode ? { ...updates } : m)),
   }));
 
-const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
+export const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
   fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
 
 const matchesAnyRequirement = (requirements: RequirementRule[], code: string): boolean =>
@@ -133,13 +133,19 @@ export const computeRequirements = (
   source: Pick<Major, 'requirements'>,
   semesters: StudentSemester[],
   waivedModules: WaivedModule[] = [],
+  requirementMappings: Record<string, string[]> = {},
 ): RequirementStatus[] => {
   const plannedCodes = semesters.flatMap((s) => s.modules.map((m) => m.code));
   const waivedCodes = waivedModules.map((m) => m.code);
   const allCodes = Array.from(new Set([...plannedCodes, ...waivedCodes]));
   return source.requirements.map((req) => {
-    const matchCount = allCodes.filter((code) =>
-      req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)),
+    // Scanning `allCodes` keeps a mapped-but-removed module dormant: the link
+    // survives in the plan, but only counts while the module is placed/waived.
+    const mappedCodes = requirementMappings[req.name] ?? [];
+    const matchCount = allCodes.filter(
+      (code) =>
+        req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)) ||
+        mappedCodes.includes(code),
     ).length;
     const need = req.count ?? 1;
     return {

@@ -20,6 +20,9 @@ interface Props {
   minorIds: string[];
   setSecondMajorId: (id: string | null) => void;
   toggleMinorId: (id: string) => void;
+  requirementMappings: Record<string, string[]>;
+  addRequirementMapping: (requirementName: string, moduleCode: string) => void;
+  removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
   stats: Stats;
@@ -56,6 +59,9 @@ export const StudyPlan = ({
   minorIds,
   setSecondMajorId,
   toggleMinorId,
+  requirementMappings,
+  addRequirementMapping,
+  removeRequirementMapping,
   semesters,
   waivedModules,
   stats,
@@ -257,6 +263,9 @@ export const StudyPlan = ({
                 semesters={semesters}
                 waivedModules={waivedModules}
                 requirements={requirements}
+                requirementMappings={requirementMappings}
+                addRequirementMapping={addRequirementMapping}
+                removeRequirementMapping={removeRequirementMapping}
               />
             </div>
           </div>

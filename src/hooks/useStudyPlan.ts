@@ -39,7 +39,19 @@ interface SavedPlanState {
   waivedModules: WaivedModule[];
   secondMajorId: string | null;
   minorIds: string[];
+  requirementMappings: Record<string, string[]>;
 }
+
+const normalizeRequirementMappings = (value: unknown): Record<string, string[]> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const result: Record<string, string[]> = {};
+  for (const [name, codes] of Object.entries(value as Record<string, unknown>)) {
+    if (!Array.isArray(codes)) continue;
+    const cleaned = codes.filter((code): code is string => typeof code === 'string');
+    if (cleaned.length > 0) result[name] = cleaned;
+  }
+  return result;
+};
 
 type PlanMode = 'personal' | 'review';
 
@@ -89,6 +101,7 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
       waivedModules: normalizeWaivedModules(major, plan.waivedModules),
       secondMajorId: typeof plan.secondMajorId === 'string' ? plan.secondMajorId : null,
       minorIds: Array.isArray(plan.minorIds) ? plan.minorIds.slice(0, MAX_MINORS) : [],
+      requirementMappings: normalizeRequirementMappings(plan.requirementMappings),
     };
   } catch {
     return null;
@@ -100,6 +113,7 @@ const jsonDefaultPlan = (major: Major): SavedPlanState => ({
   waivedModules: normalizeWaivedModules(major, major.defaultWaivedModules),
   secondMajorId: null,
   minorIds: [],
+  requirementMappings: {},
 });
 
 const loadPlanForMajor = (major: Major): SavedPlanState => {
@@ -110,6 +124,7 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
     waivedModules: savedPlan?.waivedModules ?? defaultPlan.waivedModules,
     secondMajorId: savedPlan?.secondMajorId ?? defaultPlan.secondMajorId,
     minorIds: savedPlan?.minorIds ?? defaultPlan.minorIds,
+    requirementMappings: savedPlan?.requirementMappings ?? defaultPlan.requirementMappings,
   };
 };
 
@@ -120,6 +135,7 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
     waivedModules: state.waivedModules,
     secondMajorId: state.secondMajorId ?? undefined,
     minorIds: state.minorIds,
+    requirementMappings: state.requirementMappings,
     lastUpdated: new Date().toISOString(),
   };
   localStorage.setItem(planKey(majorId), JSON.stringify(plan));
@@ -147,11 +163,14 @@ export const useStudyPlan = () => {
     () => initialPlan?.secondMajorId ?? null,
   );
   const [minorIds, setMinorIds] = useState<string[]>(() => initialPlan?.minorIds ?? []);
+  const [requirementMappings, setRequirementMappings] = useState<Record<string, string[]>>(
+    () => initialPlan?.requirementMappings ?? {},
+  );
 
   useEffect(() => {
     if (!major || mode !== 'personal') return;
-    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds });
-  }, [semesters, waivedModules, secondMajorId, minorIds, major, mode]);
+    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings });
+  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, major, mode]);
 
   const setSecondMajorId = useCallback((id: string | null) => {
     setSecondMajorIdState(id);
@@ -165,6 +184,26 @@ export const useStudyPlan = () => {
     });
   }, []);
 
+  const addRequirementMapping = useCallback((requirementName: string, moduleCode: string) => {
+    setRequirementMappings((prev) => {
+      const existing = prev[requirementName] ?? [];
+      if (existing.includes(moduleCode)) return prev;
+      return { ...prev, [requirementName]: [...existing, moduleCode] };
+    });
+  }, []);
+
+  const removeRequirementMapping = useCallback((requirementName: string, moduleCode: string) => {
+    setRequirementMappings((prev) => {
+      const existing = prev[requirementName] ?? [];
+      if (!existing.includes(moduleCode)) return prev;
+      const remaining = existing.filter((code) => code !== moduleCode);
+      const next = { ...prev };
+      if (remaining.length === 0) delete next[requirementName];
+      else next[requirementName] = remaining;
+      return next;
+    });
+  }, []);
+
   const switchMajor = useCallback(
     (newMajorId: string) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
@@ -174,6 +213,7 @@ export const useStudyPlan = () => {
       setWaivedModules(nextPlan.waivedModules);
       setSecondMajorIdState(nextPlan.secondMajorId);
       setMinorIds(nextPlan.minorIds);
+      setRequirementMappings(nextPlan.requirementMappings);
       setMajorId(newMajorId);
       if (mode === 'personal') setPersonalMajorId(newMajorId);
     },
@@ -236,6 +276,7 @@ export const useStudyPlan = () => {
     setWaivedModules(defaultPlan.waivedModules);
     setSecondMajorIdState(defaultPlan.secondMajorId);
     setMinorIds(defaultPlan.minorIds);
+    setRequirementMappings(defaultPlan.requirementMappings);
   }, [major]);
 
   const importSharedPlan = useCallback(
@@ -247,6 +288,7 @@ export const useStudyPlan = () => {
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
       setSecondMajorIdState(null);
       setMinorIds([]);
+      setRequirementMappings({});
       setMajorId(newMajorId);
       setPersonalMajorId(newMajorId);
       return true;
@@ -263,6 +305,7 @@ export const useStudyPlan = () => {
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
       setSecondMajorIdState(null);
       setMinorIds([]);
+      setRequirementMappings({});
       setMajorId(newMajorId);
       return true;
     },
@@ -278,10 +321,13 @@ export const useStudyPlan = () => {
     setWaivedModules(personalPlan.waivedModules);
     setSecondMajorIdState(personalPlan.secondMajorId);
     setMinorIds(personalPlan.minorIds);
+    setRequirementMappings(personalPlan.requirementMappings);
     setMajorId(personalMajor.id);
   }, [majors, personalMajorId, defaultMajor]);
 
-  const requirements = major ? computeRequirements(major, semesters, waivedModules) : [];
+  const requirements = major
+    ? computeRequirements(major, semesters, waivedModules, requirementMappings)
+    : [];
   const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
 
   return {
@@ -294,6 +340,9 @@ export const useStudyPlan = () => {
     minorIds,
     setSecondMajorId,
     toggleMinorId,
+    requirementMappings,
+    addRequirementMapping,
+    removeRequirementMapping,
     semesters,
     waivedModules,
     stats,

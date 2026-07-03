@@ -124,6 +124,11 @@ export interface StudentPlan {
   secondMajorId?: string;
   /** At most 3 declared minors. */
   minorIds?: string[];
+  /** Manual links from a requirement (by its `RequirementRule.name`) to planner
+   * module codes that should count toward it even though they don't match its
+   * `fulfilledBy` list. A mapped code only counts while that module is actually
+   * placed (or waived) in the plan. */
+  requirementMappings?: Record<string, string[]>;
   semesters: StudentSemester[];
   waivedModules?: WaivedModule[];
   lastUpdated: string;
