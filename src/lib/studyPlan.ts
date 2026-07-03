@@ -4,6 +4,8 @@ import type {
   PlacedModule,
   WaivedModule,
   FocusArea,
+  SecondaryProgramme,
+  RequirementRule,
 } from '@shared/types';
 
 export const semesterLabel = (year: number, sem: number): string => `Y${year}S${sem}`;
@@ -72,6 +74,9 @@ export const renameModule = (
 const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
   fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
 
+const matchesAnyRequirement = (requirements: RequirementRule[], code: string): boolean =>
+  requirements.some((req) => req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)));
+
 /**
  * Best-effort category for a module code, derived from the major's own structure:
  * default plan → requirement mapping → Breadth & Depth (focus areas, Industry
@@ -125,14 +130,14 @@ export interface RequirementStatus {
 }
 
 export const computeRequirements = (
-  major: Major,
+  source: Pick<Major, 'requirements'>,
   semesters: StudentSemester[],
   waivedModules: WaivedModule[] = [],
 ): RequirementStatus[] => {
   const plannedCodes = semesters.flatMap((s) => s.modules.map((m) => m.code));
   const waivedCodes = waivedModules.map((m) => m.code);
   const allCodes = Array.from(new Set([...plannedCodes, ...waivedCodes]));
-  return major.requirements.map((req) => {
+  return source.requirements.map((req) => {
     const matchCount = allCodes.filter((code) =>
       req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)),
     ).length;
@@ -145,6 +150,54 @@ export const computeRequirements = (
       need,
     };
   });
+};
+
+export interface DoubleCountStatus {
+  doubleCountMc: number;
+  /** secondary.mcTarget * 0.4 — 16 MC for a second major, 8 MC for a minor
+   * at NUS's standard 40/20 MC sizes. Derived, never hard-coded. */
+  capMc: number;
+  warn: boolean;
+  doubleCountedCodes: string[];
+}
+
+/** Whether each already-placed module (which belongs to the primary major by
+ * construction) also satisfies the secondary programme's own requirements.
+ * There is deliberately no `primary: Major` parameter here: many primary
+ * categories (e.g. math-sciences, unrestricted electives) carry an MC target
+ * but no named RequirementRule row, so "satisfies a primary requirement"
+ * would silently miss legitimate double-counting. */
+export const computeDoubleCount = (
+  secondary: SecondaryProgramme,
+  semesters: StudentSemester[],
+  waivedModules: WaivedModule[] = [],
+): DoubleCountStatus => {
+  const allModules = [...semesters.flatMap((s) => s.modules), ...waivedModules];
+  const byCode = new Map<string, PlacedModule>();
+  for (const m of allModules) if (!byCode.has(m.code)) byCode.set(m.code, m);
+
+  const doubleCountedCodes = [...byCode.keys()].filter((code) =>
+    matchesAnyRequirement(secondary.requirements, code),
+  );
+  const doubleCountMc = doubleCountedCodes.reduce((sum, code) => sum + (byCode.get(code)?.mcs ?? 0), 0);
+  const capMc = secondary.mcTarget * 0.4;
+
+  return { doubleCountMc, capMc, warn: doubleCountMc > capMc, doubleCountedCodes };
+};
+
+/** Codes that satisfy ≥1 requirement in 2 or more declared secondary
+ * programmes at once (1 implicit primary count + 2 secondary counts = 3).
+ * NUS explicitly forbids this. */
+export const computeTripleCountedCodes = (
+  secondaries: SecondaryProgramme[],
+  semesters: StudentSemester[],
+  waivedModules: WaivedModule[] = [],
+): string[] => {
+  const allModules = [...semesters.flatMap((s) => s.modules), ...waivedModules];
+  const codes = Array.from(new Set(allModules.map((m) => m.code)));
+  return codes.filter(
+    (code) => secondaries.filter((secondary) => matchesAnyRequirement(secondary.requirements, code)).length >= 2,
+  );
 };
 
 /** Derives the NUS course level from a code, e.g. "CS4231" -> 4000, "CS2103T" -> 2000. */
