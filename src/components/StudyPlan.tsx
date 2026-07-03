@@ -1,17 +1,25 @@
 import { useState } from 'react';
-import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
+import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
+import { computeTripleCountedCodes } from '../lib/studyPlan';
 import { buildShareLink } from '@shared/share';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
 import { BatchBadge } from './BatchBadge';
 import { AppDialog } from './AppDialog';
 import { Dropdown } from './Dropdown';
+import { SecondaryProgrammePanel } from './SecondaryProgrammePanel';
 
 interface Props {
   majors: Major[];
   major: Major;
   majorId: string;
+  secondMajors: SecondaryProgramme[];
+  minors: SecondaryProgramme[];
+  secondMajorId: string | null;
+  minorIds: string[];
+  setSecondMajorId: (id: string | null) => void;
+  toggleMinorId: (id: string) => void;
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
   stats: Stats;
@@ -42,6 +50,12 @@ export const StudyPlan = ({
   majors,
   major,
   majorId,
+  secondMajors,
+  minors,
+  secondMajorId,
+  minorIds,
+  setSecondMajorId,
+  toggleMinorId,
   semesters,
   waivedModules,
   stats,
@@ -145,6 +159,13 @@ export const StudyPlan = ({
     setShowResetConfirm(false);
   };
 
+  const declaredSecondMajor = secondMajorId
+    ? secondMajors.find((item) => item.id === secondMajorId) ?? null
+    : null;
+  const declaredMinors = minors.filter((item) => minorIds.includes(item.id));
+  const declaredSecondaries = declaredSecondMajor ? [declaredSecondMajor, ...declaredMinors] : declaredMinors;
+  const tripleCountedCodes = computeTripleCountedCodes(declaredSecondaries, semesters, waivedModules);
+
   return (
     <div className="min-h-screen bg-canvas">
       <header className="px-4 py-3 sm:px-6 sm:py-5" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
@@ -164,6 +185,8 @@ export const StudyPlan = ({
               major={major}
               majorId={majorId}
               onChange={handleSwitchMajor}
+              secondMajor={declaredSecondMajor}
+              declaredMinors={declaredMinors}
             />
           </div>
 
@@ -208,6 +231,12 @@ export const StudyPlan = ({
         <SettingsPage
           majors={majors}
           majorId={majorId}
+          secondMajors={secondMajors}
+          minors={minors}
+          secondMajorId={secondMajorId}
+          minorIds={minorIds}
+          setSecondMajorId={setSecondMajorId}
+          toggleMinorId={toggleMinorId}
           studentName={studentName}
           setStudentName={setStudentName}
           matricNumber={matricNumber}
@@ -230,6 +259,39 @@ export const StudyPlan = ({
               />
             </div>
           </div>
+
+          {(declaredSecondMajor || declaredMinors.length > 0) && (
+            <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
+              <div className="max-w-screen-2xl mx-auto flex flex-col gap-4">
+                {tripleCountedCodes.length > 0 && (
+                  <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                    <strong className="font-semibold">Triple-counting warning:</strong>{' '}
+                    {tripleCountedCodes.join(', ')}{' '}
+                    {tripleCountedCodes.length === 1 ? 'is' : 'are'} being counted toward your primary
+                    major and 2 or more secondary programmes at once &mdash; NUS does not allow this;
+                    one programme will need a different module.
+                  </div>
+                )}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {declaredSecondMajor && (
+                    <SecondaryProgrammePanel
+                      programme={declaredSecondMajor}
+                      semesters={semesters}
+                      waivedModules={waivedModules}
+                    />
+                  )}
+                  {declaredMinors.map((item) => (
+                    <SecondaryProgrammePanel
+                      key={item.id}
+                      programme={item}
+                      semesters={semesters}
+                      waivedModules={waivedModules}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="max-w-screen-2xl mx-auto px-6 py-6">
             <div className="flex min-w-0 flex-col gap-5">
@@ -341,11 +403,15 @@ const MajorHeaderSelect = ({
   major,
   majorId,
   onChange,
+  secondMajor,
+  declaredMinors,
 }: {
   majors: Major[];
   major: Major;
   majorId: string;
   onChange: (id: string) => void;
+  secondMajor: SecondaryProgramme | null;
+  declaredMinors: SecondaryProgramme[];
 }) => (
   <div className="flex flex-col items-start gap-0.5">
     <Dropdown
@@ -362,12 +428,35 @@ const MajorHeaderSelect = ({
       <span className="text-[10px] leading-tight text-muted/70">{major.school}</span>
       <BatchBadge batches={major.batches} />
     </div>
+    {(secondMajor || declaredMinors.length > 0) && (
+      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+        {secondMajor && <SecondaryProgrammeBadge label={`2nd Major: ${secondMajor.label}`} />}
+        {declaredMinors.map((item) => (
+          <SecondaryProgrammeBadge key={item.id} label={`Minor: ${item.label}`} />
+        ))}
+      </div>
+    )}
   </div>
+);
+
+const SecondaryProgrammeBadge = ({ label }: { label: string }) => (
+  <span
+    className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium leading-none"
+    style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: 'rgb(108,107,104)' }}
+  >
+    {label}
+  </span>
 );
 
 const SettingsPage = ({
   majors,
   majorId,
+  secondMajors,
+  minors,
+  secondMajorId,
+  minorIds,
+  setSecondMajorId,
+  toggleMinorId,
   studentName,
   setStudentName,
   matricNumber,
@@ -379,6 +468,12 @@ const SettingsPage = ({
 }: {
   majors: Major[];
   majorId: string;
+  secondMajors: SecondaryProgramme[];
+  minors: SecondaryProgramme[];
+  secondMajorId: string | null;
+  minorIds: string[];
+  setSecondMajorId: (id: string | null) => void;
+  toggleMinorId: (id: string) => void;
   studentName: string;
   setStudentName: (name: string) => void;
   matricNumber: string;
@@ -453,6 +548,48 @@ const SettingsPage = ({
               <BatchBadge batches={major.batches} />
             </div>
           )}
+
+          <label className="mt-4 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wide text-muted">Second Major</span>
+            <Dropdown
+              variant="field"
+              ariaLabel="Second Major"
+              value={secondMajorId ?? ''}
+              onChange={(id) => setSecondMajorId(id === '' ? null : id)}
+              className={field}
+              options={[
+                { value: '', label: 'None' },
+                ...secondMajors.map((item) => ({ value: item.id, label: item.label })),
+              ]}
+            />
+          </label>
+
+          <div className="mt-4 flex flex-col gap-1.5">
+            <span className="text-[10px] uppercase tracking-wide text-muted">Minors (up to 3)</span>
+            <div className="flex flex-wrap gap-2">
+              {minors.map((item) => {
+                const selected = minorIds.includes(item.id);
+                const disabled = !selected && minorIds.length >= 3;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => toggleMinorId(item.id)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                      selected
+                        ? 'bg-ink text-canvas'
+                        : disabled
+                          ? 'cursor-not-allowed bg-canvas text-muted/50'
+                          : 'bg-canvas text-ink hover:bg-canvas/70'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </section>
 
         <section className="rounded-4xl bg-paper p-5">
