@@ -341,6 +341,7 @@ const SemesterAddModuleForm = ({
   const [suggestions, setSuggestions] = useState<NusModsModuleSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [customMode, setCustomMode] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLFormElement>(null);
 
@@ -415,38 +416,96 @@ const SemesterAddModuleForm = ({
   const inferredLabel =
     major.categories.find((cat) => cat.id === autoCategoryId(major, form.code))?.label ?? '—';
 
+  const handleToggleCustomMode = (next: boolean) => {
+    setCustomMode(next);
+    if (next) {
+      setForm((current) => ({ ...current, query: '' }));
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
   return (
     <form ref={containerRef} onSubmit={handleSubmit} className="relative rounded-2xl bg-canvas/60 p-2">
-      <input
-        type="text"
-        value={form.query}
-        onChange={(event) => handleQueryChange(event.target.value)}
-        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-        placeholder="Module code"
-        className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
-        autoComplete="off"
-      />
-      {loading && <span className="absolute right-4 top-4 text-muted text-xs">...</span>}
+      {!customMode && (
+        <>
+          <input
+            type="text"
+            value={form.query}
+            onChange={(event) => handleQueryChange(event.target.value)}
+            onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+            placeholder="Module code"
+            className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+            autoComplete="off"
+          />
+          {loading && <span className="absolute right-4 top-4 text-muted text-xs">...</span>}
 
-      {showSuggestions && (
-        <ul className="absolute z-40 top-10 left-0 right-0 bg-ink rounded-2xl overflow-hidden shadow-soft max-h-60 overflow-y-auto">
-          {suggestions.map((item) => (
-            <li key={item.moduleCode}>
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 hover:bg-canvas/10 transition-colors"
-                onClick={() => handleSelectSuggestion(item)}
-              >
-                <span className="block text-xs font-mono font-bold text-canvas">{item.moduleCode}</span>
-                <span className="block truncate text-[10px] text-canvas/60">{item.title}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+          {showSuggestions && (
+            <ul className="absolute z-40 top-10 left-0 right-0 bg-ink rounded-2xl overflow-hidden shadow-soft max-h-60 overflow-y-auto">
+              {suggestions.map((item) => (
+                <li key={item.moduleCode}>
+                  <button
+                    type="button"
+                    className="w-full text-left px-3 py-2 hover:bg-canvas/10 transition-colors"
+                    onClick={() => handleSelectSuggestion(item)}
+                  >
+                    <span className="block text-xs font-mono font-bold text-canvas">{item.moduleCode}</span>
+                    <span className="block truncate text-[10px] text-canvas/60">{item.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {form.name && <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>}
+          {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
+
+          <button
+            type="button"
+            onClick={() => handleToggleCustomMode(true)}
+            className="mt-1.5 text-[10px] font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
+          >
+            + Add custom module
+          </button>
+        </>
       )}
 
-      {form.name && <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>}
-      {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
+      {customMode && (
+        <>
+          <input
+            type="text"
+            value={form.code}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))
+            }
+            placeholder="Module code"
+            className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+            autoComplete="off"
+          />
+
+          <div className="mt-2 flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted">Module Name</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              placeholder="e.g. Special Topics in..."
+              className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+              autoComplete="off"
+            />
+          </div>
+
+          {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
+
+          <button
+            type="button"
+            onClick={() => handleToggleCustomMode(false)}
+            className="mt-1.5 text-[10px] font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
+          >
+            ← Search instead
+          </button>
+        </>
+      )}
 
       <div className="mt-2 flex flex-col gap-1">
         <label className="text-[10px] uppercase tracking-wide text-muted">MCs</label>

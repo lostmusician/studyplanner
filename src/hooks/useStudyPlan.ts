@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Major, StudentPlan, StudentSemester, PlacedModule, WaivedModule } from '@shared/types';
+import type { Major, StudentPlan, StudentSemester, PlacedModule, WaivedModule, SecondaryProgramme } from '@shared/types';
 import {
   createEmptySemesters,
   defaultPlanToSemesters,
@@ -14,6 +14,8 @@ import {
 } from '../lib/studyPlan';
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
+const secondMajorModules = import.meta.glob('../../shared/data/second-majors/*.json', { eager: true });
+const minorModules = import.meta.glob('../../shared/data/minors/*.json', { eager: true });
 
 /** Major selected on first load, before the user picks one. */
 const DEFAULT_MAJOR_ID = 'computer-science-nusc';
@@ -21,12 +23,35 @@ const DEFAULT_MAJOR_ID = 'computer-science-nusc';
 export const loadMajors = (): Major[] =>
   Object.values(majorModules).map((m) => (m as { default: Major }).default);
 
+export const loadSecondMajors = (): SecondaryProgramme[] =>
+  Object.values(secondMajorModules).map((m) => (m as { default: SecondaryProgramme }).default);
+
+export const loadMinors = (): SecondaryProgramme[] =>
+  Object.values(minorModules).map((m) => (m as { default: SecondaryProgramme }).default);
+
+/** NUS caps a student at 1 declared second major and 3 declared minors. */
+const MAX_MINORS = 3;
+
 const planKey = (majorId: string) => `studyplan:${majorId}`;
 
 interface SavedPlanState {
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
+  secondMajorId: string | null;
+  minorIds: string[];
+  requirementMappings: Record<string, string[]>;
 }
+
+const normalizeRequirementMappings = (value: unknown): Record<string, string[]> => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const result: Record<string, string[]> = {};
+  for (const [name, codes] of Object.entries(value as Record<string, unknown>)) {
+    if (!Array.isArray(codes)) continue;
+    const cleaned = codes.filter((code): code is string => typeof code === 'string');
+    if (cleaned.length > 0) result[name] = cleaned;
+  }
+  return result;
+};
 
 type PlanMode = 'personal' | 'review';
 
@@ -74,6 +99,9 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
     return {
       semesters: normalizeSemesters(major, plan.semesters),
       waivedModules: normalizeWaivedModules(major, plan.waivedModules),
+      secondMajorId: typeof plan.secondMajorId === 'string' ? plan.secondMajorId : null,
+      minorIds: Array.isArray(plan.minorIds) ? plan.minorIds.slice(0, MAX_MINORS) : [],
+      requirementMappings: normalizeRequirementMappings(plan.requirementMappings),
     };
   } catch {
     return null;
@@ -83,6 +111,9 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
 const jsonDefaultPlan = (major: Major): SavedPlanState => ({
   semesters: defaultPlanToSemesters(major),
   waivedModules: normalizeWaivedModules(major, major.defaultWaivedModules),
+  secondMajorId: null,
+  minorIds: [],
+  requirementMappings: {},
 });
 
 const loadPlanForMajor = (major: Major): SavedPlanState => {
@@ -91,6 +122,9 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
   return {
     semesters: savedPlan?.semesters ?? defaultPlan.semesters,
     waivedModules: savedPlan?.waivedModules ?? defaultPlan.waivedModules,
+    secondMajorId: savedPlan?.secondMajorId ?? defaultPlan.secondMajorId,
+    minorIds: savedPlan?.minorIds ?? defaultPlan.minorIds,
+    requirementMappings: savedPlan?.requirementMappings ?? defaultPlan.requirementMappings,
   };
 };
 
@@ -99,6 +133,9 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
     majorId,
     semesters: state.semesters,
     waivedModules: state.waivedModules,
+    secondMajorId: state.secondMajorId ?? undefined,
+    minorIds: state.minorIds,
+    requirementMappings: state.requirementMappings,
     lastUpdated: new Date().toISOString(),
   };
   localStorage.setItem(planKey(majorId), JSON.stringify(plan));
@@ -106,6 +143,8 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
 
 export const useStudyPlan = () => {
   const majors = loadMajors();
+  const secondMajors = loadSecondMajors();
+  const minors = loadMinors();
   const defaultMajor = majors.find((m) => m.id === DEFAULT_MAJOR_ID) ?? majors[0];
   const [majorId, setMajorId] = useState<string>(defaultMajor?.id ?? '');
   const [personalMajorId, setPersonalMajorId] = useState<string>(defaultMajor?.id ?? '');
@@ -120,11 +159,50 @@ export const useStudyPlan = () => {
   const [waivedModules, setWaivedModules] = useState<WaivedModule[]>(() =>
     initialPlan?.waivedModules ?? [],
   );
+  const [secondMajorId, setSecondMajorIdState] = useState<string | null>(
+    () => initialPlan?.secondMajorId ?? null,
+  );
+  const [minorIds, setMinorIds] = useState<string[]>(() => initialPlan?.minorIds ?? []);
+  const [requirementMappings, setRequirementMappings] = useState<Record<string, string[]>>(
+    () => initialPlan?.requirementMappings ?? {},
+  );
 
   useEffect(() => {
     if (!major || mode !== 'personal') return;
-    writeSavedPlan(major.id, { semesters, waivedModules });
-  }, [semesters, waivedModules, major, mode]);
+    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings });
+  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, major, mode]);
+
+  const setSecondMajorId = useCallback((id: string | null) => {
+    setSecondMajorIdState(id);
+  }, []);
+
+  const toggleMinorId = useCallback((id: string) => {
+    setMinorIds((prev) => {
+      if (prev.includes(id)) return prev.filter((existing) => existing !== id);
+      if (prev.length >= MAX_MINORS) return prev;
+      return [...prev, id];
+    });
+  }, []);
+
+  const addRequirementMapping = useCallback((requirementName: string, moduleCode: string) => {
+    setRequirementMappings((prev) => {
+      const existing = prev[requirementName] ?? [];
+      if (existing.includes(moduleCode)) return prev;
+      return { ...prev, [requirementName]: [...existing, moduleCode] };
+    });
+  }, []);
+
+  const removeRequirementMapping = useCallback((requirementName: string, moduleCode: string) => {
+    setRequirementMappings((prev) => {
+      const existing = prev[requirementName] ?? [];
+      if (!existing.includes(moduleCode)) return prev;
+      const remaining = existing.filter((code) => code !== moduleCode);
+      const next = { ...prev };
+      if (remaining.length === 0) delete next[requirementName];
+      else next[requirementName] = remaining;
+      return next;
+    });
+  }, []);
 
   const switchMajor = useCallback(
     (newMajorId: string) => {
@@ -133,6 +211,9 @@ export const useStudyPlan = () => {
       const nextPlan = mode === 'personal' ? loadPlanForMajor(newMajor) : jsonDefaultPlan(newMajor);
       setSemesters(nextPlan.semesters);
       setWaivedModules(nextPlan.waivedModules);
+      setSecondMajorIdState(nextPlan.secondMajorId);
+      setMinorIds(nextPlan.minorIds);
+      setRequirementMappings(nextPlan.requirementMappings);
       setMajorId(newMajorId);
       if (mode === 'personal') setPersonalMajorId(newMajorId);
     },
@@ -193,6 +274,9 @@ export const useStudyPlan = () => {
     const defaultPlan = jsonDefaultPlan(major);
     setSemesters(defaultPlan.semesters);
     setWaivedModules(defaultPlan.waivedModules);
+    setSecondMajorIdState(defaultPlan.secondMajorId);
+    setMinorIds(defaultPlan.minorIds);
+    setRequirementMappings(defaultPlan.requirementMappings);
   }, [major]);
 
   const importSharedPlan = useCallback(
@@ -202,6 +286,9 @@ export const useStudyPlan = () => {
       setMode('personal');
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
+      setSecondMajorIdState(null);
+      setMinorIds([]);
+      setRequirementMappings({});
       setMajorId(newMajorId);
       setPersonalMajorId(newMajorId);
       return true;
@@ -216,6 +303,9 @@ export const useStudyPlan = () => {
       setMode('review');
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
+      setSecondMajorIdState(null);
+      setMinorIds([]);
+      setRequirementMappings({});
       setMajorId(newMajorId);
       return true;
     },
@@ -229,16 +319,30 @@ export const useStudyPlan = () => {
     setMode('personal');
     setSemesters(personalPlan.semesters);
     setWaivedModules(personalPlan.waivedModules);
+    setSecondMajorIdState(personalPlan.secondMajorId);
+    setMinorIds(personalPlan.minorIds);
+    setRequirementMappings(personalPlan.requirementMappings);
     setMajorId(personalMajor.id);
   }, [majors, personalMajorId, defaultMajor]);
 
-  const requirements = major ? computeRequirements(major, semesters, waivedModules) : [];
+  const requirements = major
+    ? computeRequirements(major, semesters, waivedModules, requirementMappings)
+    : [];
   const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
 
   return {
     majors,
     major,
     majorId,
+    secondMajors,
+    minors,
+    secondMajorId,
+    minorIds,
+    setSecondMajorId,
+    toggleMinorId,
+    requirementMappings,
+    addRequirementMapping,
+    removeRequirementMapping,
     semesters,
     waivedModules,
     stats,

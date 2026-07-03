@@ -1,0 +1,73 @@
+{
+  "id": "mathematics",
+  "label": "Mathematics",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Foundational Mathematics module (MA1521, MA1102R, or CS1231/CS1231S)",
+      "fulfilledBy": [
+        "MA1521",
+        "MA1102R",
+        "CS1231",
+        "CS1231S"
+      ],
+      "count": 2
+    },
+    {
+      "name": "2000-level Mathematics elective or ST2131",
+      "fulfilledBy": [
+        "MA2*",
+        "ST2131"
+      ],
+      "count": 2
+    },
+    {
+      "name": "3000+ Mathematics elective or ST3236/ST4238",
+      "fulfilledBy": [
+        "MA3*",
+        "MA4*",
+        "ST3236",
+        "ST4238"
+      ],
+      "count": 1
+    }
+  ],
+  "moduleCatalog": {
+    "MA1521": {
+      "code": "MA1521",
+      "name": "Calculus for Computing",
+      "mcs": 4
+    },
+    "MA1102R": {
+      "code": "MA1102R",
+      "name": "Calculus",
+      "mcs": 4
+    },
+    "CS1231": {
+      "code": "CS1231",
+      "name": "Discrete Structures",
+      "mcs": 4
+    },
+    "CS1231S": {
+      "code": "CS1231S",
+      "name": "Discrete Structures",
+      "mcs": 4
+    },
+    "ST2131": {
+      "code": "ST2131",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "ST3236": {
+      "code": "ST3236",
+      "name": "Stochastic Processes I",
+      "mcs": 4
+    },
+    "ST4238": {
+      "code": "ST4238",
+      "name": "Stochastic Processes II",
+      "mcs": 4
+    }
+  }
+}

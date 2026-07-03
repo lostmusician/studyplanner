@@ -1,0 +1,122 @@
+{
+  "id": "mathematics",
+  "label": "Mathematics",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirements": [
+    {
+      "name": "Calculus (MA1521 or MA1102R)",
+      "fulfilledBy": [
+        "MA1521",
+        "MA1102R"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Linear Algebra II (MA2101 or MA2101S)",
+      "fulfilledBy": [
+        "MA2101",
+        "MA2101S"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Multivariable Calculus (MA2104)",
+      "fulfilledBy": [
+        "MA2104"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Mathematical Analysis I (MA2108 or MA2108S)",
+      "fulfilledBy": [
+        "MA2108",
+        "MA2108S"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Probability (MA2216 or ST2131)",
+      "fulfilledBy": [
+        "MA2216",
+        "ST2131"
+      ],
+      "count": 1
+    },
+    {
+      "name": "3000+ Mathematics electives (MA-coded)",
+      "fulfilledBy": [
+        "MA3*",
+        "MA4*"
+      ],
+      "count": 2
+    },
+    {
+      "name": "Additional 3000+ elective (MA-coded, or ST3236/ST4238)",
+      "fulfilledBy": [
+        "MA3*",
+        "MA4*",
+        "ST3236",
+        "ST4238"
+      ],
+      "count": 1
+    }
+  ],
+  "moduleCatalog": {
+    "MA1521": {
+      "code": "MA1521",
+      "name": "Calculus for Computing",
+      "mcs": 4
+    },
+    "MA1102R": {
+      "code": "MA1102R",
+      "name": "Calculus",
+      "mcs": 4
+    },
+    "MA2101": {
+      "code": "MA2101",
+      "name": "Linear Algebra II",
+      "mcs": 4
+    },
+    "MA2101S": {
+      "code": "MA2101S",
+      "name": "Linear Algebra II (S)",
+      "mcs": 5
+    },
+    "MA2104": {
+      "code": "MA2104",
+      "name": "Multivariable Calculus",
+      "mcs": 4
+    },
+    "MA2108": {
+      "code": "MA2108",
+      "name": "Mathematical Analysis I",
+      "mcs": 4
+    },
+    "MA2108S": {
+      "code": "MA2108S",
+      "name": "Mathematical Analysis I (S)",
+      "mcs": 5
+    },
+    "MA2216": {
+      "code": "MA2216",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "ST2131": {
+      "code": "ST2131",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "ST3236": {
+      "code": "ST3236",
+      "name": "Stochastic Processes I",
+      "mcs": 4
+    },
+    "ST4238": {
+      "code": "ST4238",
+      "name": "Stochastic Processes II",
+      "mcs": 4
+    }
+  }
+}

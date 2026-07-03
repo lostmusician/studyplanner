@@ -1,0 +1,214 @@
+{
+  "id": "data-analytics",
+  "label": "Data Analytics",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirements": [
+    {
+      "name": "Introduction to Data Science (DSA1101)",
+      "fulfilledBy": [
+        "DSA1101"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Data Structures and Algorithms (CS2040/CS2040C/CS2040S)",
+      "fulfilledBy": [
+        "CS2040",
+        "CS2040C",
+        "CS2040S"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Probability (ST2131 or MA2116)",
+      "fulfilledBy": [
+        "ST2131",
+        "MA2116"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Mathematical Statistics (ST2132)",
+      "fulfilledBy": [
+        "ST2132"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Data Visualisation or Numerical Computation (DSA2101/DSA2102)",
+      "fulfilledBy": [
+        "DSA2101",
+        "DSA2102"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Calculus (MA1521, MA2002, MA1312, or MA1505)",
+      "fulfilledBy": [
+        "MA1521",
+        "MA2002",
+        "MA1312",
+        "MA1505"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Linear Algebra (MA1522, MA2001, or MA1508E)",
+      "fulfilledBy": [
+        "MA1522",
+        "MA2001",
+        "MA1508E"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Optimisation (DBA3701, DSA3102, MA3236, or MA3252)",
+      "fulfilledBy": [
+        "DBA3701",
+        "DSA3102",
+        "MA3236",
+        "MA3252"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Advanced electives (CS3244/CS3264, DSA4211, DSA4212, ST3131)",
+      "fulfilledBy": [
+        "CS3244",
+        "CS3264",
+        "DSA4211",
+        "DSA4212",
+        "ST3131"
+      ],
+      "count": 2
+    }
+  ],
+  "moduleCatalog": {
+    "DSA1101": {
+      "code": "DSA1101",
+      "name": "Introduction to Data Science",
+      "mcs": 4
+    },
+    "CS2040": {
+      "code": "CS2040",
+      "name": "Data Structures and Algorithms",
+      "mcs": 4
+    },
+    "CS2040C": {
+      "code": "CS2040C",
+      "name": "Data Structures and Algorithms",
+      "mcs": 4
+    },
+    "CS2040S": {
+      "code": "CS2040S",
+      "name": "Data Structures and Algorithms",
+      "mcs": 4
+    },
+    "ST2131": {
+      "code": "ST2131",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "MA2116": {
+      "code": "MA2116",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "ST2132": {
+      "code": "ST2132",
+      "name": "Mathematical Statistics",
+      "mcs": 4
+    },
+    "DSA2101": {
+      "code": "DSA2101",
+      "name": "Essential Data Analytics Tools: Data Visualisation",
+      "mcs": 4
+    },
+    "DSA2102": {
+      "code": "DSA2102",
+      "name": "Essential Data Analytics Tools: Numerical Computation",
+      "mcs": 4
+    },
+    "MA1521": {
+      "code": "MA1521",
+      "name": "Calculus for Computing",
+      "mcs": 4
+    },
+    "MA2002": {
+      "code": "MA2002",
+      "name": "Calculus",
+      "mcs": 4
+    },
+    "MA1312": {
+      "code": "MA1312",
+      "name": "Calculus with Applications",
+      "mcs": 4
+    },
+    "MA1505": {
+      "code": "MA1505",
+      "name": "Mathematics I",
+      "mcs": 4
+    },
+    "MA1522": {
+      "code": "MA1522",
+      "name": "Linear Algebra for Computing",
+      "mcs": 4
+    },
+    "MA2001": {
+      "code": "MA2001",
+      "name": "Linear Algebra I",
+      "mcs": 4
+    },
+    "MA1508E": {
+      "code": "MA1508E",
+      "name": "Linear Algebra for Engineering",
+      "mcs": 4
+    },
+    "DBA3701": {
+      "code": "DBA3701",
+      "name": "Introduction to Optimization",
+      "mcs": 4
+    },
+    "DSA3102": {
+      "code": "DSA3102",
+      "name": "Essential Data Analytics Tools: Convex Optimisation",
+      "mcs": 4
+    },
+    "MA3236": {
+      "code": "MA3236",
+      "name": "Non-Linear Programming",
+      "mcs": 4
+    },
+    "MA3252": {
+      "code": "MA3252",
+      "name": "Linear and Network Optimisation",
+      "mcs": 4
+    },
+    "CS3244": {
+      "code": "CS3244",
+      "name": "Machine Learning",
+      "mcs": 4
+    },
+    "CS3264": {
+      "code": "CS3264",
+      "name": "Foundations of Machine Learning",
+      "mcs": 4
+    },
+    "DSA4211": {
+      "code": "DSA4211",
+      "name": "High-Dimensional Statistical Analysis",
+      "mcs": 4
+    },
+    "DSA4212": {
+      "code": "DSA4212",
+      "name": "Optimisation for Large-Scale Data-Driven Inference",
+      "mcs": 4
+    },
+    "ST3131": {
+      "code": "ST3131",
+      "name": "Regression Analysis",
+      "mcs": 4
+    }
+  }
+}

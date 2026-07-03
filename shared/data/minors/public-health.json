@@ -1,0 +1,33 @@
+{
+  "id": "public-health",
+  "label": "Public Health",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Fundamental Public Health Methods (SPH2001)",
+      "fulfilledBy": ["SPH2001"],
+      "count": 1
+    },
+    {
+      "name": "Public Health and Epidemiology (SPH2002)",
+      "fulfilledBy": ["SPH2002"],
+      "count": 1
+    },
+    {
+      "name": "SPH-coded courses, incl. cores + at least 8 MC electives (4 courses)",
+      "fulfilledBy": ["SPH*", "GEC1015"],
+      "count": 4
+    },
+    {
+      "name": "Level-3000 electives, 8 MC (2 courses)",
+      "fulfilledBy": ["SPH3*"],
+      "count": 2
+    }
+  ],
+  "moduleCatalog": {
+    "SPH2001": { "code": "SPH2001", "name": "Fundamental Public Health Methods", "mcs": 4 },
+    "SPH2002": { "code": "SPH2002", "name": "Public Health and Epidemiology", "mcs": 4 },
+    "GEC1015": { "code": "GEC1015", "name": "Public Health in Action", "mcs": 4 }
+  }
+}

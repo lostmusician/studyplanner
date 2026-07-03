@@ -1,0 +1,63 @@
+{
+  "id": "psychology",
+  "label": "Psychology",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirements": [
+    {
+      "name": "Introduction to Psychology (PL1101E)",
+      "fulfilledBy": ["PL1101E"],
+      "count": 1
+    },
+    {
+      "name": "Research and Statistical Methods I (PL2131)",
+      "fulfilledBy": ["PL2131"],
+      "count": 1
+    },
+    {
+      "name": "Research and Statistical Methods II (PL2132)",
+      "fulfilledBy": ["PL2132"],
+      "count": 1
+    },
+    {
+      "name": "Biological Psychology (PL3102)",
+      "fulfilledBy": ["PL3102"],
+      "count": 1
+    },
+    {
+      "name": "Cognitive Psychology (PL3103)",
+      "fulfilledBy": ["PL3103"],
+      "count": 1
+    },
+    {
+      "name": "Developmental Psychology (PL3104)",
+      "fulfilledBy": ["PL3104"],
+      "count": 1
+    },
+    {
+      "name": "Social Psychology (PL3105)",
+      "fulfilledBy": ["PL3105"],
+      "count": 1
+    },
+    {
+      "name": "Mental Health and Distress (PL3106)",
+      "fulfilledBy": ["PL3106"],
+      "count": 1
+    },
+    {
+      "name": "Level-2000/3000 Psychology, 8 MC beyond cores (9 courses incl. cores)",
+      "fulfilledBy": ["PL2*", "PL3*"],
+      "count": 9
+    }
+  ],
+  "moduleCatalog": {
+    "PL1101E": { "code": "PL1101E", "name": "Introduction to Psychology", "mcs": 4 },
+    "PL2131": { "code": "PL2131", "name": "Research and Statistical Methods I", "mcs": 4 },
+    "PL2132": { "code": "PL2132", "name": "Research and Statistical Methods II", "mcs": 4 },
+    "PL3102": { "code": "PL3102", "name": "Biological Psychology", "mcs": 4 },
+    "PL3103": { "code": "PL3103", "name": "Cognitive Psychology", "mcs": 4 },
+    "PL3104": { "code": "PL3104", "name": "Developmental Psychology", "mcs": 4 },
+    "PL3105": { "code": "PL3105", "name": "Social Psychology", "mcs": 4 },
+    "PL3106": { "code": "PL3106", "name": "Mental Health and Distress", "mcs": 4 }
+  }
+}

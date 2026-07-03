@@ -1,0 +1,103 @@
+{
+  "id": "public-health",
+  "label": "Public Health",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirements": [
+    {
+      "name": "Fundamental Public Health Methods (SPH2001)",
+      "fulfilledBy": [
+        "SPH2001"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Public Health and Epidemiology (SPH2002)",
+      "fulfilledBy": [
+        "SPH2002"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Systems and Policies to Improve Health (SPH2003)",
+      "fulfilledBy": [
+        "SPH2003"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Lifestyle, Behaviour and Public Health (SPH2004)",
+      "fulfilledBy": [
+        "SPH2004"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Health, Society and the Social Determinants (SPH2005)",
+      "fulfilledBy": [
+        "SPH2005"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Public Health Practice (SPH3001)",
+      "fulfilledBy": [
+        "SPH3001"
+      ],
+      "count": 1
+    },
+    {
+      "name": "SPH-coded courses, incl. cores + at least 8 MC electives (8 courses)",
+      "fulfilledBy": [
+        "SPH*",
+        "GEC1015"
+      ],
+      "count": 8
+    },
+    {
+      "name": "Level-3000+ courses, 12 MC electives incl. SPH3001 (4 courses)",
+      "fulfilledBy": [
+        "SPH3*",
+        "SPH5*"
+      ],
+      "count": 4
+    }
+  ],
+  "moduleCatalog": {
+    "SPH2001": {
+      "code": "SPH2001",
+      "name": "Fundamental Public Health Methods",
+      "mcs": 4
+    },
+    "SPH2002": {
+      "code": "SPH2002",
+      "name": "Public Health and Epidemiology",
+      "mcs": 4
+    },
+    "SPH2003": {
+      "code": "SPH2003",
+      "name": "Systems and Policies to improve Health",
+      "mcs": 4
+    },
+    "SPH2004": {
+      "code": "SPH2004",
+      "name": "Lifestyle, Behaviour and Public Health",
+      "mcs": 4
+    },
+    "SPH2005": {
+      "code": "SPH2005",
+      "name": "Health, Society and the Social Determinants",
+      "mcs": 4
+    },
+    "SPH3001": {
+      "code": "SPH3001",
+      "name": "Public Health Practice",
+      "mcs": 4
+    },
+    "GEC1015": {
+      "code": "GEC1015",
+      "name": "Public Health in Action",
+      "mcs": 4
+    }
+  }
+}
