@@ -487,6 +487,11 @@ const SettingsPage = ({
   const field =
     'rounded-2xl bg-canvas border border-ink/10 px-3 py-2 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20 w-full';
 
+  const declaredSecondMajorLabel = secondMajors.find((item) => item.id === secondMajorId)?.label ?? null;
+  const declaredMinorLabels = minors.filter((item) => minorIds.includes(item.id)).map((item) => item.label);
+  const hasSecondaryDeclared = Boolean(declaredSecondMajorLabel) || declaredMinorLabels.length > 0;
+  const [secondaryOpen, setSecondaryOpen] = useState(hasSecondaryDeclared);
+
   return (
     <main className="max-w-3xl mx-auto px-6 py-8">
       <div className="mb-6 flex items-baseline justify-between gap-4">
@@ -549,46 +554,73 @@ const SettingsPage = ({
             </div>
           )}
 
-          <label className="mt-4 flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-wide text-muted">Second Major</span>
-            <Dropdown
-              variant="field"
-              ariaLabel="Second Major"
-              value={secondMajorId ?? ''}
-              onChange={(id) => setSecondMajorId(id === '' ? null : id)}
-              className={field}
-              options={[
-                { value: '', label: 'None' },
-                ...secondMajors.map((item) => ({ value: item.id, label: item.label })),
-              ]}
-            />
-          </label>
+          <div className="mt-4 border-t border-ink/10 pt-3">
+            <button
+              type="button"
+              onClick={() => setSecondaryOpen((open) => !open)}
+              className="flex w-full items-center justify-between gap-2 text-left"
+              aria-expanded={secondaryOpen}
+            >
+              <span className="text-[10px] uppercase tracking-wide text-muted">Second Major / Minors</span>
+              <span className="text-xs text-muted">{secondaryOpen ? '▾' : '▸'}</span>
+            </button>
 
-          <div className="mt-4 flex flex-col gap-1.5">
-            <span className="text-[10px] uppercase tracking-wide text-muted">Minors (up to 3)</span>
-            <div className="flex flex-wrap gap-2">
-              {minors.map((item) => {
-                const selected = minorIds.includes(item.id);
-                const disabled = !selected && minorIds.length >= 3;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => toggleMinorId(item.id)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                      selected
-                        ? 'bg-ink text-canvas'
-                        : disabled
-                          ? 'cursor-not-allowed bg-canvas text-muted/50'
-                          : 'bg-canvas text-ink hover:bg-canvas/70'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
+            {!secondaryOpen && hasSecondaryDeclared && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {declaredSecondMajorLabel && (
+                  <SecondaryProgrammeBadge label={`2nd Major: ${declaredSecondMajorLabel}`} />
+                )}
+                {declaredMinorLabels.map((label) => (
+                  <SecondaryProgrammeBadge key={label} label={`Minor: ${label}`} />
+                ))}
+              </div>
+            )}
+
+            {secondaryOpen && (
+              <div className="mt-3 flex flex-col gap-4">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase tracking-wide text-muted">Second Major</span>
+                  <Dropdown
+                    variant="field"
+                    ariaLabel="Second Major"
+                    value={secondMajorId ?? ''}
+                    onChange={(id) => setSecondMajorId(id === '' ? null : id)}
+                    className={field}
+                    options={[
+                      { value: '', label: 'None' },
+                      ...secondMajors.map((item) => ({ value: item.id, label: item.label })),
+                    ]}
+                  />
+                </label>
+
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] uppercase tracking-wide text-muted">Minors (up to 3)</span>
+                  <div className="flex flex-wrap gap-2">
+                    {minors.map((item) => {
+                      const selected = minorIds.includes(item.id);
+                      const disabled = !selected && minorIds.length >= 3;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => toggleMinorId(item.id)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                            selected
+                              ? 'bg-ink text-canvas'
+                              : disabled
+                                ? 'cursor-not-allowed bg-canvas text-muted/50'
+                                : 'bg-canvas text-ink hover:bg-canvas/70'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
