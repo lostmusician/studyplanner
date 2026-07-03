@@ -1,0 +1,46 @@
+{
+  "id": "statistics",
+  "label": "Statistics",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Introduction to Statistics (ST1131)",
+      "fulfilledBy": ["ST1131"],
+      "count": 1
+    },
+    {
+      "name": "Calculus (MA1521, MA2002, MA1312, or MA1505)",
+      "fulfilledBy": ["MA1521", "MA2002", "MA1312", "MA1505"],
+      "count": 1
+    },
+    {
+      "name": "Probability (ST2131/MA2116 or ST2334)",
+      "fulfilledBy": ["ST2131", "MA2116", "ST2334"],
+      "count": 1
+    },
+    {
+      "name": "Mathematical Statistics or Statistical Computing (ST2132 or ST2137)",
+      "fulfilledBy": ["ST2132", "ST2137"],
+      "count": 1
+    },
+    {
+      "name": "Level-3000 Statistics (ST3131 or ST32xx)",
+      "fulfilledBy": ["ST3131", "ST32*"],
+      "count": 1
+    }
+  ],
+  "moduleCatalog": {
+    "ST1131": { "code": "ST1131", "name": "Introduction to Statistics and Statistical Computing", "mcs": 4 },
+    "MA1521": { "code": "MA1521", "name": "Calculus for Computing", "mcs": 4 },
+    "MA2002": { "code": "MA2002", "name": "Calculus", "mcs": 4 },
+    "MA1312": { "code": "MA1312", "name": "Calculus with Applications", "mcs": 4 },
+    "MA1505": { "code": "MA1505", "name": "Mathematics I", "mcs": 4 },
+    "ST2131": { "code": "ST2131", "name": "Probability", "mcs": 4 },
+    "MA2116": { "code": "MA2116", "name": "Probability", "mcs": 4 },
+    "ST2334": { "code": "ST2334", "name": "Probability and Statistics", "mcs": 4 },
+    "ST2132": { "code": "ST2132", "name": "Mathematical Statistics", "mcs": 4 },
+    "ST2137": { "code": "ST2137", "name": "Statistical Computing and Programming", "mcs": 4 },
+    "ST3131": { "code": "ST3131", "name": "Regression Analysis", "mcs": 4 }
+  }
+}

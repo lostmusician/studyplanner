@@ -1,0 +1,28 @@
+{
+  "id": "economics",
+  "label": "Economics",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Introduction to Economic Analysis (EC1101E)",
+      "fulfilledBy": ["EC1101E"],
+      "count": 1
+    },
+    {
+      "name": "Microeconomic or Macroeconomic Analysis I (EC2101/EC2102)",
+      "fulfilledBy": ["EC2101", "EC2102"],
+      "count": 1
+    },
+    {
+      "name": "Economics courses toward 20 MC total (5 courses incl. the above)",
+      "fulfilledBy": ["EC*"],
+      "count": 5
+    }
+  ],
+  "moduleCatalog": {
+    "EC1101E": { "code": "EC1101E", "name": "Introduction to Economic Analysis", "mcs": 4 },
+    "EC2101": { "code": "EC2101", "name": "Microeconomic Analysis I", "mcs": 4 },
+    "EC2102": { "code": "EC2102", "name": "Macroeconomic Analysis I", "mcs": 4 }
+  }
+}

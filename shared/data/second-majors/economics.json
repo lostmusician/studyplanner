@@ -1,0 +1,68 @@
+{
+  "id": "economics",
+  "label": "Economics",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirements": [
+    {
+      "name": "Introduction to Economic Analysis (EC1101E)",
+      "fulfilledBy": ["EC1101E"],
+      "count": 1
+    },
+    {
+      "name": "Microeconomic Analysis I (EC2101)",
+      "fulfilledBy": ["EC2101"],
+      "count": 1
+    },
+    {
+      "name": "Macroeconomic Analysis I (EC2102)",
+      "fulfilledBy": ["EC2102"],
+      "count": 1
+    },
+    {
+      "name": "Quantitative Methods for Economic Analysis (EC2104)",
+      "fulfilledBy": ["EC2104"],
+      "count": 1
+    },
+    {
+      "name": "Foundations for Econometrics (EC2303)",
+      "fulfilledBy": ["EC2303"],
+      "count": 1
+    },
+    {
+      "name": "Microeconomic Analysis II (EC3101)",
+      "fulfilledBy": ["EC3101"],
+      "count": 1
+    },
+    {
+      "name": "Macroeconomic Analysis II (EC3102)",
+      "fulfilledBy": ["EC3102"],
+      "count": 1
+    },
+    {
+      "name": "Econometrics I (EC3303)",
+      "fulfilledBy": ["EC3303"],
+      "count": 1
+    },
+    {
+      "name": "Level-3000+ Economics, 16 MC (4 courses incl. EC3101/EC3102/EC3303)",
+      "fulfilledBy": ["EC3*", "EC4*"],
+      "count": 4
+    },
+    {
+      "name": "Economics courses toward 40 MC total (10 courses incl. cores)",
+      "fulfilledBy": ["EC*"],
+      "count": 10
+    }
+  ],
+  "moduleCatalog": {
+    "EC1101E": { "code": "EC1101E", "name": "Introduction to Economic Analysis", "mcs": 4 },
+    "EC2101": { "code": "EC2101", "name": "Microeconomic Analysis I", "mcs": 4 },
+    "EC2102": { "code": "EC2102", "name": "Macroeconomic Analysis I", "mcs": 4 },
+    "EC2104": { "code": "EC2104", "name": "Quantitative Methods for Economic Analysis", "mcs": 4 },
+    "EC2303": { "code": "EC2303", "name": "Foundations for Econometrics", "mcs": 4 },
+    "EC3101": { "code": "EC3101", "name": "Microeconomic Analysis II", "mcs": 4 },
+    "EC3102": { "code": "EC3102", "name": "Macroeconomic Analysis II", "mcs": 4 },
+    "EC3303": { "code": "EC3303", "name": "Econometrics I", "mcs": 4 }
+  }
+}

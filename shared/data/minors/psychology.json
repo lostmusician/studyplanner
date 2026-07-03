@@ -1,0 +1,27 @@
+{
+  "id": "psychology",
+  "label": "Psychology",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Introduction to Psychology (PL1101E)",
+      "fulfilledBy": ["PL1101E"],
+      "count": 1
+    },
+    {
+      "name": "Psychology electives, 16 MC (PL2131, PL3102, PL3103, PL3104, PL3105, PL3106)",
+      "fulfilledBy": ["PL2131", "PL3102", "PL3103", "PL3104", "PL3105", "PL3106"],
+      "count": 4
+    }
+  ],
+  "moduleCatalog": {
+    "PL1101E": { "code": "PL1101E", "name": "Introduction to Psychology", "mcs": 4 },
+    "PL2131": { "code": "PL2131", "name": "Research and Statistical Methods I", "mcs": 4 },
+    "PL3102": { "code": "PL3102", "name": "Biological Psychology", "mcs": 4 },
+    "PL3103": { "code": "PL3103", "name": "Cognitive Psychology", "mcs": 4 },
+    "PL3104": { "code": "PL3104", "name": "Developmental Psychology", "mcs": 4 },
+    "PL3105": { "code": "PL3105", "name": "Social Psychology", "mcs": 4 },
+    "PL3106": { "code": "PL3106", "name": "Mental Health and Distress", "mcs": 4 }
+  }
+}

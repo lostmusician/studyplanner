@@ -1,0 +1,124 @@
+{
+  "id": "data-analytics",
+  "label": "Data Analytics",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Level-1000 foundation (BT1101, DSA1101, GEA1000/GEA1000N, or ST1131)",
+      "fulfilledBy": [
+        "BT1101",
+        "DSA1101",
+        "GEA1000",
+        "GEA1000N",
+        "ST1131"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Data Visualisation (DSA2101)",
+      "fulfilledBy": [
+        "DSA2101"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Level-2000 mathematics/statistics (MA1522, MA2001, MA1508E, or ST2334)",
+      "fulfilledBy": [
+        "MA1522",
+        "MA2001",
+        "MA1508E",
+        "ST2334"
+      ],
+      "count": 1
+    },
+    {
+      "name": "DSA3361",
+      "fulfilledBy": [
+        "DSA3361"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Level-3000 elective (DBA3701, DSA3102, or DSA3362)",
+      "fulfilledBy": [
+        "DBA3701",
+        "DSA3102",
+        "DSA3362"
+      ],
+      "count": 1
+    }
+  ],
+  "moduleCatalog": {
+    "BT1101": {
+      "code": "BT1101",
+      "name": "Introduction to Business Analytics",
+      "mcs": 4
+    },
+    "DSA1101": {
+      "code": "DSA1101",
+      "name": "Introduction to Data Science",
+      "mcs": 4
+    },
+    "GEA1000": {
+      "code": "GEA1000",
+      "name": "Quantitative Reasoning with Data",
+      "mcs": 4
+    },
+    "GEA1000N": {
+      "code": "GEA1000N",
+      "name": "Quantitative Reasoning with Data",
+      "mcs": 4
+    },
+    "ST1131": {
+      "code": "ST1131",
+      "name": "Introduction to Statistics and Statistical Computing",
+      "mcs": 4
+    },
+    "DSA2101": {
+      "code": "DSA2101",
+      "name": "Essential Data Analytics Tools: Data Visualisation",
+      "mcs": 4
+    },
+    "MA1522": {
+      "code": "MA1522",
+      "name": "Linear Algebra for Computing",
+      "mcs": 4
+    },
+    "MA2001": {
+      "code": "MA2001",
+      "name": "Linear Algebra I",
+      "mcs": 4
+    },
+    "MA1508E": {
+      "code": "MA1508E",
+      "name": "Linear Algebra for Engineering",
+      "mcs": 4
+    },
+    "ST2334": {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
+      "mcs": 4
+    },
+    "DSA3361": {
+      "code": "DSA3361",
+      "name": "Inferential Data Analytics",
+      "mcs": 4
+    },
+    "DBA3701": {
+      "code": "DBA3701",
+      "name": "Introduction to Optimization",
+      "mcs": 4
+    },
+    "DSA3102": {
+      "code": "DSA3102",
+      "name": "Essential Data Analytics Tools: Convex Optimisation",
+      "mcs": 4
+    },
+    "DSA3362": {
+      "code": "DSA3362",
+      "name": "Predictive Data Analytics",
+      "mcs": 4
+    }
+  }
+}

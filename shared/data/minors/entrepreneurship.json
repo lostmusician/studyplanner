@@ -1,0 +1,166 @@
+{
+  "id": "entrepreneurship",
+  "label": "Entrepreneurship",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Foundation Business courses, 8 MC (choose 2)",
+      "fulfilledBy": [
+        "BSP1702",
+        "BSP1702X",
+        "MKT1705",
+        "MKT1705X",
+        "FIN2704",
+        "FIN2704X",
+        "MNO1706",
+        "MNO1706X",
+        "PL3239",
+        "ACC1701",
+        "ACC1701X",
+        "EC2204",
+        "BSP1703",
+        "BSP1703X",
+        "EC1101E",
+        "EC1301"
+      ],
+      "count": 2
+    },
+    {
+      "name": "Advanced entrepreneurship courses, 12 MC (choose 3)",
+      "fulfilledBy": [
+        "ACC2706",
+        "BSN3703",
+        "BSN3712",
+        "BSN3717",
+        "ETP3211",
+        "BSN3702",
+        "BSN3701",
+        "IS3251"
+      ],
+      "count": 3
+    }
+  ],
+  "moduleCatalog": {
+    "BSP1702": {
+      "code": "BSP1702",
+      "name": "Legal Environment of Business",
+      "mcs": 4
+    },
+    "BSP1702X": {
+      "code": "BSP1702X",
+      "name": "Legal Environment of Business",
+      "mcs": 4
+    },
+    "MKT1705": {
+      "code": "MKT1705",
+      "name": "Principles of Marketing",
+      "mcs": 4
+    },
+    "MKT1705X": {
+      "code": "MKT1705X",
+      "name": "Principles of Marketing",
+      "mcs": 4
+    },
+    "FIN2704": {
+      "code": "FIN2704",
+      "name": "Finance",
+      "mcs": 4
+    },
+    "FIN2704X": {
+      "code": "FIN2704X",
+      "name": "Finance",
+      "mcs": 4
+    },
+    "MNO1706": {
+      "code": "MNO1706",
+      "name": "Organisational Behaviour",
+      "mcs": 4
+    },
+    "MNO1706X": {
+      "code": "MNO1706X",
+      "name": "Organisational Behaviour",
+      "mcs": 4
+    },
+    "PL3239": {
+      "code": "PL3239",
+      "name": "Industrial and Organisational Psychology",
+      "mcs": 4
+    },
+    "ACC1701": {
+      "code": "ACC1701",
+      "name": "Accounting for Decision Makers",
+      "mcs": 4
+    },
+    "ACC1701X": {
+      "code": "ACC1701X",
+      "name": "Accounting for Decision Makers",
+      "mcs": 4
+    },
+    "EC2204": {
+      "code": "EC2204",
+      "name": "Financial Accounting for Economists",
+      "mcs": 4
+    },
+    "BSP1703": {
+      "code": "BSP1703",
+      "name": "Managerial Economics",
+      "mcs": 4
+    },
+    "BSP1703X": {
+      "code": "BSP1703X",
+      "name": "Managerial Economics",
+      "mcs": 4
+    },
+    "EC1101E": {
+      "code": "EC1101E",
+      "name": "Introduction to Economic Analysis",
+      "mcs": 4
+    },
+    "EC1301": {
+      "code": "EC1301",
+      "name": "Principles of Economics",
+      "mcs": 4
+    },
+    "ACC2706": {
+      "code": "ACC2706",
+      "name": "Managerial Accounting",
+      "mcs": 4
+    },
+    "BSN3703": {
+      "code": "BSN3703",
+      "name": "Entrepreneurial Strategy",
+      "mcs": 4
+    },
+    "BSN3712": {
+      "code": "BSN3712",
+      "name": "Innovation and Intellectual Property",
+      "mcs": 4
+    },
+    "BSN3717": {
+      "code": "BSN3717",
+      "name": "Family Business",
+      "mcs": 4
+    },
+    "ETP3211": {
+      "code": "ETP3211",
+      "name": "New Venture Creation",
+      "mcs": 4
+    },
+    "BSN3702": {
+      "code": "BSN3702",
+      "name": "New Venture Creation",
+      "mcs": 4
+    },
+    "BSN3701": {
+      "code": "BSN3701",
+      "name": "Technological Innovation",
+      "mcs": 4
+    },
+    "IS3251": {
+      "code": "IS3251",
+      "name": "Principles of Technology Entrepreneurship",
+      "mcs": 4
+    }
+  }
+}
