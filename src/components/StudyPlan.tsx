@@ -86,6 +86,7 @@ export const StudyPlan = ({
   const [shareNameError, setShareNameError] = useState(false);
   const [pendingMajorId, setPendingMajorId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [secondaryPanelsOpen, setSecondaryPanelsOpen] = useState(false);
   const reviewLabel = reviewOwnerName?.trim() || 'Shared plan';
 
   const copyShareLink = async (name: string) => {
@@ -263,32 +264,51 @@ export const StudyPlan = ({
           {(declaredSecondMajor || declaredMinors.length > 0) && (
             <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
               <div className="max-w-screen-2xl mx-auto flex flex-col gap-4">
-                {tripleCountedCodes.length > 0 && (
-                  <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                    <strong className="font-semibold">Triple-counting warning:</strong>{' '}
-                    {tripleCountedCodes.join(', ')}{' '}
-                    {tripleCountedCodes.length === 1 ? 'is' : 'are'} being counted toward your primary
-                    major and 2 or more secondary programmes at once &mdash; NUS does not allow this;
-                    one programme will need a different module.
-                  </div>
-                )}
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {declaredSecondMajor && (
-                    <SecondaryProgrammePanel
-                      programme={declaredSecondMajor}
-                      semesters={semesters}
-                      waivedModules={waivedModules}
-                    />
+                <button
+                  type="button"
+                  onClick={() => setSecondaryPanelsOpen((open) => !open)}
+                  className="flex items-center gap-2 text-left text-sm font-semibold text-ink"
+                  aria-expanded={secondaryPanelsOpen}
+                >
+                  <span>{secondaryPanelsOpen ? '▾' : '▸'}</span>
+                  <span>Second Major &amp; Minor Progress</span>
+                  {tripleCountedCodes.length > 0 && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+                      Triple-counting warning
+                    </span>
                   )}
-                  {declaredMinors.map((item) => (
-                    <SecondaryProgrammePanel
-                      key={item.id}
-                      programme={item}
-                      semesters={semesters}
-                      waivedModules={waivedModules}
-                    />
-                  ))}
-                </div>
+                </button>
+
+                {secondaryPanelsOpen && (
+                  <>
+                    {tripleCountedCodes.length > 0 && (
+                      <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
+                        <strong className="font-semibold">Triple-counting warning:</strong>{' '}
+                        {tripleCountedCodes.join(', ')}{' '}
+                        {tripleCountedCodes.length === 1 ? 'is' : 'are'} being counted toward your primary
+                        major and 2 or more secondary programmes at once &mdash; NUS does not allow this;
+                        one programme will need a different module.
+                      </div>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {declaredSecondMajor && (
+                        <SecondaryProgrammePanel
+                          programme={declaredSecondMajor}
+                          semesters={semesters}
+                          waivedModules={waivedModules}
+                        />
+                      )}
+                      {declaredMinors.map((item) => (
+                        <SecondaryProgrammePanel
+                          key={item.id}
+                          programme={item}
+                          semesters={semesters}
+                          waivedModules={waivedModules}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
