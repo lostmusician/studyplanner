@@ -174,25 +174,34 @@ export interface DoubleCountStatus {
 }
 
 export const computeDoubleCount = (
-  primary: Major,
   secondary: SecondaryProgramme,
   semesters: StudentSemester[],
   waivedModules: WaivedModule[] = [],
 ): DoubleCountStatus => {
-  // 1. Codes satisfying ≥1 requirement in `primary`.
-  // 2. Codes satisfying ≥1 requirement in `secondary`.
-  // 3. Intersect, sum MC via the plan's PlacedModule.mcs.
-  // 4. capMc = secondary.mcTarget * 0.4; warn = doubleCountMc > capMc.
+  // Every module in `semesters`/`waivedModules` already counts toward the
+  // primary major's MC total by construction (it's the primary major's
+  // plan) — many primary categories (e.g. math-sciences, unrestricted
+  // electives) have an MC target but no named RequirementRule row at all,
+  // so "satisfies a primary requirement" is NOT the right overlap test.
+  // 1. Codes anywhere in the plan that also satisfy ≥1 `secondary` requirement.
+  // 2. Sum MC via the plan's PlacedModule.mcs.
+  // 3. capMc = secondary.mcTarget * 0.4; warn = doubleCountMc > capMc.
 };
 ```
+
+No `primary: Major` parameter is needed — the plan itself *is* the primary
+major's plan, so any placed module inherently "belongs" to it regardless
+of category. The only real question is whether that same credit *also*
+satisfies a secondary programme's requirement.
 
 The cap is derived from `mcTarget` (NUS's rule is "40% of the programme's
 MC requirement," which equals 16/8 only because second majors/minors are
 standardized at 40/20 MC) rather than hard-coded, so it stays correct if a
 future programme ever ships at a non-standard size.
 
-**Triple-counting flag**: any code that double-counts against the primary
-*and 2+* declared secondary programmes at once is called out as its own
+**Triple-counting flag**: a code satisfying ≥1 requirement in *2 or more*
+declared secondary programmes at once (1 implicit primary count + 2
+secondary counts = 3) is called out as its own
 separate warning line (NUS explicitly forbids triple counting), rather
 than folded into either programme's double-count chip.
 
