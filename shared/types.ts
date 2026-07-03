@@ -95,6 +95,23 @@ export interface Major {
   defaultWaivedModules?: WaivedModule[];
 }
 
+/** A second major or minor a student can additionally declare alongside their
+ * primary major. Deliberately lean compared to `Major`: no `school`,
+ * `batches`, `defaultPlan`, `categories`, or `breadthDepth` — a secondary
+ * programme never owns semester placement or a per-category MC bar, it is
+ * only ever checked against whichever modules the student has already
+ * placed for their primary major. */
+export interface SecondaryProgramme {
+  id: string;
+  label: string;
+  kind: 'second-major' | 'minor';
+  /** 40 MC for a second major, 20 MC for a minor at NUS's standard sizes.
+   * Also drives the double-counting cap: `mcTarget * 0.4`. */
+  mcTarget: number;
+  requirements: RequirementRule[];
+  moduleCatalog: Record<string, Module>;
+}
+
 export interface StudentSemester {
   year: number;
   sem: number;
@@ -103,6 +120,10 @@ export interface StudentSemester {
 
 export interface StudentPlan {
   majorId: string;
+  /** At most 1 declared second major. */
+  secondMajorId?: string;
+  /** At most 3 declared minors. */
+  minorIds?: string[];
   semesters: StudentSemester[];
   waivedModules?: WaivedModule[];
   lastUpdated: string;
