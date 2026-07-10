@@ -4,6 +4,7 @@ import type { ConstraintStatus, FocusAreaStatus, RequirementStatus, Stats } from
 import { computeBreadthDepth, computeFocusAreas, computeProgrammeElectives, matchesFulfiller } from '../lib/studyPlan';
 import { FocusAreaExplorer } from './FocusAreaExplorer';
 import { ProgrammeElectivesExplorer } from './ProgrammeElectivesExplorer';
+import { MUTED } from '../lib/colors';
 
 interface Props {
   major: Major;
@@ -82,10 +83,10 @@ const TotalStatCard = ({
       className="flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl bg-white px-4 py-3 text-left shadow-soft sm:grow-0 sm:basis-auto sm:min-w-[160px] sm:px-5 sm:py-4"
       style={{ border: '1px solid rgba(20,20,19,0.08)' }}
     >
-      <span className="text-xs text-ink/60 font-medium tracking-wide uppercase">Total MCs</span>
+      <span className="text-xs text-ink/80 font-medium tracking-wide uppercase">Total MCs</span>
       <span className="text-2xl font-bold text-ink leading-none">
         {value}
-        <span className="text-sm font-normal text-ink/50 ml-1">/ {target}</span>
+        <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>
       </span>
       <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
         <div
@@ -123,10 +124,10 @@ const StatCard = ({
   };
   const content = (
     <>
-      <span className="text-xs text-ink/60 font-medium tracking-wide uppercase">{label}</span>
+      <span className="text-xs text-ink/80 font-medium tracking-wide uppercase">{label}</span>
       <span className="text-2xl font-bold text-ink leading-none">
         {value}
-        {target && <span className="text-sm font-normal text-ink/50 ml-1">/ {target}</span>}
+        {target && <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>}
       </span>
       {pct !== null && (
         <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
@@ -365,7 +366,7 @@ const ProgrammeElectivesPanel = ({
             <span
               key={cat.id}
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none"
-              style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: 'rgb(108,107,104)' }}
+              style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: MUTED }}
             >
               <span className="font-medium">{cat.label}</span>
               <span className="opacity-70">{cat.matched.length}</span>
@@ -404,7 +405,7 @@ export const ConstraintChip = ({ constraint }: { constraint: ConstraintStatus })
     ? 'rgb(180,83,9)'
     : constraint.fulfilled
       ? 'rgb(239,238,231)'
-      : 'rgb(108,107,104)';
+      : MUTED;
   return (
     <span
       title={constraint.label}
@@ -480,7 +481,7 @@ const FocusAreaChip = ({ area }: { area: FocusAreaStatus }) => {
   const needSenior =
     !area.fulfilled && area.matched.length >= area.need && area.seniorMatched.length < area.needSenior;
   const bg = area.fulfilled ? 'rgb(20,20,19)' : needSenior ? 'rgb(254,243,199)' : 'rgba(20,20,19,0.06)';
-  const fg = area.fulfilled ? 'rgb(239,238,231)' : needSenior ? 'rgb(180,83,9)' : 'rgb(108,107,104)';
+  const fg = area.fulfilled ? 'rgb(239,238,231)' : needSenior ? 'rgb(180,83,9)' : MUTED;
   return (
     <span
       title={needSenior ? `${area.label} — needs a level-4000 course` : area.label}
@@ -542,7 +543,7 @@ export const RequirementRow = ({
         <StatusDot fulfilled={req.fulfilled} />
         <span
           className="text-xs leading-relaxed"
-          style={{ color: req.fulfilled ? 'rgb(20,20,19)' : 'rgb(108,107,104)' }}
+          style={{ color: req.fulfilled ? 'rgb(20,20,19)' : MUTED }}
         >
           {req.name}
         </span>
@@ -641,7 +642,7 @@ const ModuleStatusRow = ({
     <div className="flex min-w-0 flex-col">
       <span
         className="font-mono text-xs font-bold leading-relaxed"
-        style={{ color: fulfilled ? 'rgb(20,20,19)' : 'rgb(108,107,104)' }}
+        style={{ color: fulfilled ? 'rgb(20,20,19)' : MUTED }}
       >
         {module.code}
       </span>
@@ -656,7 +657,7 @@ export const StatusDot = ({ fulfilled }: { fulfilled: boolean }) => (
     className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full text-[10px]"
     style={{
       backgroundColor: fulfilled ? 'rgb(20,20,19)' : 'transparent',
-      border: fulfilled ? 'none' : '1.5px solid rgb(108,107,104)',
+      border: fulfilled ? 'none' : `1.5px solid ${MUTED}`,
     }}
   >
     {fulfilled && (

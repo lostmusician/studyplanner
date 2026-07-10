@@ -288,6 +288,14 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
           />
         )}
 
+        {semester.modules.length === 0 && !isAdding && (
+          <p className="px-1 py-6 text-center text-[10px] leading-snug text-muted">
+            No modules yet.
+            <br />
+            Tap + to add one or drag one in.
+          </p>
+        )}
+
         {semester.modules.map((module) => (
           <ModuleCard
             key={module.code}
@@ -549,7 +557,10 @@ interface LoadWarning {
 }
 
 const LoadWarningChip = ({ warning }: { warning: LoadWarning }) => (
-  <div className={`${warning.className} mb-2 rounded-xl px-2.5 py-1.5 text-[10px] font-medium leading-tight`}>
+  // mb-4 (not mb-2): the first module card's corner controls (edit/delete/move)
+  // sit on negative offsets that poke above the card's own top edge on
+  // hover/focus, so this needs enough clearance to not collide with them.
+  <div className={`${warning.className} mb-4 rounded-xl px-2.5 py-1.5 text-[10px] font-medium leading-tight`}>
     <span className="block">{warning.label}</span>
     <span className="block font-normal opacity-75">{warning.detail}</span>
   </div>
@@ -586,7 +597,7 @@ const getLoadWarning = (year: number, sem: number, totalMcs: number): LoadWarnin
   if (totalMcs > 0 && totalMcs < UNDERLOAD_MCS) {
     return {
       label: 'Underload',
-      detail: `Below ${UNDERLOAD_MCS} MC`,
+      detail: `${UNDERLOAD_MCS - totalMcs} MC short of a full load — add electives`,
       className: 'bg-sky-100 text-sky-800',
     };
   }

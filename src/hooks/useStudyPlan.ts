@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type {
   Major,
   StudentPlan,
@@ -30,6 +30,9 @@ const minorModules = import.meta.glob('../../shared/data/minors/*.json', { eager
 
 /** Major selected on first load, before the user picks one. */
 const DEFAULT_MAJOR_ID = 'computer-science-nusc';
+
+/** How long a deleted module stays undoable before the toast dismisses itself. */
+const UNDO_DELETE_MS = 6000;
 
 export const loadMajors = (): Major[] =>
   Object.values(majorModules).map((m) => (m as { default: Major }).default);
@@ -308,10 +311,47 @@ export const useStudyPlan = () => {
     setWaivedModules((prev) => prev.filter((m) => m.code !== module.code));
   }, [major]);
 
+  const [lastRemovedModule, setLastRemovedModule] = useState<{
+    module: PlacedModule;
+    year: number;
+    sem: number;
+    insertBeforeCode?: string;
+  } | null>(null);
+  const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+  }, []);
+
   const deleteModule = useCallback((moduleCode: string, year?: number, sem?: number) => {
     const target = year && sem ? { year, sem } : undefined;
+    const semester = target ? semesters.find((s) => s.year === target.year && s.sem === target.sem) : undefined;
+    const index = semester?.modules.findIndex((m) => m.code === moduleCode) ?? -1;
+
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    if (semester && index >= 0) {
+      setLastRemovedModule({
+        module: semester.modules[index],
+        year: semester.year,
+        sem: semester.sem,
+        insertBeforeCode: semester.modules[index + 1]?.code,
+      });
+      undoTimeoutRef.current = setTimeout(() => setLastRemovedModule(null), UNDO_DELETE_MS);
+    } else {
+      setLastRemovedModule(null);
+    }
+
     setSemesters((prev) => removeModule(prev, moduleCode, target));
-  }, []);
+  }, [semesters]);
+
+  const undoDelete = useCallback(() => {
+    if (!lastRemovedModule) return;
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    setSemesters((prev) =>
+      upsertModule(prev, lastRemovedModule.year, lastRemovedModule.sem, lastRemovedModule.module, lastRemovedModule.insertBeforeCode),
+    );
+    setLastRemovedModule(null);
+  }, [lastRemovedModule]);
 
   const updateModule = useCallback(
     (
@@ -463,6 +503,8 @@ export const useStudyPlan = () => {
     applyOnboardingChoice,
     addOrMoveModule,
     deleteModule,
+    lastRemovedModule,
+    undoDelete,
     updateModule,
     addWaivedModule,
     deleteWaivedModule,

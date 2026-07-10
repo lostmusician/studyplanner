@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme, NocDuration } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { computeTripleCountedCodes } from '../lib/studyPlan';
+import { MUTED } from '../lib/colors';
 import { buildShareLink } from '@shared/share';
 import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
@@ -501,7 +502,7 @@ const MajorHeaderSelect = ({
 const SecondaryProgrammeBadge = ({ label }: { label: string }) => (
   <span
     className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium leading-none"
-    style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: 'rgb(108,107,104)' }}
+    style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: MUTED }}
   >
     {label}
   </span>

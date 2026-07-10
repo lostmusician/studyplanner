@@ -3,6 +3,7 @@ import type { Major, WaivedModule } from '@shared/types';
 import { searchNusModsModules, fetchNusModsModuleDetail } from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
 import { PlusIcon, XIcon } from './Icons';
+import { FOCUS_RING } from '../lib/colors';
 
 interface Props {
   major: Major;
@@ -181,14 +182,14 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth
               </div>
               <p className="text-[11px] text-ink/70 leading-snug mt-0.5 line-clamp-2">{module.name}</p>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-[10px] text-ink/50">Waived</span>
+                <span className="text-[10px] text-ink/80">Waived</span>
                 {category && (
-                  <span className="text-[10px] text-ink/50 truncate max-w-[80px]">{category.label}</span>
+                  <span className="text-[10px] text-ink/80 truncate max-w-[80px]">{category.label}</span>
                 )}
               </div>
               <button
                 type="button"
-                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-opacity group-hover:opacity-100"
+                className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${FOCUS_RING}`}
                 onClick={() => onDelete(module.code)}
                 aria-label={`Remove waived ${module.code}`}
               >

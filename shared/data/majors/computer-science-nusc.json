@@ -457,6 +457,12 @@
       "name": "Introductory Mathematics",
       "mcs": 4,
       "categoryId": "cs-foundation"
+    },
+    {
+      "code": "CS1010S",
+      "name": "Programming Methodology",
+      "mcs": 4,
+      "categoryId": "cs-foundation"
     }
   ]
 }

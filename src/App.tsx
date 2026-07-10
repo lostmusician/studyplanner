@@ -156,6 +156,18 @@ const App = () => {
           </button>
         </div>
       )}
+      {plan.lastRemovedModule && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-ink px-4 py-3 text-sm text-canvas shadow-lg">
+          <span>{plan.lastRemovedModule.module.code} removed</span>
+          <button
+            type="button"
+            onClick={plan.undoDelete}
+            className="ml-3 font-medium underline underline-offset-2"
+          >
+            Undo
+          </button>
+        </div>
+      )}
     </>
   );
 };
