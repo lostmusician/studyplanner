@@ -60,8 +60,11 @@ cd admin
 npm run dev
 ```
 
-It has three sections (Majors, Second Majors, Minors), each with an Info/Requirements/
-[Default Plan or Module Catalog]/Export tab. Use the Export tab to save the file to the right
+It has three sections (Majors, Second Majors, Minors). Majors get an Info/Categories/Default
+Plan/Requirements/Export tab set; Second Majors and Minors get the leaner Info/Requirements/
+Module Catalog/Export (no categories or default plan — a secondary programme is only ever
+checked against modules already placed for the primary major). Use the Export tab to save the
+file to the right
 `shared/data/` subdirectory, then run `npm run validate` from the repo root to check it (id
 uniqueness, `moduleCatalog` consistency, category/MC-target sums for majors).
 
