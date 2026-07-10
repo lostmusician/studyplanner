@@ -92,9 +92,15 @@ Per NUSC official PDFs (AY2022-24 and AY2025/26+ cohorts) and NUSC FAQs (updated
   CDE/XDP) are **not additive**. Verbatim from the official source: "the total number of Making
   Connection waivers will follow the PWW with the highest number of waivers." A student on two
   overlapping waiver programmes takes the higher single waiver count, not the sum.
-- **Not currently modeled in app data or code** — no major JSON or logic in `studyPlan.ts` /
-  `SemesterGrid.tsx` currently represents NOC/PWW waivers. This is a manual/advisory consideration
-  outside the app's automated checks (see Section 5).
+- **Now modeled** (as of 2026-07-10): `src/lib/studyPlan.ts`'s `applyNocAdjustment(major, duration)`
+  reduces the Making Connections requirement's `count` by the waived amount and shifts the freed MC
+  from `nus-college` to `unrestricted-electives`, keeping `totalMcTarget` fixed. Declared per-plan via
+  a "NOC (Overseas Colleges)" selector in Settings (None / 6-month / 1-year — 3-month is a no-op, so
+  isn't offered as a distinct option). Threaded through save/load, major switching, plan reset, and
+  share/review links, matching the existing second-major/minor plumbing. **Not modeled**: the
+  non-cumulative-waivers trap (stacking NOC with another PWW like CDE/XDP) — the app has no notion of
+  other PWWs at all, so there is nothing to take the max against; a single declared NOC duration is
+  applied as-is.
 
 ---
 
@@ -287,10 +293,9 @@ Electives is 16 MC here (vs 20 MC for CS/AI/BAIS) — the totals still sum to 16
 | NUS College GCC/MCE/IEx rows (7 rows) | — | nus-college |
 
 No `breadthDepth`/`programmeElectives` config — modeled instead as two flat-pool requirement rows
-(count-based, approximating the real MC minimums). **Known simplification:** the real rule allows
-IFS4205 (8 MC, 1 course) OR the pair CS4238 + IFS4103 together (8 MC, 2 specific courses) as
-alternate paths to the capstone requirement — the app only checks for IFS4205 alone; the pair
-alternative isn't specially modeled (both codes are still available in the Security Electives pool).
+(count-based, approximating the real MC minimums). The capstone requirement is satisfied either by
+IFS4205 (8 MC, 1 course) OR the pair CS4238 + IFS4103 together (8 MC, 2 specific courses), via
+`altGroups: [["CS4238", "IFS4103"]]` alongside `fulfilledBy: ["IFS4205"]`.
 
 Source: comp.nus.edu.sg/programmes/ug/isc/curr/, fetched live 2026-07-10.
 
@@ -490,19 +495,18 @@ the resulting per-major detail. A pre-existing gap in Computer Science's own dat
 passing: its `breadthDepth.industryExperience.courses` list referenced codes that were never added to
 its `moduleCatalog`.
 
+**Also resolved (2026-07-10, second pass):** NOC/PWW waivers are now modeled (see Section 1's NOC
+entry for the mechanics). Information Security's capstone alternative is now modeled too — a new
+`RequirementRule.altGroups` field lets a requirement be satisfied either by its normal
+`fulfilledBy`/`count` check OR by placing every code in one full alternative group; InfoSec's
+capstone row now has `altGroups: [["CS4238", "IFS4103"]]` alongside its existing `fulfilledBy:
+["IFS4205"]`.
+
 Remaining genuine gaps, not invented:
 
-- **NOC / Programme-With-Waivers is still not represented anywhere in the app.** No major JSON, minor
-  JSON, second-major JSON, or logic in `studyPlan.ts`/`SemesterGrid.tsx` encodes the MCE-waiver
-  mechanics described in Section 1 (waived UT counts, the non-cumulative-waivers rule). A student
-  on NOC currently has no way to reflect a reduced NUS College MC target in the app. This is the
-  one remaining gap from the original list — it needs a small code change (something has to adjust
-  the `nus-college` category's MC target and the Making Connections requirement count when NOC is
-  declared), not just data authoring, so it was deferred as a separate follow-up.
-- **Information Security's capstone alternative isn't fully modeled**: the real rule allows IFS4205
-  (8 MC) OR the pair CS4238 + IFS4103 together as alternate paths — the app only checks for IFS4205
-  alone. Low-impact (both codes are still in the Security Electives pool, just not linked as a
-  specific alternate pair).
+- **The non-cumulative-waivers trap is unmodeled** (see Section 1) — the app doesn't represent CDE/
+  XDP or any other PWW, so there's no "take the higher waiver count" logic to write; a declared NOC
+  duration always applies in full. Only relevant to a student stacking NOC with another PWW.
 - **The `computeDoubleCount` cap (`mcTarget * 0.4`) is a generic derivation**, not a rule read from
   each programme's own official double-counting allowance — it assumes every second major allows
   exactly 16 MC overlap and every minor allows exactly 8 MC, which matches the general NUS rule but

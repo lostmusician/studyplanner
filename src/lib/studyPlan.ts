@@ -6,6 +6,7 @@ import type {
   FocusArea,
   SecondaryProgramme,
   RequirementRule,
+  NocDuration,
 } from '@shared/types';
 
 export const semesterLabel = (year: number, sem: number): string => `Y${year}S${sem}`;
@@ -156,9 +157,11 @@ export const computeRequirements = (
         mappedCodes.includes(code),
     ).length;
     const need = req.count ?? 1;
+    const codeSet = new Set(allCodes);
+    const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) => codeSet.has(code)));
     return {
       name: req.name,
-      fulfilled: matchCount >= need,
+      fulfilled: matchCount >= need || altGroupSatisfied,
       categoryId: req.categoryId,
       have: matchCount,
       need,
@@ -212,6 +215,53 @@ export const computeTripleCountedCodes = (
   return codes.filter(
     (code) => secondaries.filter((secondary) => matchesAnyRequirement(secondary.requirements, code)).length >= 2,
   );
+};
+
+/** NOC waives Making Connections Electives (MCEs) only — 4 UT each, confirmed
+ * uniform across NUSC-wide and SoC/NUSC-specific curricula alike. Waiver
+ * counts and freed MC are NUS-wide constants, independent of a major's own
+ * `nus-college` MC total (52 for SoC/NUSC majors, 56 generically) — the
+ * waived count is what shrinks, the per-elective 4 MC weight is fixed. */
+const NOC_MCE_WAIVERS: Record<NocDuration, { wavered: number; freedMc: number }> = {
+  '6-month': { wavered: 2, freedMc: 8 },
+  '1-year': { wavered: 4, freedMc: 16 },
+};
+
+/** Applies NOC (NUS Overseas Colleges) Programme-With-Waivers adjustments to a
+ * major: reduces the "Making Connections" requirement's `count` by the waived
+ * amount, and moves the freed MC from `nus-college` to `unrestricted-electives`
+ * so `totalMcTarget` stays fixed. NOC waives NUSC requirements ONLY — SoC/
+ * Faculty common curriculum (`soc-common`) is untouched, per the official NUSC
+ * FAQ: "the waiver ... is for NUSC requirements only." A major with no
+ * `nus-college` category or no "Making Connections" row (i.e. not modeled with
+ * the NUSC block at all) is returned unchanged. Returns `major` unchanged
+ * when `duration` is nullish (3-month NOC waives nothing, so it isn't a
+ * distinct `NocDuration` value — see the type's own doc comment). */
+export const applyNocAdjustment = (major: Major, duration?: NocDuration | null): Major => {
+  if (!duration) return major;
+  const rule = NOC_MCE_WAIVERS[duration];
+  const mceIndex = major.requirements.findIndex(
+    (r) => r.categoryId === 'nus-college' && r.name.startsWith('Making Connections'),
+  );
+  const hasNusCollege = major.categories.some((c) => c.id === 'nus-college');
+  if (!rule || mceIndex === -1 || !hasNusCollege) return major;
+
+  const mceReq = major.requirements[mceIndex];
+  const newCount = Math.max(0, (mceReq.count ?? 1) - rule.wavered);
+
+  return {
+    ...major,
+    categories: major.categories.map((cat) => {
+      if (cat.id === 'nus-college' && cat.mcTarget !== undefined) {
+        return { ...cat, mcTarget: Math.max(0, cat.mcTarget - rule.freedMc) };
+      }
+      if (cat.id === 'unrestricted-electives' && cat.mcTarget !== undefined) {
+        return { ...cat, mcTarget: cat.mcTarget + rule.freedMc };
+      }
+      return cat;
+    }),
+    requirements: major.requirements.map((r, i) => (i === mceIndex ? { ...r, count: newCount } : r)),
+  };
 };
 
 /** Derives the NUS course level from a code, e.g. "CS4231" -> 4000, "CS2103T" -> 2000. */

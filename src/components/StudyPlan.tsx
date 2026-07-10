@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme } from '@shared/types';
+import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme, NocDuration } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { computeTripleCountedCodes } from '../lib/studyPlan';
 import { buildShareLink } from '@shared/share';
@@ -20,6 +20,8 @@ interface Props {
   minorIds: string[];
   setSecondMajorId: (id: string | null) => void;
   toggleMinorId: (id: string) => void;
+  nocDuration: NocDuration | null;
+  setNocDuration: (duration: NocDuration | null) => void;
   requirementMappings: Record<string, string[]>;
   addRequirementMapping: (requirementName: string, moduleCode: string) => void;
   removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
@@ -59,6 +61,8 @@ export const StudyPlan = ({
   minorIds,
   setSecondMajorId,
   toggleMinorId,
+  nocDuration,
+  setNocDuration,
   requirementMappings,
   addRequirementMapping,
   removeRequirementMapping,
@@ -98,7 +102,7 @@ export const StudyPlan = ({
   const copyShareLink = async (name: string) => {
     const link = buildShareLink({
       profile: { name, matricNumber, year: studentYear },
-      plan: { majorId, semesters, waivedModules, secondMajorId, minorIds, requirementMappings },
+      plan: { majorId, semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration },
     }, major.moduleCatalog);
     try {
       await navigator.clipboard.writeText(link);
@@ -244,6 +248,8 @@ export const StudyPlan = ({
           minorIds={minorIds}
           setSecondMajorId={setSecondMajorId}
           toggleMinorId={toggleMinorId}
+          nocDuration={nocDuration}
+          setNocDuration={setNocDuration}
           studentName={studentName}
           setStudentName={setStudentName}
           matricNumber={matricNumber}
@@ -486,6 +492,8 @@ const SettingsPage = ({
   minorIds,
   setSecondMajorId,
   toggleMinorId,
+  nocDuration,
+  setNocDuration,
   studentName,
   setStudentName,
   matricNumber,
@@ -503,6 +511,8 @@ const SettingsPage = ({
   minorIds: string[];
   setSecondMajorId: (id: string | null) => void;
   toggleMinorId: (id: string) => void;
+  nocDuration: NocDuration | null;
+  setNocDuration: (duration: NocDuration | null) => void;
   studentName: string;
   setStudentName: (name: string) => void;
   matricNumber: string;
@@ -589,6 +599,22 @@ const SettingsPage = ({
               options={[
                 { value: '', label: 'None' },
                 ...secondMajors.map((item) => ({ value: item.id, label: item.label })),
+              ]}
+            />
+          </label>
+
+          <label className="mt-4 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wide text-muted">NOC (Overseas Colleges)</span>
+            <Dropdown
+              variant="field"
+              ariaLabel="NOC duration"
+              value={nocDuration ?? ''}
+              onChange={(v) => setNocDuration(v === '' ? null : (v as NocDuration))}
+              className={field}
+              options={[
+                { value: '', label: 'None' },
+                { value: '6-month', label: '6-month (2 MCEs waived)' },
+                { value: '1-year', label: '1-year (4 MCEs waived)' },
               ]}
             />
           </label>

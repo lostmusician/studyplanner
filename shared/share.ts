@@ -1,4 +1,4 @@
-import type { Module, PlacedModule, StudentSemester, WaivedModule } from './types';
+import type { Module, PlacedModule, StudentSemester, WaivedModule, NocDuration } from './types';
 
 /** Personal identity carried in a share link. */
 export interface ShareProfile {
@@ -15,6 +15,7 @@ export interface SharePlan {
   secondMajorId?: string | null;
   minorIds?: string[];
   requirementMappings?: Record<string, string[]>;
+  nocDuration?: NocDuration | null;
 }
 
 /** Self-contained payload encoded into a share URL. */
@@ -47,6 +48,8 @@ interface CompactSharePayload {
   mn?: string[];
   /** Manual requirement-name -> module-code mappings. Omitted entirely when empty. */
   rm?: Record<string, string[]>;
+  /** Declared NOC duration. Omitted entirely when not on NOC. */
+  noc?: NocDuration;
 }
 
 const toBase64Url = (json: string): string => {
@@ -112,6 +115,7 @@ const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalo
   if (payload.plan.requirementMappings && Object.keys(payload.plan.requirementMappings).length > 0) {
     compact.rm = payload.plan.requirementMappings;
   }
+  if (payload.plan.nocDuration) compact.noc = payload.plan.nocDuration;
   return compact;
 };
 
@@ -185,6 +189,7 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
         secondMajorId: typeof parsed.sm === 'string' ? parsed.sm : null,
         minorIds: Array.isArray(parsed.mn) ? parsed.mn.filter((id): id is string => typeof id === 'string') : [],
         requirementMappings: isRequirementMappings(parsed.rm) ? parsed.rm : {},
+        nocDuration: parsed.noc === '6-month' || parsed.noc === '1-year' ? parsed.noc : null,
       },
     };
   } catch {

@@ -23,6 +23,11 @@ export interface RequirementRule {
   /** Groups this requirement under a MajorCategory (by id) in the requirements checklist.
    * Rows without one are rendered under a fallback "Other" group. */
   categoryId?: string;
+  /** Alternative ways to satisfy this requirement instead of `fulfilledBy`/`count` — each
+   * inner array must be placed/waived IN FULL (e.g. NUS Information Security's capstone:
+   * IFS4205 alone, OR CS4238 together with IFS4103). Satisfied when the plain
+   * `fulfilledBy`/`count` check passes OR any one altGroup's codes are all present. */
+  altGroups?: string[][];
 }
 
 export interface FocusArea {
@@ -168,12 +173,20 @@ export interface StudentSemester {
   modules: PlacedModule[];
 }
 
+/** NUS Overseas Colleges duration. A student on NOC is on a "Programme-With-
+ * Waivers" (PWW) that waives some Making Connections Electives only — NUSC
+ * requirements, never Faculty/SoC common curriculum. 3-month NOC waives
+ * nothing, so it isn't tracked as a distinct value here (equivalent to `null`). */
+export type NocDuration = '6-month' | '1-year';
+
 export interface StudentPlan {
   majorId: string;
   /** At most 1 declared second major. */
   secondMajorId?: string;
   /** At most 3 declared minors. */
   minorIds?: string[];
+  /** Declared NOC Programme-With-Waivers duration, if any. See {@link NocDuration}. */
+  nocDuration?: NocDuration | null;
   /** Manual links from a requirement (by its `RequirementRule.name`) to planner
    * module codes that should count toward it even though they don't match its
    * `fulfilledBy` list. A mapped code only counts while that module is actually

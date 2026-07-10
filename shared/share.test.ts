@@ -23,9 +23,10 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
     expect(decoded?.plan.secondMajorId ?? null).toBeNull();
     expect(decoded?.plan.minorIds ?? []).toEqual([]);
     expect(decoded?.plan.requirementMappings ?? {}).toEqual({});
+    expect(decoded?.plan.nocDuration ?? null).toBeNull();
   });
 
-  it('round-trips a declared second major, minors, and requirement mappings', () => {
+  it('round-trips a declared second major, minors, requirement mappings, and NOC duration', () => {
     const payload = {
       ...basePayload,
       plan: {
@@ -33,6 +34,7 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
         secondMajorId: 'mathematics',
         minorIds: ['statistics', 'economics'],
         requirementMappings: { 'Programming Methodology': ['CS2101'] },
+        nocDuration: '1-year' as const,
       },
     };
     const encoded = encodeCompactPlan(payload);
@@ -40,5 +42,6 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
     expect(decoded?.plan.secondMajorId).toBe('mathematics');
     expect(decoded?.plan.minorIds).toEqual(['statistics', 'economics']);
     expect(decoded?.plan.requirementMappings).toEqual({ 'Programming Methodology': ['CS2101'] });
+    expect(decoded?.plan.nocDuration).toBe('1-year');
   });
 });

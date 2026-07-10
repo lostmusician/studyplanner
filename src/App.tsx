@@ -43,6 +43,7 @@ const App = () => {
       pendingImport.plan.secondMajorId ?? null,
       pendingImport.plan.minorIds ?? [],
       pendingImport.plan.requirementMappings ?? {},
+      pendingImport.plan.nocDuration ?? null,
     );
     if (ok) {
       importProfile(pendingImport.profile);
@@ -60,6 +61,7 @@ const App = () => {
       pendingImport.plan.secondMajorId ?? null,
       pendingImport.plan.minorIds ?? [],
       pendingImport.plan.requirementMappings ?? {},
+      pendingImport.plan.nocDuration ?? null,
     );
     if (ok) {
       setReviewProfile(pendingImport.profile);
