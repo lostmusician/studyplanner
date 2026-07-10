@@ -561,3 +561,121 @@ Confirm the ImportModal appears and the onboarding popup does NOT appear underne
 - [ ] **Step 5: No regressions**
 
 Run `npx tsc --noEmit`, `npm run test`, `npm run validate`, `npm run build` one final time — all must be clean, matching the CI workflow's exact steps.
+
+---
+### Task 7: Persist the last active major across page loads
+
+**Files:**
+- Modify: `src/hooks/useStudyPlan.ts`
+
+**Interfaces:**
+- Consumes: nothing new.
+- Produces: no new exports — this is a behavioral fix to the hook's existing initialization logic.
+
+**Why:** Task 6's manual verification surfaced a pre-existing, separate gap that directly undermines this feature: `majorId` state always initializes to the hardcoded `DEFAULT_MAJOR_ID` ('computer-science-nusc') on every fresh page load — there is no persisted "last active major." Consequence: a student who completes onboarding by picking a non-CS major sees Computer Science's plan again on their very next reload (their real data is safe under its own `studyplan:<majorId>` key and reachable via the major dropdown, so this is not data loss — but it looks broken and defeats onboarding's purpose for exactly the students it was built to help). This task closes that gap with a small persisted key.
+
+- [ ] **Step 1: Add the persisted-key constant and a read helper**
+
+In `src/hooks/useStudyPlan.ts`, find `const writeSavedPlan = (majorId: string, state: SavedPlanState) => {`. Immediately after that function's closing `};` (and before `export const useStudyPlan = () => {`), add:
+
+```ts
+const LAST_MAJOR_KEY = 'studyplan:lastMajorId';
+
+const getInitialMajorId = (majors: Major[], fallback: string): string => {
+  const stored = localStorage.getItem(LAST_MAJOR_KEY);
+  return stored && majors.some((m) => m.id === stored) ? stored : fallback;
+};
+```
+
+- [ ] **Step 2: Use it to seed the initial state**
+
+Replace:
+
+```ts
+  const defaultMajor = majors.find((m) => m.id === DEFAULT_MAJOR_ID) ?? majors[0];
+  const [majorId, setMajorId] = useState<string>(defaultMajor?.id ?? '');
+  const [personalMajorId, setPersonalMajorId] = useState<string>(defaultMajor?.id ?? '');
+```
+
+with:
+
+```ts
+  const defaultMajor = majors.find((m) => m.id === DEFAULT_MAJOR_ID) ?? majors[0];
+  const initialMajorId = getInitialMajorId(majors, defaultMajor?.id ?? '');
+  const [majorId, setMajorId] = useState<string>(initialMajorId);
+  const [personalMajorId, setPersonalMajorId] = useState<string>(initialMajorId);
+```
+
+On a genuinely fresh browser (no `studyplan:lastMajorId` key yet), `getInitialMajorId` falls back to `defaultMajor?.id` — identical to today's bootstrap behavior, so this doesn't change what a brand-new visitor sees before onboarding runs.
+
+- [ ] **Step 3: Add a `rememberMajorId` helper that persists on every real major change**
+
+Find `const toggleMinorId = useCallback(`. Immediately before it, add:
+
+```ts
+  const rememberMajorId = (id: string) => {
+    localStorage.setItem(LAST_MAJOR_KEY, id);
+    setPersonalMajorId(id);
+  };
+```
+
+- [ ] **Step 4: Replace the three existing `setPersonalMajorId` call sites**
+
+There are exactly three. Each one is the signal for "this is the user's own real major choice, not a temporary review-mode view" — replace each with `rememberMajorId`, keeping every surrounding line unchanged:
+
+In `switchMajor`, replace:
+```ts
+      if (mode === 'personal') setPersonalMajorId(newMajorId);
+```
+with:
+```ts
+      if (mode === 'personal') rememberMajorId(newMajorId);
+```
+
+In `applyOnboardingChoice` (added in Task 3), replace:
+```ts
+      setPersonalMajorId(newMajorId);
+```
+with:
+```ts
+      rememberMajorId(newMajorId);
+```
+(This is the one line that directly closes the gap Task 6 found: completing onboarding now persists the chosen major for next time.)
+
+In `importSharedPlan`, replace:
+```ts
+      setPersonalMajorId(newMajorId);
+```
+with:
+```ts
+      rememberMajorId(newMajorId);
+```
+
+Do not touch `openReviewPlan` or `exitReviewMode` — review mode is intentionally temporary and must not overwrite the persisted "last active" major.
+
+- [ ] **Step 5: Typecheck**
+
+Run: `npx tsc --noEmit`
+Expected: clean, no output.
+
+- [ ] **Step 6: Run the full test suite**
+
+Run: `npm run test`
+Expected: all tests pass (this task adds no new tests — `useStudyPlan.ts` isn't unit-tested per this project's convention — but must not break any of the existing 109).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/hooks/useStudyPlan.ts
+git commit -m "Persist the last active major across page loads"
+```
+
+- [ ] **Step 8: Manual re-verification**
+
+Run `npm run dev` (or reuse a running dev server). In a fresh browser context with empty `localStorage`:
+1. Complete onboarding picking a non-CS major (e.g. Information Security) with "Start from scratch."
+2. Confirm the grid shows the scratch plan for that major (only the locked NEP entries).
+3. Reload the page.
+4. Confirm the header still shows the chosen major (e.g. Information Security) — NOT Computer Science — and the grid still shows the scratch plan, not a reset default. This is the specific regression Task 6 found; confirm it's fixed.
+5. Switch to a different major via the Settings dropdown, reload, confirm it lands on that major too (general "remember last active major" behavior, not just the onboarding path).
+
