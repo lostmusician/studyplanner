@@ -72,6 +72,33 @@ export const renameModule = (
     modules: s.modules.map((m) => (m.code === oldCode ? { ...updates } : m)),
   }));
 
+/** Reassigns a placed module's `categoryId` in place, wherever it's currently
+ * scheduled. Used when a manual requirement mapping links a module to a
+ * requirement row (see `StudentPlan.requirementMappings`) — without this, a
+ * module auto-categorized as Unrestricted Electives on first add (because its
+ * code didn't match any `RequirementRule.fulfilledBy`) would stay tagged that
+ * way even after being manually linked to satisfy a SoC Common Curriculum
+ * requirement, so its MC would count toward the wrong category's target while
+ * the requirement checklist shows it fulfilled. No-op if the code isn't
+ * currently placed. */
+export const recategorizeModule = (
+  semesters: StudentSemester[],
+  moduleCode: string,
+  categoryId: string,
+): StudentSemester[] =>
+  semesters.map((s) => ({
+    ...s,
+    modules: s.modules.map((m) => (m.code === moduleCode ? { ...m, categoryId } : m)),
+  }));
+
+/** Same as {@link recategorizeModule} but for the waived-modules list, which
+ * isn't shaped as `StudentSemester[]`. */
+export const recategorizeWaivedModule = (
+  waivedModules: WaivedModule[],
+  moduleCode: string,
+  categoryId: string,
+): WaivedModule[] => waivedModules.map((m) => (m.code === moduleCode ? { ...m, categoryId } : m));
+
 export const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
   fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
 
