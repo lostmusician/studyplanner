@@ -40,6 +40,9 @@ const App = () => {
       pendingImport.plan.majorId,
       pendingImport.plan.semesters,
       pendingImport.plan.waivedModules,
+      pendingImport.plan.secondMajorId ?? null,
+      pendingImport.plan.minorIds ?? [],
+      pendingImport.plan.requirementMappings ?? {},
     );
     if (ok) {
       importProfile(pendingImport.profile);
@@ -54,6 +57,9 @@ const App = () => {
       pendingImport.plan.majorId,
       pendingImport.plan.semesters,
       pendingImport.plan.waivedModules,
+      pendingImport.plan.secondMajorId ?? null,
+      pendingImport.plan.minorIds ?? [],
+      pendingImport.plan.requirementMappings ?? {},
     );
     if (ok) {
       setReviewProfile(pendingImport.profile);
