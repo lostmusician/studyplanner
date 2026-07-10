@@ -271,6 +271,24 @@ export const useStudyPlan = () => {
     [majors, mode],
   );
 
+  const applyOnboardingChoice = useCallback(
+    (newMajorId: string, mode: 'example' | 'scratch') => {
+      const newMajor = majors.find((m) => m.id === newMajorId);
+      if (!newMajor) return;
+      setSemesters(defaultPlanToSemesters(newMajor, { lockedOnly: mode === 'scratch' }));
+      setWaivedModules(
+        mode === 'example' ? normalizeWaivedModules(newMajor, newMajor.defaultWaivedModules) : [],
+      );
+      setSecondMajorIdState(null);
+      setMinorIds([]);
+      setRequirementMappings({});
+      setNocDurationState(null);
+      setMajorId(newMajorId);
+      setPersonalMajorId(newMajorId);
+    },
+    [majors],
+  );
+
   const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => {
     if (major && isModuleLocked(major, module.code)) return;
     setSemesters((prev) => upsertModule(prev, year, sem, module, insertBeforeCode));
@@ -429,6 +447,7 @@ export const useStudyPlan = () => {
     stats,
     requirements,
     switchMajor,
+    applyOnboardingChoice,
     addOrMoveModule,
     deleteModule,
     updateModule,
