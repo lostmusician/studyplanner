@@ -12,6 +12,9 @@ export interface SharePlan {
   majorId: string;
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
+  secondMajorId?: string | null;
+  minorIds?: string[];
+  requirementMappings?: Record<string, string[]>;
 }
 
 /** Self-contained payload encoded into a share URL. */
@@ -38,6 +41,12 @@ interface CompactSharePayload {
   m: string;
   s: CompactSemester[];
   w: CompactModule[];
+  /** Declared second major id. Omitted entirely when none is declared. */
+  sm?: string;
+  /** Declared minor ids. Omitted entirely when empty. */
+  mn?: string[];
+  /** Manual requirement-name -> module-code mappings. Omitted entirely when empty. */
+  rm?: Record<string, string[]>;
 }
 
 const toBase64Url = (json: string): string => {
@@ -84,19 +93,27 @@ const expandModules = (modules: unknown): PlacedModule[] =>
     ? modules.map(expandModule).filter((module): module is PlacedModule => Boolean(module))
     : [];
 
-const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalog): CompactSharePayload => ({
-  v: COMPACT_VERSION,
-  p: [payload.profile.name, payload.profile.matricNumber, payload.profile.year],
-  m: payload.plan.majorId,
-  s: payload.plan.semesters
-    .map((semester): CompactSemester => [
-      semester.year,
-      semester.sem,
-      semester.modules.map((module) => compactModule(module, catalog)),
-    ])
-    .filter((semester) => semester[2].length > 0),
-  w: payload.plan.waivedModules.map((module) => compactModule(module, catalog)),
-});
+const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalog): CompactSharePayload => {
+  const compact: CompactSharePayload = {
+    v: COMPACT_VERSION,
+    p: [payload.profile.name, payload.profile.matricNumber, payload.profile.year],
+    m: payload.plan.majorId,
+    s: payload.plan.semesters
+      .map((semester): CompactSemester => [
+        semester.year,
+        semester.sem,
+        semester.modules.map((module) => compactModule(module, catalog)),
+      ])
+      .filter((semester) => semester[2].length > 0),
+    w: payload.plan.waivedModules.map((module) => compactModule(module, catalog)),
+  };
+  if (payload.plan.secondMajorId) compact.sm = payload.plan.secondMajorId;
+  if (payload.plan.minorIds && payload.plan.minorIds.length > 0) compact.mn = payload.plan.minorIds;
+  if (payload.plan.requirementMappings && Object.keys(payload.plan.requirementMappings).length > 0) {
+    compact.rm = payload.plan.requirementMappings;
+  }
+  return compact;
+};
 
 /** Encodes a payload into a base64url string suitable for a URL hash. */
 export const encodePlan = (payload: Omit<SharePayload, 'v'>): string =>
@@ -132,6 +149,14 @@ export const decodePlan = (encoded: string): SharePayload | null => {
 export const encodeCompactPlan = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalog): string =>
   toBase64Url(JSON.stringify(compactPayload(payload, catalog)));
 
+const isRequirementMappings = (value: unknown): value is Record<string, string[]> =>
+  Boolean(
+    value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.values(value).every((codes) => Array.isArray(codes) && codes.every((c) => typeof c === 'string')),
+  );
+
 /** Decodes the compact v2 share string. Returns null on parse, shape, or version failure. */
 export const decodeCompactPlan = (encoded: string): SharePayload | null => {
   try {
@@ -157,6 +182,9 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
           }))
           .filter((semester) => Number.isFinite(semester.year) && Number.isFinite(semester.sem)),
         waivedModules: expandModules(parsed.w),
+        secondMajorId: typeof parsed.sm === 'string' ? parsed.sm : null,
+        minorIds: Array.isArray(parsed.mn) ? parsed.mn.filter((id): id is string => typeof id === 'string') : [],
+        requirementMappings: isRequirementMappings(parsed.rm) ? parsed.rm : {},
       },
     };
   } catch {

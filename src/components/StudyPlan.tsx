@@ -98,7 +98,7 @@ export const StudyPlan = ({
   const copyShareLink = async (name: string) => {
     const link = buildShareLink({
       profile: { name, matricNumber, year: studentYear },
-      plan: { majorId, semesters, waivedModules },
+      plan: { majorId, semesters, waivedModules, secondMajorId, minorIds, requirementMappings },
     }, major.moduleCatalog);
     try {
       await navigator.clipboard.writeText(link);

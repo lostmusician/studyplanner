@@ -113,7 +113,7 @@ export const MajorBuilder = ({ major, onChange }: Props) => {
           />
         )}
 
-        {tab === 'export' && <ExportPanel major={major} />}
+        {tab === 'export' && <ExportPanel data={major} directory="majors" />}
       </div>
     </div>
   );
