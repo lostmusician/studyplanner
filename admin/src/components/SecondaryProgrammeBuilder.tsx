@@ -51,14 +51,10 @@ export const SecondaryProgrammeBuilder = ({ programme, onChange }: Props) => {
               <input value={programme.label} onChange={(e) => update({ label: e.target.value })} className={field} />
             </LabeledField>
             <LabeledField label="Kind">
-              <select
-                value={programme.kind}
-                onChange={(e) => update({ kind: e.target.value as SecondaryProgramme['kind'] })}
-                className={field}
-              >
-                <option value="second-major">Second Major</option>
-                <option value="minor">Minor</option>
-              </select>
+              <div className="rounded-xl border border-ink/10 bg-canvas px-3 py-2 text-sm text-ink w-full">
+                {programme.kind === 'second-major' ? 'Second Major' : 'Minor'}
+              </div>
+              <p className="text-xs text-muted">Set when the entry is created — can't be changed here.</p>
             </LabeledField>
             <LabeledField label="MC Target">
               <input
