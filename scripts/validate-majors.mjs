@@ -59,6 +59,31 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
     if (mod.code !== code) fail(`catalog key "${code}" !== module.code "${mod.code}"`);
   }
 
+  const checkCode = (context, code) => {
+    if (!major.moduleCatalog?.[code]) fail(`${context} code "${code}" not in moduleCatalog`);
+  };
+
+  if (major.breadthDepth) {
+    const bd = major.breadthDepth;
+    if (!catIds.has(bd.categoryId)) fail(`breadthDepth categoryId "${bd.categoryId}" not a category`);
+    for (const code of bd.industryExperience?.courses ?? []) checkCode('breadthDepth.industryExperience', code);
+    if (bd.industryExperience?.dissertationAlternative) {
+      checkCode('breadthDepth.industryExperience.dissertationAlternative', bd.industryExperience.dissertationAlternative);
+    }
+    for (const code of bd.technicalElectives?.courses ?? []) checkCode('breadthDepth.technicalElectives', code);
+  }
+
+  if (major.programmeElectives) {
+    const pe = major.programmeElectives;
+    if (!catIds.has(pe.categoryId)) fail(`programmeElectives categoryId "${pe.categoryId}" not a category`);
+    for (const cat of pe.categories ?? []) {
+      for (const code of cat.courses ?? []) checkCode(`programmeElectives.categories[${cat.id}]`, code);
+    }
+    for (const spec of pe.specialisations ?? []) {
+      for (const code of spec.courses ?? []) checkCode(`programmeElectives.specialisations[${spec.id}]`, code);
+    }
+  }
+
   if (errors.every((e) => !e.startsWith(`FAIL ${idKey}:`))) {
     console.log(`OK ${idKey} (${(major.categories ?? []).length} categories, ${major.totalMcTarget} MC)`);
   }

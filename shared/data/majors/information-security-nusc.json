@@ -27,7 +27,19 @@
     { "name": "Global Narratives (NGN)", "fulfilledBy": ["NGN*"], "categoryId": "nus-college" },
     { "name": "Science and Society (NSS)", "fulfilledBy": ["NSS*"], "categoryId": "nus-college" },
     { "name": "Making Connections", "fulfilledBy": ["NHS*", "NFB*", "NST*", "NFC*", "NHT*"], "count": 6, "categoryId": "nus-college" },
-    { "name": "Impact Experience Project (NEP)", "fulfilledBy": ["NEP*"], "categoryId": "nus-college" }
+    { "name": "Impact Experience Project (NEP)", "fulfilledBy": ["NEP*"], "categoryId": "nus-college" },
+    {
+      "name": "Security Electives (8 MC)",
+      "fulfilledBy": ["CS4230", "CS4236", "MA4261", "CS4238", "CS4239", "CS4257", "CS4276", "CS5231", "CS5321", "CS5322", "CS5331", "CS5332", "IFS4101", "IFS4102", "IFS4103", "IS4204", "IS4233", "IS4234", "IS4238", "IS4302"],
+      "count": 2,
+      "categoryId": "security-requirements"
+    },
+    {
+      "name": "Industrial Experience (≥ 6 MC, or CP4101 dissertation)",
+      "fulfilledBy": ["CP3880", "IS4010", "TR3202", "CP3200", "CP3202", "CP3107", "CP3110", "CP4101"],
+      "count": 1,
+      "categoryId": "industrial-experience"
+    }
   ],
   "moduleCatalog": {
     "CS1010": { "code": "CS1010", "name": "Programming Methodology", "mcs": 4 },
@@ -50,7 +62,35 @@
     "NTW2035": { "code": "NTW2035", "name": "Art and the Attention Economy", "mcs": 4 },
     "GEA1000N": { "code": "GEA1000N", "name": "Quantitative Reasoning with Data", "mcs": 4 },
     "MA1301": { "code": "MA1301", "name": "Introductory Mathematics", "mcs": 4 },
-    "NEP2001A": { "code": "NEP2001A", "name": "Impact Experience Project", "mcs": 2 }
+    "NEP2001A": { "code": "NEP2001A", "name": "Impact Experience Project", "mcs": 2 },
+    "CS4230": { "code": "CS4230", "name": "Foundations of Modern Cryptography", "mcs": 4 },
+    "CS4236": { "code": "CS4236", "name": "Cryptography Theory and Practice", "mcs": 4 },
+    "MA4261": { "code": "MA4261", "name": "Information and Coding Theory", "mcs": 4 },
+    "CS4238": { "code": "CS4238", "name": "Computer Security Practice", "mcs": 4 },
+    "CS4239": { "code": "CS4239", "name": "Software Security", "mcs": 4 },
+    "CS4257": { "code": "CS4257", "name": "Algorithmic Foundations of Privacy", "mcs": 4 },
+    "CS4276": { "code": "CS4276", "name": "IoT Security", "mcs": 4 },
+    "CS5231": { "code": "CS5231", "name": "Systems Security", "mcs": 4 },
+    "CS5321": { "code": "CS5321", "name": "Network Security", "mcs": 4 },
+    "CS5322": { "code": "CS5322", "name": "Database Security", "mcs": 4 },
+    "CS5331": { "code": "CS5331", "name": "Web Security", "mcs": 4 },
+    "CS5332": { "code": "CS5332", "name": "Biometric Authentication", "mcs": 4 },
+    "IFS4101": { "code": "IFS4101", "name": "Legal Aspects of Information Security", "mcs": 4 },
+    "IFS4102": { "code": "IFS4102", "name": "Digital Forensics", "mcs": 4 },
+    "IFS4103": { "code": "IFS4103", "name": "Penetration Testing Practice", "mcs": 4 },
+    "IS4204": { "code": "IS4204", "name": "IT Governance", "mcs": 4 },
+    "IS4233": { "code": "IS4233", "name": "Legal Aspects of Information Technology", "mcs": 4 },
+    "IS4234": { "code": "IS4234", "name": "Governance, Regulation, and Compliance Technology", "mcs": 4 },
+    "IS4238": { "code": "IS4238", "name": "Strategic Cybersecurity", "mcs": 4 },
+    "IS4302": { "code": "IS4302", "name": "Blockchain and Distributed Ledger Technologies", "mcs": 4 },
+    "CP3880": { "code": "CP3880", "name": "Advanced Technology Attachment Programme", "mcs": 12 },
+    "IS4010": { "code": "IS4010", "name": "Digital Transformation Leadership Programme", "mcs": 12 },
+    "TR3202": { "code": "TR3202", "name": "Start-up Internship Programme", "mcs": 12 },
+    "CP3200": { "code": "CP3200", "name": "Internship", "mcs": 6 },
+    "CP3202": { "code": "CP3202", "name": "Internship II", "mcs": 6 },
+    "CP3107": { "code": "CP3107", "name": "Computing for Social Service Agencies I", "mcs": 6 },
+    "CP3110": { "code": "CP3110", "name": "Computing for Social Service Agencies II", "mcs": 6 },
+    "CP4101": { "code": "CP4101", "name": "B.Comp. Dissertation", "mcs": 12 }
   },
   "defaultPlan": [
     { "year": 1, "sem": 1, "moduleCode": "CS1010", "categoryId": "soc-common" },

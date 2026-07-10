@@ -111,6 +111,14 @@ export const autoCategoryId = (major: Major, code: string): string => {
     if (inFocusArea || isIndustryExperience || isDepth) return bd.categoryId;
   }
 
+  // 3b. Programme Electives: named elective categories or specialisation tracks.
+  const pe = major.programmeElectives;
+  if (pe && categoryExists(pe.categoryId)) {
+    const inCategory = pe.categories.some((cat) => cat.courses.includes(c));
+    const inSpecialisation = pe.specialisations?.some((s) => s.courses.includes(c));
+    if (inCategory || inSpecialisation) return pe.categoryId;
+  }
+
   // 4. Maths & sciences by prefix.
   if (/^(MA|ST|PC|LSM|CM|PH)\d/.test(c)) {
     const math = categoryExists('math-sciences');
@@ -317,18 +325,35 @@ export const computeBreadthDepth = (
     .filter((m) => !cfg.allowedPrefixes.some((p) => m.code.startsWith(p)))
     .map((m) => m.code);
 
-  const { anyFulfilled: focusDone } = computeFocusAreas(major, semesters, waivedModules);
   const dissCode = cfg.industryExperience.dissertationAlternative;
   const hasDissertation = dissCode ? all.some((m) => m.code === dissCode) : false;
   const { minUnits, maxUnits } = cfg.industryExperience;
 
-  const constraints: ConstraintStatus[] = [
-    {
+  const constraints: ConstraintStatus[] = [];
+
+  // A major uses exactly one of these two mechanisms to gate its "pick technical
+  // depth" constraint: named Focus Areas (CS) or a flat technical-electives list (AI).
+  if (major.focusAreas?.length) {
+    const { anyFulfilled: focusDone } = computeFocusAreas(major, semesters, waivedModules);
+    constraints.push({
       id: 'focus-area',
       label: 'Complete a CS Focus Area',
       short: 'Focus area',
       fulfilled: focusDone,
-    },
+    });
+  } else if (cfg.technicalElectives) {
+    const teCodes = new Set(cfg.technicalElectives.courses);
+    const teUnits = sum(all.filter((m) => teCodes.has(m.code)));
+    constraints.push({
+      id: 'technical-electives',
+      label: `≥ ${cfg.technicalElectives.minUnits} units from the Technical Electives list`,
+      short: 'Tech electives',
+      detail: `${teUnits}/${cfg.technicalElectives.minUnits}u`,
+      fulfilled: teUnits >= cfg.technicalElectives.minUnits,
+    });
+  }
+
+  constraints.push(
     {
       id: 'level-4000',
       label: `≥ ${cfg.minLevel4000Units} units at level-4000+`,
@@ -369,9 +394,114 @@ export const computeBreadthDepth = (
       detail: `${totalUnits}/${cfg.totalUnits}u`,
       fulfilled: totalUnits >= cfg.totalUnits,
     },
-  ];
+  );
 
   return { totalUnits, targetUnits: cfg.totalUnits, constraints, codingViolations };
+};
+
+export interface SpecialisationStatus {
+  id: string;
+  label: string;
+  matched: string[];
+  need: number;
+  fulfilled: boolean;
+}
+
+export interface ElectiveCategoryStatus {
+  id: string;
+  label: string;
+  matched: string[];
+}
+
+export interface ProgrammeElectivesStatus {
+  totalUnits: number;
+  targetUnits: number;
+  /** Distinct codes tagged to the electives category that match a named category. */
+  matchedCourses: string[];
+  minCourses: number;
+  constraints: ConstraintStatus[];
+  categories: ElectiveCategoryStatus[];
+  specialisations: SpecialisationStatus[];
+}
+
+/** Evaluates the named-elective-category Programme Electives requirement
+ * (e.g. NUS Business Analytics, Business AI Systems). Distinct from
+ * {@link computeBreadthDepth}: courses are pooled across named `categories`
+ * rather than checked against a Focus Area / Industry Experience split, and
+ * `specialisations` are informational progress tracks, not a hard gate. */
+export const computeProgrammeElectives = (
+  major: Major,
+  semesters: StudentSemester[],
+  waivedModules: WaivedModule[] = [],
+): ProgrammeElectivesStatus | null => {
+  const cfg = major.programmeElectives;
+  if (!cfg) return null;
+
+  const tagged = [...semesters.flatMap((s) => s.modules), ...waivedModules].filter(
+    (m) => m.categoryId === cfg.categoryId,
+  );
+  const byCode = new Map<string, PlacedModule>();
+  for (const m of tagged) if (!byCode.has(m.code)) byCode.set(m.code, m);
+  const all = [...byCode.values()];
+
+  const namedCodes = new Set(cfg.categories.flatMap((cat) => cat.courses));
+  const matched = all.filter((m) => namedCodes.has(m.code));
+  const matchedCourses = matched.map((m) => m.code);
+  const totalUnits = all.reduce((n, m) => n + m.mcs, 0);
+  const level4000Count = matched.filter((m) => courseLevel(m.code) >= 4000).length;
+
+  const constraints: ConstraintStatus[] = [
+    {
+      id: 'course-count',
+      label: `${cfg.minCourses} distinct elective courses`,
+      short: 'Courses',
+      detail: `${matched.length}/${cfg.minCourses}`,
+      fulfilled: matched.length >= cfg.minCourses,
+    },
+  ];
+
+  if (cfg.minLevel4000Courses) {
+    constraints.push({
+      id: 'level-4000',
+      label: `≥ ${cfg.minLevel4000Courses} courses at level-4000+`,
+      short: 'L4000+',
+      detail: `${level4000Count}/${cfg.minLevel4000Courses}`,
+      fulfilled: level4000Count >= cfg.minLevel4000Courses,
+    });
+  }
+
+  for (const rule of cfg.minPrefixCourses ?? []) {
+    const count = matched.filter((m) => m.code.startsWith(rule.prefix)).length;
+    constraints.push({
+      id: `prefix-${rule.prefix}`,
+      label: `≥ ${rule.minCourses} ${rule.prefix}-coded courses`,
+      short: `${rule.prefix} ≥${rule.minCourses}`,
+      detail: `${count}/${rule.minCourses}`,
+      fulfilled: count >= rule.minCourses,
+    });
+  }
+
+  constraints.push({
+    id: 'total',
+    label: `${cfg.totalUnits} units total`,
+    short: 'Total',
+    detail: `${totalUnits}/${cfg.totalUnits}u`,
+    fulfilled: totalUnits >= cfg.totalUnits,
+  });
+
+  const categories: ElectiveCategoryStatus[] = cfg.categories.map((cat) => ({
+    id: cat.id,
+    label: cat.label,
+    matched: cat.courses.filter((code) => byCode.has(code)),
+  }));
+
+  const specialisations: SpecialisationStatus[] = (cfg.specialisations ?? []).map((s) => {
+    const specMatched = s.courses.filter((code) => byCode.has(code));
+    const need = s.minCourses ?? s.courses.length;
+    return { id: s.id, label: s.label, matched: specMatched, need, fulfilled: specMatched.length >= need };
+  });
+
+  return { totalUnits, targetUnits: cfg.totalUnits, matchedCourses, minCourses: cfg.minCourses, constraints, categories, specialisations };
 };
 
 export interface Stats {
