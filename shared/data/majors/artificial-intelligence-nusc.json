@@ -30,6 +30,24 @@
     { "name": "Making Connections", "fulfilledBy": ["NHS*", "NFB*", "NST*", "NFC*", "NHT*"], "count": 6, "categoryId": "nus-college" },
     { "name": "Impact Experience Project (NEP)", "fulfilledBy": ["NEP*"], "categoryId": "nus-college" }
   ],
+  "breadthDepth": {
+    "categoryId": "ai-breadth-depth",
+    "totalUnits": 20,
+    "minLevel4000Units": 12,
+    "industryExperience": {
+      "minUnits": 6,
+      "maxUnits": 12,
+      "courses": ["CP3880", "IS4010", "ETP3201L", "CP3200", "CP3202", "CP3107", "CP3110", "ETP3205"],
+      "dissertationAlternative": "CP4101"
+    },
+    "technicalElectives": {
+      "minUnits": 12,
+      "courses": ["CS4220", "CS4225", "CS4240", "CS4244", "CS4246", "CS4261", "CS4262", "CS4277", "CS4278", "CS4347"]
+    },
+    "allowedPrefixes": ["CS", "IFS", "IS", "CP"],
+    "maxCpUnits": 12,
+    "cpPrefix": "CP"
+  },
   "moduleCatalog": {
     "CS1101S": { "code": "CS1101S", "name": "Programming Methodology", "mcs": 4 },
     "CS1231S": { "code": "CS1231S", "name": "Discrete Structures", "mcs": 4 },
@@ -52,7 +70,26 @@
     "NTW2035": { "code": "NTW2035", "name": "Art and the Attention Economy", "mcs": 4 },
     "GEA1000N": { "code": "GEA1000N", "name": "Quantitative Reasoning with Data", "mcs": 4 },
     "MA1301": { "code": "MA1301", "name": "Introductory Mathematics", "mcs": 4 },
-    "NEP2001A": { "code": "NEP2001A", "name": "Impact Experience Project", "mcs": 2 }
+    "NEP2001A": { "code": "NEP2001A", "name": "Impact Experience Project", "mcs": 2 },
+    "CS4220": { "code": "CS4220", "name": "Knowledge Discovery Methods in Bioinformatics", "mcs": 4 },
+    "CS4225": { "code": "CS4225", "name": "Big Data Systems for Data Science", "mcs": 4 },
+    "CS4240": { "code": "CS4240", "name": "Interaction Design for Virtual and Augmented Reality", "mcs": 4 },
+    "CS4244": { "code": "CS4244", "name": "Knowledge Representation and Reasoning", "mcs": 4 },
+    "CS4246": { "code": "CS4246", "name": "AI Planning and Decision Making", "mcs": 4 },
+    "CS4261": { "code": "CS4261", "name": "Algorithmic Mechanism Design", "mcs": 4 },
+    "CS4262": { "code": "CS4262", "name": "Machine Learning Systems", "mcs": 4 },
+    "CS4277": { "code": "CS4277", "name": "3D Computer Vision", "mcs": 4 },
+    "CS4278": { "code": "CS4278", "name": "Intelligent Robots: Algorithms and Systems", "mcs": 4 },
+    "CS4347": { "code": "CS4347", "name": "Sound and Music Computing", "mcs": 4 },
+    "CP3880": { "code": "CP3880", "name": "Advanced Technology Attachment Programme", "mcs": 12 },
+    "IS4010": { "code": "IS4010", "name": "Digital Transformation Leadership Programme", "mcs": 12 },
+    "ETP3201L": { "code": "ETP3201L", "name": "Innovation & Enterprise Internship", "mcs": 12 },
+    "CP3200": { "code": "CP3200", "name": "Internship", "mcs": 6 },
+    "CP3202": { "code": "CP3202", "name": "Internship II", "mcs": 6 },
+    "CP3107": { "code": "CP3107", "name": "Computing for Social Service Agencies I", "mcs": 6 },
+    "CP3110": { "code": "CP3110", "name": "Computing for Social Service Agencies II", "mcs": 6 },
+    "ETP3205": { "code": "ETP3205", "name": "Innovation & Enterprise Internship", "mcs": 6 },
+    "CP4101": { "code": "CP4101", "name": "B.Comp. Dissertation", "mcs": 12 }
   },
   "defaultPlan": [
     { "year": 1, "sem": 1, "moduleCode": "CS1101S", "categoryId": "soc-common" },

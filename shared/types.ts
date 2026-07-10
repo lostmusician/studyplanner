@@ -47,19 +47,68 @@ export interface IndustryExperienceRule {
   dissertationAlternative?: string;
 }
 
-/** The multi-constraint Breadth & Depth requirement (e.g. NUS CS). Checked over
- * courses the student has tagged with `categoryId`. Focus areas live separately
- * on the major and satisfy the first constraint. */
+export interface TechnicalElectivesRule {
+  minUnits: number;
+  /** Exact course codes that count toward this requirement. */
+  courses: string[];
+}
+
+/** The multi-constraint Breadth & Depth requirement (e.g. NUS CS, AI). Checked
+ * over courses the student has tagged with `categoryId`. A major satisfies its
+ * "pick technical depth" constraint via exactly one of two mechanisms:
+ * `major.focusAreas` (CS: complete 1 of N named areas) or `technicalElectives`
+ * (AI: ≥N units from a flat list, no named areas) — whichever is present drives
+ * that constraint; a major should not need both. */
 export interface BreadthDepthConfig {
   categoryId: string;
   totalUnits: number;
   minLevel4000Units: number;
   industryExperience: IndustryExperienceRule;
+  technicalElectives?: TechnicalElectivesRule;
   /** Allowed code prefixes for every non-Industry-Experience course. */
   allowedPrefixes: string[];
   /** Max units of courses matching `cpPrefix`, excluding Industry Experience. */
   maxCpUnits: number;
   cpPrefix: string;
+}
+
+export interface ElectiveCategory {
+  id: string;
+  label: string;
+  /** Module codes belonging to this named elective category. */
+  courses: string[];
+}
+
+export interface Specialisation {
+  id: string;
+  label: string;
+  /** Module codes recommended for this specialisation track. */
+  courses: string[];
+  /** Distinct courses needed to complete this specialisation. Defaults to `courses.length`. */
+  minCourses?: number;
+}
+
+export interface PrefixCountRule {
+  /** Course-code prefix, e.g. "BT". */
+  prefix: string;
+  /** Distinct matching courses needed. */
+  minCourses: number;
+}
+
+/** The named-elective-category Programme Electives requirement (e.g. NUS
+ * Business Analytics, Business AI Systems): pick `minCourses` distinct
+ * courses drawn from `categories`' pooled course lists, subject to
+ * cross-cutting minimums. Distinct from `BreadthDepthConfig` (CS/AI), which
+ * centers on Focus Areas + Industry Experience rather than named elective
+ * categories + optional Specialisation tracks. */
+export interface ProgrammeElectivesConfig {
+  categoryId: string;
+  totalUnits: number;
+  minCourses: number;
+  minLevel4000Courses?: number;
+  minPrefixCourses?: PrefixCountRule[];
+  categories: ElectiveCategory[];
+  specialisations?: Specialisation[];
 }
 
 export interface DefaultPlanEntry {
@@ -90,6 +139,7 @@ export interface Major {
   requirements: RequirementRule[];
   focusAreas?: FocusArea[];
   breadthDepth?: BreadthDepthConfig;
+  programmeElectives?: ProgrammeElectivesConfig;
   moduleCatalog: Record<string, Module>;
   defaultPlan: DefaultPlanEntry[];
   defaultWaivedModules?: WaivedModule[];

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Major, MajorCategory, Module, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import type { ConstraintStatus, FocusAreaStatus, RequirementStatus, Stats } from '../lib/studyPlan';
-import { computeBreadthDepth, computeFocusAreas, matchesFulfiller } from '../lib/studyPlan';
+import { computeBreadthDepth, computeFocusAreas, computeProgrammeElectives, matchesFulfiller } from '../lib/studyPlan';
 import { FocusAreaExplorer } from './FocusAreaExplorer';
-
-/** Category that hosts the focus-area tracker. */
-const FOCUS_AREA_CATEGORY_ID = 'breadth-depth';
+import { ProgrammeElectivesExplorer } from './ProgrammeElectivesExplorer';
 
 interface Props {
   major: Major;
@@ -200,7 +198,8 @@ const CategoryPanel = ({
   const placedMc = stats.byCategory[category.id] ?? 0;
   const remainingMc = Math.max(0, (category.mcTarget ?? 0) - placedMc);
   const showFocusAreas =
-    category.id === FOCUS_AREA_CATEGORY_ID && Boolean(major.focusAreas?.length);
+    category.id === major.breadthDepth?.categoryId && Boolean(major.focusAreas?.length);
+  const showProgrammeElectives = category.id === major.programmeElectives?.categoryId;
 
   // All modules currently on the planner (any category) plus waived ones, deduped by
   // code — the pool a requirement row can pick a manual mapping candidate from.
@@ -228,6 +227,10 @@ const CategoryPanel = ({
 
       {showFocusAreas && (
         <BreadthDepthPanel major={major} semesters={semesters} waivedModules={waivedModules} />
+      )}
+
+      {showProgrammeElectives && (
+        <ProgrammeElectivesPanel major={major} semesters={semesters} waivedModules={waivedModules} />
       )}
 
       {categoryRequirements.length > 0 ? (
@@ -319,6 +322,74 @@ const BreadthDepthPanel = ({
       )}
 
       <FocusAreaTracker major={major} semesters={semesters} waivedModules={waivedModules} />
+    </div>
+  );
+};
+
+const ProgrammeElectivesPanel = ({
+  major,
+  semesters,
+  waivedModules,
+}: {
+  major: Major;
+  semesters: StudentSemester[];
+  waivedModules: WaivedModule[];
+}) => {
+  const [explorerOpen, setExplorerOpen] = useState(false);
+  const pe = computeProgrammeElectives(major, semesters, waivedModules);
+  const metCount = pe ? pe.constraints.filter((c) => c.fulfilled).length : 0;
+
+  return (
+    <div className="mb-4 flex flex-col gap-3">
+      {pe && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[11px] font-semibold text-ink">
+            Constraints
+            <span className="ml-1 font-normal text-muted">{metCount}/{pe.constraints.length}</span>
+          </span>
+          {pe.constraints.map((constraint) => (
+            <ConstraintChip key={constraint.id} constraint={constraint} />
+          ))}
+        </div>
+      )}
+
+      {pe && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[11px] font-semibold text-ink">
+            Categories
+            <span className="ml-1 font-normal text-muted">
+              {pe.matchedCourses.length}/{pe.minCourses} courses
+            </span>
+          </span>
+          {pe.categories.map((cat) => (
+            <span
+              key={cat.id}
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] leading-none"
+              style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: 'rgb(108,107,104)' }}
+            >
+              <span className="font-medium">{cat.label}</span>
+              <span className="opacity-70">{cat.matched.length}</span>
+            </span>
+          ))}
+          <button
+            type="button"
+            onClick={() => setExplorerOpen(true)}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium text-ink underline-offset-2 transition-colors hover:bg-ink/5 hover:underline"
+          >
+            Browse categories
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      )}
+
+      {explorerOpen && (
+        <ProgrammeElectivesExplorer
+          major={major}
+          semesters={semesters}
+          waivedModules={waivedModules}
+          onClose={() => setExplorerOpen(false)}
+        />
+      )}
     </div>
   );
 };

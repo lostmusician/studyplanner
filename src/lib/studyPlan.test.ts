@@ -9,6 +9,7 @@ import {
   computeTripleCountedCodes,
   computeFocusAreas,
   computeBreadthDepth,
+  computeProgrammeElectives,
   autoCategoryId,
 } from './studyPlan';
 
@@ -222,6 +223,27 @@ describe('computeBreadthDepth', () => {
     const cpConstraint = result?.constraints.find((c) => c.id === 'cp-cap');
     expect(cpConstraint?.warn).toBe(true);
   });
+
+  it('uses a technical-electives constraint instead of focus-area when the major has no focusAreas', () => {
+    const aiMajor: Major = {
+      ...major,
+      id: 'ai',
+      focusAreas: undefined,
+      breadthDepth: {
+        ...major.breadthDepth!,
+        totalUnits: 20,
+        technicalElectives: { minUnits: 12, courses: ['CS4246'] },
+      },
+    };
+
+    const empty = computeBreadthDepth(aiMajor, []);
+    expect(empty?.constraints.find((c) => c.id === 'focus-area')).toBeUndefined();
+    expect(empty?.constraints.find((c) => c.id === 'technical-electives')?.fulfilled).toBe(false);
+
+    const sems = semesters([{ code: 'CS4246', name: 'x', mcs: 12, categoryId: 'breadth-depth', year: 3, sem: 1 }]);
+    const met = computeBreadthDepth(aiMajor, sems);
+    expect(met?.constraints.find((c) => c.id === 'technical-electives')?.fulfilled).toBe(true);
+  });
 });
 
 describe('autoCategoryId', () => {
@@ -247,5 +269,75 @@ describe('autoCategoryId', () => {
 
   it('falls back to unrestricted electives for anything else', () => {
     expect(autoCategoryId(major, 'GET1234')).toBe('unrestricted-electives');
+  });
+
+  it('routes a programme-electives course to its configured category', () => {
+    const withPe: Major = {
+      ...major,
+      categories: [...major.categories, { id: 'ba-electives', label: 'Programme Electives', color: '#fff' }],
+      programmeElectives: {
+        categoryId: 'ba-electives',
+        totalUnits: 20,
+        minCourses: 5,
+        categories: [{ id: 'analytics-methods', label: 'Analytics Methods', courses: ['BT4221'] }],
+      },
+    };
+    expect(autoCategoryId(withPe, 'BT4221')).toBe('ba-electives');
+  });
+});
+
+describe('computeProgrammeElectives', () => {
+  const major: Major = {
+    id: 'ba', label: 'Business Analytics', school: 'SoC', batches: [], totalMcTarget: 160,
+    categories: [], requirements: [], moduleCatalog: {}, defaultPlan: [],
+    programmeElectives: {
+      categoryId: 'ba-electives',
+      totalUnits: 20,
+      minCourses: 5,
+      minLevel4000Courses: 3,
+      minPrefixCourses: [{ prefix: 'BT', minCourses: 3 }],
+      categories: [
+        { id: 'business-applications', label: 'Business Applications', courses: ['BT4013', 'BT4016'] },
+        { id: 'analytics-methods', label: 'Analytics Methods', courses: ['BT4221', 'CS3244', 'CS4248'] },
+      ],
+      specialisations: [
+        { id: 'financial-analytics', label: 'Financial Analytics', courses: ['BT4013', 'BT4221'], minCourses: 2 },
+      ],
+    },
+  };
+
+  it('returns null when the major has no programmeElectives config', () => {
+    expect(computeProgrammeElectives({ ...major, programmeElectives: undefined }, [])).toBeNull();
+  });
+
+  it('is not fulfilled below the required course count', () => {
+    const sems = semesters([
+      { code: 'BT4013', name: 'x', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 1 },
+      { code: 'BT4221', name: 'y', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 2 },
+    ]);
+    const result = computeProgrammeElectives(major, sems);
+    expect(result?.constraints.find((c) => c.id === 'course-count')?.fulfilled).toBe(false);
+  });
+
+  it('flags the BT-prefix constraint once enough BT-coded courses are placed', () => {
+    const sems = semesters([
+      { code: 'BT4013', name: 'a', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 1 },
+      { code: 'BT4016', name: 'b', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 1 },
+      { code: 'BT4221', name: 'c', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 2 },
+      { code: 'CS3244', name: 'd', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 2 },
+      { code: 'CS4248', name: 'e', mcs: 4, categoryId: 'ba-electives', year: 4, sem: 1 },
+    ]);
+    const result = computeProgrammeElectives(major, sems);
+    expect(result?.constraints.find((c) => c.id === 'prefix-BT')?.fulfilled).toBe(true);
+    expect(result?.constraints.find((c) => c.id === 'course-count')?.fulfilled).toBe(true);
+  });
+
+  it('tracks specialisation progress independently of the hard requirement', () => {
+    const sems = semesters([
+      { code: 'BT4013', name: 'a', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 1 },
+      { code: 'BT4221', name: 'b', mcs: 4, categoryId: 'ba-electives', year: 3, sem: 2 },
+    ]);
+    const result = computeProgrammeElectives(major, sems);
+    expect(result?.specialisations[0].fulfilled).toBe(true);
   });
 });

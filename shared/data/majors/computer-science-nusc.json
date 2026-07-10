@@ -284,6 +284,51 @@
       "code": "NEP2001A",
       "name": "Impact Experience Project",
       "mcs": 2
+    },
+    "CP3880": {
+      "code": "CP3880",
+      "name": "Advanced Technology Attachment Programme",
+      "mcs": 12
+    },
+    "IS4010": {
+      "code": "IS4010",
+      "name": "Digital Transformation Leadership Programme",
+      "mcs": 12
+    },
+    "ETP3201L": {
+      "code": "ETP3201L",
+      "name": "Innovation & Enterprise Internship",
+      "mcs": 12
+    },
+    "CP3200": {
+      "code": "CP3200",
+      "name": "Internship",
+      "mcs": 6
+    },
+    "CP3202": {
+      "code": "CP3202",
+      "name": "Internship II",
+      "mcs": 6
+    },
+    "CP3107": {
+      "code": "CP3107",
+      "name": "Computing for Social Service Agencies I",
+      "mcs": 6
+    },
+    "CP3110": {
+      "code": "CP3110",
+      "name": "Computing for Social Service Agencies II",
+      "mcs": 6
+    },
+    "ETP3205": {
+      "code": "ETP3205",
+      "name": "Innovation & Enterprise Internship",
+      "mcs": 6
+    },
+    "CP4101": {
+      "code": "CP4101",
+      "name": "B.Comp. Dissertation",
+      "mcs": 12
     }
   },
   "defaultPlan": [
