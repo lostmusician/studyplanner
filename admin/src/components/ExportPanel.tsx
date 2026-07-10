@@ -1,15 +1,14 @@
-import type { Major } from '@shared/types';
-
-interface Props {
-  major: Major;
+interface Props<T extends { id: string }> {
+  data: T;
+  directory: 'majors' | 'second-majors' | 'minors';
 }
 
-export const ExportPanel = ({ major }: Props) => {
-  const json = JSON.stringify(major, null, 2);
+export const ExportPanel = <T extends { id: string },>({ data, directory }: Props<T>) => {
+  const json = JSON.stringify(data, null, 2);
 
   const handleSave = async () => {
     if (!('showSaveFilePicker' in window)) {
-      fallbackDownload(major.id, json);
+      fallbackDownload(data.id, json);
       return;
     }
 
@@ -17,7 +16,7 @@ export const ExportPanel = ({ major }: Props) => {
       const fileHandle = await (window as Window & typeof globalThis & {
         showSaveFilePicker: (opts: unknown) => Promise<FileSystemFileHandle>;
       }).showSaveFilePicker({
-        suggestedName: `${major.id}.json`,
+        suggestedName: `${data.id}.json`,
         types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }],
       });
       const writable = await fileHandle.createWritable();
@@ -25,7 +24,7 @@ export const ExportPanel = ({ major }: Props) => {
       await writable.close();
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        fallbackDownload(major.id, json);
+        fallbackDownload(data.id, json);
       }
     }
   };
@@ -36,9 +35,9 @@ export const ExportPanel = ({ major }: Props) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-semibold text-ink">Export Major JSON</h3>
+      <h3 className="text-sm font-semibold text-ink">Export JSON</h3>
       <p className="text-xs text-muted leading-relaxed">
-        Save the JSON file to <code className="font-mono bg-paper px-1 rounded">shared/data/majors/{major.id}.json</code> for the student app to pick it up.
+        Save the JSON file to <code className="font-mono bg-paper px-1 rounded">shared/data/{directory}/{data.id}.json</code> for the student app to pick it up.
       </p>
       <pre className="rounded-xl bg-paper p-3 text-[10px] font-mono text-ink/70 overflow-auto max-h-48">
         {json}
