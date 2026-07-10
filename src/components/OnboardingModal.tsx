@@ -36,12 +36,9 @@ export const OnboardingModal = ({ majors, hasExistingPlan, onChooseExample, onCh
                   key={major.id}
                   type="button"
                   onClick={() => setSelectedMajorId(major.id)}
-                  className="rounded-2xl px-4 py-3 text-left transition-colors"
-                  style={
-                    selectedMajorId === major.id
-                      ? { backgroundColor: 'rgb(20,20,19)', color: 'rgb(239,238,231)' }
-                      : { backgroundColor: 'rgba(20,20,19,0.05)', color: 'rgb(20,20,19)' }
-                  }
+                  className={`rounded-2xl px-4 py-3 text-left transition-colors ${
+                    selectedMajorId === major.id ? 'bg-ink text-canvas' : 'bg-ink/5 text-ink'
+                  }`}
                 >
                   <span className="block text-sm font-medium">{major.label}</span>
                   <span className="block text-[11px] opacity-70">{major.school}</span>
