@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "validate:majors": "node scripts/validate-majors.mjs",
+    "validate:secondary": "node scripts/validate-secondary.mjs",
+    "validate": "npm run validate:majors && npm run validate:secondary"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
