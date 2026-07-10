@@ -14,9 +14,13 @@ export const semesterLabel = (year: number, sem: number): string => `Y${year}S${
 export const createEmptySemesters = (): StudentSemester[] =>
   [1, 2, 3, 4].flatMap((year) => [1, 2].map((sem) => ({ year, sem, modules: [] })));
 
-export const defaultPlanToSemesters = (major: Major): StudentSemester[] => {
+export const defaultPlanToSemesters = (
+  major: Major,
+  options: { lockedOnly?: boolean } = {},
+): StudentSemester[] => {
   const semesters = createEmptySemesters();
   for (const entry of major.defaultPlan) {
+    if (options.lockedOnly && !entry.locked) continue;
     const sem = semesters.find((s) => s.year === entry.year && s.sem === entry.sem);
     if (!sem) continue;
     const mod = major.moduleCatalog[entry.moduleCode];

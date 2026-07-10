@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useStudyPlan } from './hooks/useStudyPlan';
 import { useProfile } from './hooks/useProfile';
+import { useOnboarding } from './hooks/useOnboarding';
 import { StudyPlan } from './components/StudyPlan';
 import { ImportModal } from './components/ImportModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import {
   readImportFromHash,
   IMPORT_HASH_KEY,
@@ -18,9 +20,13 @@ const clearImportHash = () => {
 const App = () => {
   const plan = useStudyPlan();
   const { profile, setName, setMatricNumber, setYear, importProfile } = useProfile();
+  const onboarding = useOnboarding(plan.majors);
   const [pendingImport, setPendingImport] = useState<SharePayload | null>(null);
   const [reviewProfile, setReviewProfile] = useState<ShareProfile | null>(null);
   const [importError, setImportError] = useState(false);
+  const hasImportInHash =
+    window.location.hash.includes(`${IMPORT_HASH_KEY}=`) ||
+    window.location.hash.includes(`${SHORT_IMPORT_HASH_KEY}=`);
 
   useEffect(() => {
     const hasImport =
@@ -48,6 +54,7 @@ const App = () => {
     if (ok) {
       importProfile(pendingImport.profile);
       setReviewProfile(null);
+      onboarding.dismissOnboarding();
     }
     setPendingImport(null);
   };
@@ -66,6 +73,7 @@ const App = () => {
     if (ok) {
       setReviewProfile(pendingImport.profile);
       setPendingImport(null);
+      onboarding.dismissOnboarding();
     }
   };
 
@@ -86,6 +94,7 @@ const App = () => {
     ? plan.majors.find((m) => m.id === pendingImport.plan.majorId)?.label ?? null
     : null;
   const isReviewMode = plan.isReviewMode && reviewProfile !== null;
+  const showOnboarding = onboarding.needsOnboarding && !hasImportInHash && !pendingImport && !isReviewMode;
   const displayedProfile = isReviewMode ? reviewProfile : profile;
   const setDisplayedName = isReviewMode
     ? (name: string) => setReviewProfile((current) => current ? { ...current, name } : current)
@@ -99,6 +108,21 @@ const App = () => {
 
   return (
     <>
+      {showOnboarding && (
+        <OnboardingModal
+          majors={plan.majors}
+          hasExistingPlan={onboarding.hasExistingPlan}
+          onChooseExample={(majorId) => {
+            plan.applyOnboardingChoice(majorId, 'example');
+            onboarding.dismissOnboarding();
+          }}
+          onChooseScratch={(majorId) => {
+            plan.applyOnboardingChoice(majorId, 'scratch');
+            onboarding.dismissOnboarding();
+          }}
+          onKeepCurrent={onboarding.dismissOnboarding}
+        />
+      )}
       <StudyPlan
         {...plan}
         studentName={displayedProfile.name}

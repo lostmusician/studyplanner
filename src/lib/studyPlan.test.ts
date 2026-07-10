@@ -537,6 +537,24 @@ describe('defaultPlanToSemesters', () => {
     const y1s1 = sems.find((s) => s.year === 1 && s.sem === 1)!;
     expect(y1s1.modules.map((m) => m.code)).toEqual(['CS1101S', 'MA1521']);
   });
+
+  it('with lockedOnly: true, places only entries marked locked', () => {
+    const major: Major = {
+      id: 'cs', label: 'CS', school: 'SoC', batches: [], totalMcTarget: 160,
+      categories: [], requirements: [],
+      moduleCatalog: {
+        CS1101S: { code: 'CS1101S', name: 'Programming Methodology', mcs: 4 },
+        NEP2001A: { code: 'NEP2001A', name: 'Impact Experience Project', mcs: 2 },
+      },
+      defaultPlan: [
+        { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'soc-common' },
+        { year: 1, sem: 2, moduleCode: 'NEP2001A', categoryId: 'nus-college', locked: true },
+      ],
+    };
+    const result = defaultPlanToSemesters(major, { lockedOnly: true });
+    const allCodes = result.flatMap((s) => s.modules.map((m) => m.code));
+    expect(allCodes).toEqual(['NEP2001A']);
+  });
 });
 
 describe('upsertModule', () => {

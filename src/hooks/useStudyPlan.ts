@@ -160,13 +160,21 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
   localStorage.setItem(planKey(majorId), JSON.stringify(plan));
 };
 
+const LAST_MAJOR_KEY = 'studyplan:lastMajorId';
+
+const getInitialMajorId = (majors: Major[], fallback: string): string => {
+  const stored = localStorage.getItem(LAST_MAJOR_KEY);
+  return stored && majors.some((m) => m.id === stored) ? stored : fallback;
+};
+
 export const useStudyPlan = () => {
   const majors = loadMajors();
   const secondMajors = loadSecondMajors();
   const minors = loadMinors();
   const defaultMajor = majors.find((m) => m.id === DEFAULT_MAJOR_ID) ?? majors[0];
-  const [majorId, setMajorId] = useState<string>(defaultMajor?.id ?? '');
-  const [personalMajorId, setPersonalMajorId] = useState<string>(defaultMajor?.id ?? '');
+  const initialMajorId = getInitialMajorId(majors, defaultMajor?.id ?? '');
+  const [majorId, setMajorId] = useState<string>(initialMajorId);
+  const [personalMajorId, setPersonalMajorId] = useState<string>(initialMajorId);
   const [mode, setMode] = useState<PlanMode>('personal');
   const rawMajor = majors.find((m) => m.id === majorId) ?? defaultMajor;
 
@@ -206,6 +214,11 @@ export const useStudyPlan = () => {
   const setNocDuration = useCallback((duration: NocDuration | null) => {
     setNocDurationState(duration);
   }, []);
+
+  const rememberMajorId = (id: string) => {
+    localStorage.setItem(LAST_MAJOR_KEY, id);
+    setPersonalMajorId(id);
+  };
 
   const toggleMinorId = useCallback((id: string) => {
     setMinorIds((prev) => {
@@ -266,9 +279,27 @@ export const useStudyPlan = () => {
       setRequirementMappings(nextPlan.requirementMappings);
       setNocDurationState(nextPlan.nocDuration);
       setMajorId(newMajorId);
-      if (mode === 'personal') setPersonalMajorId(newMajorId);
+      if (mode === 'personal') rememberMajorId(newMajorId);
     },
     [majors, mode],
+  );
+
+  const applyOnboardingChoice = useCallback(
+    (newMajorId: string, mode: 'example' | 'scratch') => {
+      const newMajor = majors.find((m) => m.id === newMajorId);
+      if (!newMajor) return;
+      setSemesters(defaultPlanToSemesters(newMajor, { lockedOnly: mode === 'scratch' }));
+      setWaivedModules(
+        mode === 'example' ? normalizeWaivedModules(newMajor, newMajor.defaultWaivedModules) : [],
+      );
+      setSecondMajorIdState(null);
+      setMinorIds([]);
+      setRequirementMappings({});
+      setNocDurationState(null);
+      setMajorId(newMajorId);
+      rememberMajorId(newMajorId);
+    },
+    [majors],
   );
 
   const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => {
@@ -355,7 +386,7 @@ export const useStudyPlan = () => {
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
       setNocDurationState(normalizeNocDuration(importedNocDuration));
       setMajorId(newMajorId);
-      setPersonalMajorId(newMajorId);
+      rememberMajorId(newMajorId);
       return true;
     },
     [majors, secondMajors, minors],
@@ -429,6 +460,7 @@ export const useStudyPlan = () => {
     stats,
     requirements,
     switchMajor,
+    applyOnboardingChoice,
     addOrMoveModule,
     deleteModule,
     updateModule,
