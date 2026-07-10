@@ -9,6 +9,7 @@ import { BatchBadge } from './BatchBadge';
 import { AppDialog } from './AppDialog';
 import { Dropdown } from './Dropdown';
 import { SecondaryProgrammePanel } from './SecondaryProgrammePanel';
+import { PrintView } from './PrintView';
 
 interface Props {
   majors: Major[];
@@ -178,7 +179,8 @@ export const StudyPlan = ({
   const tripleCountedCodes = computeTripleCountedCodes(declaredSecondaries, semesters, waivedModules);
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <>
+      <div className="min-h-screen bg-canvas print:hidden">
       <header className="px-4 py-3 sm:px-6 sm:py-5" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
         <div className="max-w-screen-2xl mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-6">
           <div className="flex items-center gap-3 sm:gap-6">
@@ -202,6 +204,12 @@ export const StudyPlan = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.print()}
+              className="text-xs text-muted hover:text-ink transition-colors px-3 py-1.5 rounded-xl hover:bg-paper"
+            >
+              Print
+            </button>
             <button
               onClick={handleShare}
               className="text-xs text-muted hover:text-ink transition-colors px-3 py-1.5 rounded-xl hover:bg-paper"
@@ -425,6 +433,22 @@ export const StudyPlan = ({
         </AppDialog>
       )}
     </div>
+      <PrintView
+        studentName={studentName}
+        matricNumber={matricNumber}
+        studentYear={studentYear}
+        major={major}
+        stats={stats}
+        requirements={requirements}
+        semesters={semesters}
+        waivedModules={waivedModules}
+        secondMajors={secondMajors}
+        minors={minors}
+        secondMajorId={secondMajorId}
+        minorIds={minorIds}
+        nocDuration={nocDuration}
+      />
+    </>
   );
 };
 
