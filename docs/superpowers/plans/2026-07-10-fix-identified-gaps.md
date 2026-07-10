@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Fix the share/review pipeline silently dropping second-major/minor/requirement-mapping data, add automated test coverage for the counting logic in `src/lib/studyPlan.ts`, extend data validation to the second-major/minor JSON files, remove orphaned dead code, and give the admin tool a builder for `SecondaryProgramme` (second-major/minor) data so it no longer has to be hand-typed.
+**Goal:** Fix the share/review pipeline silently dropping second-major/minor/requirement-mapping data, add automated test coverage (plus a coverage report) for the counting logic in `src/lib/studyPlan.ts` and the share-link codec, extend data validation to the second-major/minor JSON files, remove orphaned dead code, give the admin tool a builder for `SecondaryProgramme` (second-major/minor) data so it no longer has to be hand-typed, and document the project (README, CONTRIBUTING).
 
-**Architecture:** Nine independent, sequential tasks. Tasks 1-4 fix the share/review bug end to end (types → hook → UI call sites), with Task 1 also standing up the project's first test framework and a regression-safety-net test suite for the existing pure counting logic. Task 5 is a small dead-code removal. Task 6 extends JSON validation tooling. Tasks 7-9 add a `SecondaryProgramme` builder to the `admin/` app, mirroring the existing `MajorBuilder` pattern.
+**Architecture:** Twelve independent, mostly-sequential tasks. Tasks 1-4 fix the share/review bug end to end (types → hook → UI call sites), with Task 1 also standing up the project's first test framework and a regression-safety-net test suite for the existing pure counting logic. Task 5 is a small dead-code removal. Task 6 extends JSON validation tooling. Tasks 7-9 add a `SecondaryProgramme` builder to the `admin/` app, mirroring the existing `MajorBuilder` pattern. Task 10 adds a coverage report on top of Tasks 1-2's test suites. Tasks 11-12 write project documentation (README, CONTRIBUTING) reflecting the state after Tasks 1-10 — they should run last among this addendum since they document the finished result, not a snapshot mid-plan.
 
 **Tech Stack:** React 19 + TypeScript 5.8 + Vite 6, Tailwind (utility classes, no new UI libraries), Vitest (new, added in Task 1) for unit tests.
 
@@ -1422,4 +1422,324 @@ Run: `cd admin && npm run dev`, open the printed local URL (typically http://loc
 ```bash
 git add admin/src/App.tsx
 git commit -m "Add Second Majors and Minors tabs to the admin app"
+```
+
+---
+
+### Task 10: Add a test coverage report
+
+**Files:**
+- Modify: `vitest.config.ts` (add a `coverage` block)
+- Modify: `package.json` (add `@vitest/coverage-v8` devDependency, `test:coverage` script)
+- Modify: `.gitignore` (add `coverage`)
+- Create: `docs/test-coverage-report.md`
+
+**Interfaces:**
+- Consumes: the test suites from Task 1 (`src/lib/studyPlan.test.ts`) and Task 2 (`shared/share.test.ts`) — no changes to either.
+
+- [ ] **Step 1: Install the coverage provider**
+
+Run: `npm install -D @vitest/coverage-v8`
+Expected: `@vitest/coverage-v8` added under `devDependencies` in `package.json`.
+
+- [ ] **Step 2: Add the coverage config**
+
+Modify `vitest.config.ts` — add a `coverage` block inside `test`:
+
+```ts
+import { defineConfig } from 'vitest/config';
+import { resolve } from 'path';
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@shared': resolve(__dirname, 'shared'),
+    },
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts', 'shared/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      include: ['src/lib/**/*.ts', 'shared/*.ts'],
+      exclude: ['**/*.test.ts', '**/*.d.ts'],
+    },
+  },
+});
+```
+
+The `include` is scoped to the tested logic layer only (`src/lib/` and the top-level files in `shared/`) — not the whole `src/`/`shared/` tree — because this project deliberately only unit-tests pure logic, not React components (see Global Constraints). Scoping coverage to what's meant to be tested avoids a misleading wall of 0%-covered component files.
+
+- [ ] **Step 3: Add the npm script**
+
+Modify `package.json`'s `"scripts"` block, adding:
+
+```json
+    "test:coverage": "vitest run --coverage"
+```
+
+- [ ] **Step 4: Ignore the generated coverage output**
+
+Modify `.gitignore` — add a new line: `coverage`
+
+- [ ] **Step 5: Run it and capture the real output**
+
+Run: `npm run test:coverage`
+This prints a text coverage table to the console (per-file % Statements/Branch/Funcs/Lines) and writes `coverage/index.html` + `coverage/lcov.info`. Copy the exact printed table for Step 6 — do not fabricate numbers.
+
+- [ ] **Step 6: Write the coverage report doc**
+
+Create `docs/test-coverage-report.md`:
+
+```markdown
+# Test Coverage Report
+
+Generated via `npm run test:coverage` (Vitest + the v8 coverage provider).
+
+## Scope
+
+Only the pure logic layer is unit-tested — `src/lib/` (study-plan computation) and the
+top-level files in `shared/` (types, the NUSMods API client, the share-link codec). React
+components are verified manually (`npm run dev` + a browser check, per each plan's manual
+verification steps), not with component tests — this is a deliberate project convention, not
+a gap. Coverage below is scoped to that tested layer only (see `vitest.config.ts`'s
+`coverage.include`).
+
+## Summary
+
+<PASTE the real text-reporter table from `npm run test:coverage` here, verbatim>
+
+## Notes
+
+<Briefly note any file below ~80% coverage and why (e.g. an unexercised branch or defensive
+fallback), and whether it's worth a follow-up test — base this on the real numbers above, do
+not invent a percentage.>
+
+## Regenerating this report
+
+```bash
+npm run test:coverage
+```
+
+An HTML report is also written to `coverage/index.html` (gitignored — open it locally for
+line-by-line detail).
+```
+
+Fill in the `<...>` placeholders with the actual output from Step 5 before committing — the committed file must contain real numbers, not this template's placeholder text.
+
+- [ ] **Step 7: Typecheck**
+
+Run: `npx tsc --noEmit`
+Expected: clean, no output.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add vitest.config.ts package.json package-lock.json .gitignore docs/test-coverage-report.md
+git commit -m "Add a test coverage report for the pure logic layer"
+```
+
+---
+
+### Task 11: Rewrite the README
+
+**Files:**
+- Modify: `README.md`
+
+**Interfaces:**
+- Consumes: nothing (documentation only). Should be done after Tasks 1-10 so it accurately describes the finished state — `npm test`, `npm run test:coverage`, `npm run validate`, and the admin app's second-major/minor support all need to exist before this doc claims they do.
+
+- [ ] **Step 1: Replace the README**
+
+Replace the full contents of `README.md`:
+
+```markdown
+# Study Planner
+
+A study planner for NUS School of Computing (SoC) / NUS College (NUSC) students to plan
+their degree, track requirements, and share their plan for review.
+
+## Project structure
+
+This is a two-app monorepo sharing one data/logic layer:
+
+- `src/` — the student-facing planner app (React 19 + TypeScript + Vite + Tailwind). No
+  backend; a plan persists to `localStorage` and can be shared via a self-contained link
+  (`#i=<encoded-plan>`).
+- `admin/` — a separate Vite app for authoring major/second-major/minor JSON data without
+  hand-editing files. Has its own `package.json`/`tsconfig.json`.
+- `shared/` — the data model (`types.ts`), the NUSMods API client (`nusmods.ts`), the
+  share-link codec (`share.ts`), and the data itself (`data/majors/`, `data/second-majors/`,
+  `data/minors/`).
+- `scripts/` — standalone data validation scripts (`validate-majors.mjs`,
+  `validate-secondary.mjs`), run via `npm run validate`.
+- `docs/superpowers/` — design specs and implementation plans for past and current feature
+  work.
+
+## Getting started
+
+```bash
+npm install
+npm run dev
+```
+
+Opens the student app at http://localhost:5173 (port may bump if taken).
+
+To run the admin data-authoring tool:
+
+```bash
+cd admin
+npm install
+npm run dev
+```
+
+## Scripts (student app, repo root)
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Start the student app dev server |
+| `npm run build` | Typecheck (`tsc --noEmit`) then build for production |
+| `npm run preview` | Preview the production build |
+| `npm test` | Run the Vitest test suite (pure logic in `src/lib/` and `shared/`) |
+| `npm run test:coverage` | Run tests with a coverage report (see `docs/test-coverage-report.md`) |
+| `npm run validate` | Validate all major/second-major/minor JSON data files |
+
+## Data model
+
+Majors, second majors, and minors are plain JSON files under `shared/data/`. A `Major` owns
+categories, a default seed plan, and named requirement rules; a `SecondaryProgramme` (second
+major or minor) is a leaner shape — just requirements and a module catalog, checked against
+whatever the student has already placed for their primary major. See `shared/types.ts` for
+the full data model, and `admin/` for the tool that authors these files.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
+```
+
+- [ ] **Step 2: Sanity-check the doc against reality**
+
+Confirm every command/path named in the new README actually exists: `npm test`, `npm run
+test:coverage`, `npm run validate` in `package.json`'s scripts; `admin/package.json`,
+`admin/tsconfig.json`; `shared/types.ts`, `shared/nusmods.ts`, `shared/share.ts`,
+`shared/data/majors/`, `shared/data/second-majors/`, `shared/data/minors/`;
+`scripts/validate-majors.mjs`, `scripts/validate-secondary.mjs`. If any don't match (e.g. a
+script was named differently by an earlier task), fix the README text to match reality, not
+the other way around.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add README.md
+git commit -m "Rewrite README to reflect the current dual-app structure and tooling"
+```
+
+---
+
+### Task 12: Add CONTRIBUTING.md
+
+**Files:**
+- Create: `CONTRIBUTING.md`
+
+**Interfaces:**
+- Consumes: nothing (documentation only). Should be done after Task 11 (the README links to
+  it) and after Tasks 1-10 for the same reason — it documents finished tooling.
+
+- [ ] **Step 1: Write the file**
+
+Create `CONTRIBUTING.md`:
+
+```markdown
+# Contributing
+
+## Setup
+
+```bash
+npm install
+npm run dev
+```
+
+For the admin data-authoring tool, see `admin/`'s own `npm install`/`npm run dev` (it's a
+separate Vite project — see the root [README](./README.md#project-structure)).
+
+## Before committing
+
+Run these from the repo root:
+
+```bash
+npx tsc --noEmit
+npm test
+npm run validate
+```
+
+If you touched `admin/`, also run its own typecheck:
+
+```bash
+cd admin && npx tsc --noEmit
+```
+
+There is no CI pipeline yet — these checks are the whole verification story, so run all of
+them before opening a PR.
+
+## Code style
+
+- Match the existing Tailwind palette tokens (`ink`, `canvas`, `paper`, `muted`) and
+  rounded-card shapes (`rounded-xl`/`rounded-2xl`/`rounded-4xl`) — don't introduce new colors
+  or a different border-radius scale.
+- No comments unless they explain a non-obvious *why* (a hidden constraint, a workaround, a
+  subtle invariant). Well-named identifiers should carry the *what*.
+- Keep files focused: one clear responsibility per component/module, following the existing
+  split (e.g. `src/lib/studyPlan.ts` for pure computation, `src/hooks/useStudyPlan.ts` for
+  state/persistence, components for rendering only).
+- Follow the patterns already in the codebase for a given layer rather than introducing a new
+  one — e.g. new pure logic goes in `src/lib/studyPlan.ts` alongside the existing `compute*`
+  functions, new admin builders follow `MajorBuilder`'s tab-per-concern layout.
+
+## Tests
+
+Only the pure logic in `src/lib/` and `shared/` is unit-tested (`npm test`, via Vitest) —
+React components are verified manually (`npm run dev` + a browser check), not with component
+tests. If you add or change a pure function in `src/lib/studyPlan.ts` or `shared/share.ts`,
+add or update its test in the co-located `*.test.ts` file. See
+`docs/test-coverage-report.md` for current coverage.
+
+## Adding or editing major/second-major/minor data
+
+Don't hand-edit the JSON under `shared/data/` where possible — use the `admin/` app instead:
+
+```bash
+cd admin
+npm run dev
+```
+
+It has three sections (Majors, Second Majors, Minors), each with an Info/Requirements/
+[Default Plan or Module Catalog]/Export tab. Use the Export tab to save the file to the right
+`shared/data/` subdirectory, then run `npm run validate` from the repo root to check it (id
+uniqueness, `moduleCatalog` consistency, category/MC-target sums for majors).
+
+## Design specs and plans
+
+Nontrivial features get a design spec and/or implementation plan under
+`docs/superpowers/specs/` and `docs/superpowers/plans/` before implementation. Look at recent
+examples there for the expected level of detail (exact file paths, exact code, a verification
+checklist) before writing a new one.
+
+## Commit messages
+
+Concise, imperative subject line describing the *why* more than the *what* (e.g. "Fix
+computeDoubleCount design: drop unneeded primary-major requirement check", not "update
+studyPlan.ts"). Look at `git log` for examples of the house style.
+```
+
+- [ ] **Step 2: Typecheck**
+
+Run: `npx tsc --noEmit`
+Expected: clean, no output (this task doesn't touch code, but confirm nothing else broke).
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add CONTRIBUTING.md
+git commit -m "Add CONTRIBUTING.md"
 ```
