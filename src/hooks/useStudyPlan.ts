@@ -280,36 +280,58 @@ export const useStudyPlan = () => {
   }, [major]);
 
   const importSharedPlan = useCallback(
-    (newMajorId: string, importedSemesters: StudentSemester[], importedWaived: WaivedModule[]) => {
+    (
+      newMajorId: string,
+      importedSemesters: StudentSemester[],
+      importedWaived: WaivedModule[],
+      importedSecondMajorId: string | null = null,
+      importedMinorIds: string[] = [],
+      importedRequirementMappings: Record<string, string[]> = {},
+    ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
       setMode('personal');
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
-      setSecondMajorIdState(null);
-      setMinorIds([]);
-      setRequirementMappings({});
+      setSecondMajorIdState(
+        importedSecondMajorId && secondMajors.some((m) => m.id === importedSecondMajorId)
+          ? importedSecondMajorId
+          : null,
+      );
+      setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
+      setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
       setMajorId(newMajorId);
       setPersonalMajorId(newMajorId);
       return true;
     },
-    [majors],
+    [majors, secondMajors, minors],
   );
 
   const openReviewPlan = useCallback(
-    (newMajorId: string, importedSemesters: StudentSemester[], importedWaived: WaivedModule[]) => {
+    (
+      newMajorId: string,
+      importedSemesters: StudentSemester[],
+      importedWaived: WaivedModule[],
+      importedSecondMajorId: string | null = null,
+      importedMinorIds: string[] = [],
+      importedRequirementMappings: Record<string, string[]> = {},
+    ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
       setMode('review');
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
-      setSecondMajorIdState(null);
-      setMinorIds([]);
-      setRequirementMappings({});
+      setSecondMajorIdState(
+        importedSecondMajorId && secondMajors.some((m) => m.id === importedSecondMajorId)
+          ? importedSecondMajorId
+          : null,
+      );
+      setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
+      setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
       setMajorId(newMajorId);
       return true;
     },
-    [majors],
+    [majors, secondMajors, minors],
   );
 
   const exitReviewMode = useCallback(() => {
