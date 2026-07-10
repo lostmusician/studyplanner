@@ -20,6 +20,8 @@ import {
   autoCategoryId,
   isModuleLocked,
   applyNocAdjustment,
+  recategorizeModule,
+  recategorizeWaivedModule,
 } from '../lib/studyPlan';
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
@@ -219,7 +221,18 @@ export const useStudyPlan = () => {
       if (existing.includes(moduleCode)) return prev;
       return { ...prev, [requirementName]: [...existing, moduleCode] };
     });
-  }, []);
+    // A manually mapped module should visibly move into the requirement's own
+    // category (e.g. SoC Common Curriculum), not stay wherever autoCategoryId
+    // first guessed (typically Unrestricted Electives, since a manually mapped
+    // code by definition didn't match any RequirementRule.fulfilledBy) — otherwise
+    // its MC counts toward the wrong category's target even though the
+    // requirement checklist shows it fulfilled.
+    const categoryId = major?.requirements.find((r) => r.name === requirementName)?.categoryId;
+    if (categoryId) {
+      setSemesters((prev) => recategorizeModule(prev, moduleCode, categoryId));
+      setWaivedModules((prev) => recategorizeWaivedModule(prev, moduleCode, categoryId));
+    }
+  }, [major]);
 
   const removeRequirementMapping = useCallback((requirementName: string, moduleCode: string) => {
     setRequirementMappings((prev) => {
@@ -231,7 +244,15 @@ export const useStudyPlan = () => {
       else next[requirementName] = remaining;
       return next;
     });
-  }, []);
+    // Symmetric with addRequirementMapping: once unmapped, the module no longer
+    // has a specific reason to sit in the requirement's category, so recompute
+    // a sensible category the same way a freshly-added module would get one.
+    if (major) {
+      const fallbackCategoryId = autoCategoryId(major, moduleCode);
+      setSemesters((prev) => recategorizeModule(prev, moduleCode, fallbackCategoryId));
+      setWaivedModules((prev) => recategorizeWaivedModule(prev, moduleCode, fallbackCategoryId));
+    }
+  }, [major]);
 
   const switchMajor = useCallback(
     (newMajorId: string) => {

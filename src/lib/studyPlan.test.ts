@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Major, SecondaryProgramme, StudentSemester } from '@shared/types';
+import type { Major, PlacedModule, SecondaryProgramme, StudentSemester, WaivedModule } from '@shared/types';
 import {
   matchesFulfiller,
   courseLevel,
@@ -12,6 +12,15 @@ import {
   computeProgrammeElectives,
   applyNocAdjustment,
   autoCategoryId,
+  createEmptySemesters,
+  defaultPlanToSemesters,
+  upsertModule,
+  removeModule,
+  isModuleLocked,
+  renameModule,
+  getCompletedCodesUpTo,
+  recategorizeModule,
+  recategorizeWaivedModule,
 } from './studyPlan';
 
 interface FixtureModule {
@@ -42,6 +51,13 @@ describe('matchesFulfiller', () => {
     expect(matchesFulfiller('NHS2001', 'NHS*')).toBe(true);
     expect(matchesFulfiller('NST2001', 'NHS*')).toBe(false);
   });
+
+  it('matches any code when the fulfiller is bare "*" (empty-string prefix always matches)', () => {
+    // slice(0, -1) on '*' gives '', and every string startsWith(''); an
+    // unusual config, but the matcher shouldn't crash on it.
+    expect(matchesFulfiller('CS1101S', '*')).toBe(true);
+    expect(matchesFulfiller('', '*')).toBe(true);
+  });
 });
 
 describe('courseLevel', () => {
@@ -49,6 +65,10 @@ describe('courseLevel', () => {
     expect(courseLevel('CS4231')).toBe(4000);
     expect(courseLevel('CS2103T')).toBe(2000);
     expect(courseLevel('MA1521')).toBe(1000);
+  });
+
+  it('returns 0 for a malformed code with no digits, instead of throwing', () => {
+    expect(courseLevel('ABC')).toBe(0);
   });
 });
 
@@ -153,6 +173,13 @@ describe('computeDoubleCount', () => {
     expect(result.doubleCountMc).toBe(12);
     expect(result.warn).toBe(true);
   });
+
+  it('returns the zero baseline for an empty plan (nothing placed, nothing waived)', () => {
+    const result = computeDoubleCount(secondary, semesters([]));
+    expect(result.doubleCountMc).toBe(0);
+    expect(result.warn).toBe(false);
+    expect(result.doubleCountedCodes).toEqual([]);
+  });
 });
 
 describe('computeTripleCountedCodes', () => {
@@ -206,6 +233,17 @@ describe('computeFocusAreas', () => {
       { code: 'CS4246', name: 'x', mcs: 4, categoryId: 'breadth-depth', year: 4, sem: 1 },
     ]);
     const { anyFulfilled } = computeFocusAreas(major, sems);
+    expect(anyFulfilled).toBe(true);
+  });
+
+  it('counts a focus-area primary satisfied via waivedModules, not just placed semesters', () => {
+    const sems = semesters([
+      { code: 'CS3243', name: 'x', mcs: 4, categoryId: 'breadth-depth', year: 3, sem: 1 },
+      { code: 'CS3244', name: 'x', mcs: 4, categoryId: 'breadth-depth', year: 3, sem: 2 },
+    ]);
+    const waived: WaivedModule[] = [{ code: 'CS4246', name: 'Neuro', mcs: 4, categoryId: 'breadth-depth' }];
+    const { areas, anyFulfilled } = computeFocusAreas(major, sems, waived);
+    expect(areas[0].matched).toContain('CS4246');
     expect(anyFulfilled).toBe(true);
   });
 });
@@ -264,6 +302,22 @@ describe('computeBreadthDepth', () => {
     const sems = semesters([{ code: 'CS4246', name: 'x', mcs: 12, categoryId: 'breadth-depth', year: 3, sem: 1 }]);
     const met = computeBreadthDepth(aiMajor, sems);
     expect(met?.constraints.find((c) => c.id === 'technical-electives')?.fulfilled).toBe(true);
+  });
+
+  it('has neither a focus-area nor a technical-electives constraint when the major configures neither mechanism', () => {
+    // `major` here has no `focusAreas` and its `breadthDepth` has no `technicalElectives` —
+    // a real, if unusual, config state that should degrade to "no depth-mechanism
+    // constraint" rather than crashing or defaulting to one incorrectly.
+    const result = computeBreadthDepth(major, []);
+    expect(result?.constraints.find((c) => c.id === 'focus-area')).toBeUndefined();
+    expect(result?.constraints.find((c) => c.id === 'technical-electives')).toBeUndefined();
+    expect(result?.constraints.map((c) => c.id)).toEqual([
+      'level-4000',
+      'industry-experience',
+      'coding',
+      'cp-cap',
+      'total',
+    ]);
   });
 });
 
@@ -361,6 +415,15 @@ describe('computeProgrammeElectives', () => {
     const result = computeProgrammeElectives(major, sems);
     expect(result?.specialisations[0].fulfilled).toBe(true);
   });
+
+  it('defaults specialisations to [] when the config omits the field entirely, rather than crashing', () => {
+    const noSpecialisations: Major = {
+      ...major,
+      programmeElectives: { ...major.programmeElectives!, specialisations: undefined },
+    };
+    const result = computeProgrammeElectives(noSpecialisations, []);
+    expect(result?.specialisations).toEqual([]);
+  });
 });
 
 describe('applyNocAdjustment', () => {
@@ -408,5 +471,258 @@ describe('applyNocAdjustment', () => {
   it('returns the major unchanged when it has no nus-college category', () => {
     const noNusCollege: Major = { ...major, categories: [], requirements: [] };
     expect(applyNocAdjustment(noNusCollege, '1-year')).toBe(noNusCollege);
+  });
+
+  it('freed MC is not redistributed anywhere when the major has no unrestricted-electives category', () => {
+    // A hypothetical major modeled with the NUSC block but no unrestricted-electives
+    // bucket: nus-college still shrinks, but there's nowhere for the freed MC to land.
+    const noUnrestricted: Major = {
+      ...major,
+      categories: major.categories.filter((c) => c.id !== 'unrestricted-electives'),
+    };
+    const adjusted = applyNocAdjustment(noUnrestricted, '6-month');
+    expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(44);
+    expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')).toBeUndefined();
+    expect(adjusted.categories).toHaveLength(1);
+  });
+});
+
+describe('createEmptySemesters', () => {
+  it('returns all 8 year/sem combinations for years 1-4, in UI-rendering order, each with an empty modules array', () => {
+    const result = createEmptySemesters();
+    expect(result.map((s) => [s.year, s.sem])).toEqual([
+      [1, 1], [1, 2],
+      [2, 1], [2, 2],
+      [3, 1], [3, 2],
+      [4, 1], [4, 2],
+    ]);
+    expect(result.every((s) => s.modules.length === 0)).toBe(true);
+  });
+});
+
+describe('defaultPlanToSemesters', () => {
+  const major: Major = {
+    id: 'cs', label: 'CS', school: 'SoC', batches: [], totalMcTarget: 160,
+    categories: [], requirements: [],
+    moduleCatalog: {
+      CS1101S: { code: 'CS1101S', name: 'Programming Methodology', mcs: 4 },
+      MA1521: { code: 'MA1521', name: 'Calculus', mcs: 4 },
+      CS2030S: { code: 'CS2030S', name: 'Programming Methodology II', mcs: 4 },
+    },
+    defaultPlan: [
+      { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'cs-foundation' },
+      { year: 1, sem: 1, moduleCode: 'MA1521', categoryId: 'math-sciences' },
+      // Typo'd/removed code, not in moduleCatalog — should degrade gracefully.
+      { year: 1, sem: 1, moduleCode: 'CS9999X', categoryId: 'cs-foundation' },
+      { year: 1, sem: 2, moduleCode: 'CS2030S', categoryId: 'cs-foundation' },
+    ],
+  };
+
+  it("places a defaultPlan entry's module into its matching {year, sem} semester, tagged with the entry's categoryId", () => {
+    const sems = defaultPlanToSemesters(major);
+    const y1s2 = sems.find((s) => s.year === 1 && s.sem === 2)!;
+    expect(y1s2.modules).toEqual([
+      { code: 'CS2030S', name: 'Programming Methodology II', mcs: 4, categoryId: 'cs-foundation' },
+    ]);
+  });
+
+  it('silently skips a defaultPlan entry whose moduleCode is not in moduleCatalog, instead of crashing', () => {
+    const sems = defaultPlanToSemesters(major);
+    const allCodes = sems.flatMap((s) => s.modules.map((m) => m.code));
+    expect(allCodes).not.toContain('CS9999X');
+  });
+
+  it('places multiple defaultPlan entries targeting the same {year, sem}, not just the last one', () => {
+    const sems = defaultPlanToSemesters(major);
+    const y1s1 = sems.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules.map((m) => m.code)).toEqual(['CS1101S', 'MA1521']);
+  });
+});
+
+describe('upsertModule', () => {
+  const mod = (code: string): PlacedModule => ({ code, name: code, mcs: 4, categoryId: 'cs-foundation' });
+
+  it('adds a brand-new module to an empty semester', () => {
+    const empty = createEmptySemesters();
+    const result = upsertModule(empty, 1, 1, mod('CS1101S'));
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules.map((m) => m.code)).toEqual(['CS1101S']);
+  });
+
+  it('moving an existing module to a different {year, sem} removes it from the old semester and adds it to the new one, never placed twice', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    const result = upsertModule(sems, 1, 2, mod('CS1101S'));
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    const y1s2 = result.find((s) => s.year === 1 && s.sem === 2)!;
+    expect(y1s1.modules).toEqual([]);
+    expect(y1s2.modules.map((m) => m.code)).toEqual(['CS1101S']);
+    expect(result.flatMap((s) => s.modules).filter((m) => m.code === 'CS1101S')).toHaveLength(1);
+  });
+
+  it('insertBeforeCode inserts the module at that position rather than appending it', () => {
+    const sems = semesters([
+      { code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 },
+      { code: 'MA1521', name: 'y', mcs: 4, categoryId: 'math-sciences', year: 1, sem: 1 },
+    ]);
+    const result = upsertModule(sems, 1, 1, mod('CS2030S'), 'MA1521');
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules.map((m) => m.code)).toEqual(['CS1101S', 'CS2030S', 'MA1521']);
+  });
+
+  it('falls back to appending at the end when insertBeforeCode is not found in the target semester', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    const result = upsertModule(sems, 1, 1, mod('MA1521'), 'NONEXISTENT');
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules.map((m) => m.code)).toEqual(['CS1101S', 'MA1521']);
+  });
+
+  it('re-adding the same module code to the same semester it is already in is a no-op (no duplicate)', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    const result = upsertModule(sems, 1, 1, mod('CS1101S'));
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules.map((m) => m.code)).toEqual(['CS1101S']);
+  });
+});
+
+describe('removeModule', () => {
+  it('with no target argument, removes the module from every semester it appears in (defensive full-plan sweep)', () => {
+    // Shouldn't happen via the normal UI, but the function doesn't assume uniqueness.
+    const sems = semesters([
+      { code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 },
+      { code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 2, sem: 1 },
+    ]);
+    const result = removeModule(sems, 'CS1101S');
+    expect(result.flatMap((s) => s.modules).some((m) => m.code === 'CS1101S')).toBe(false);
+  });
+
+  it('with a target argument, removes the module only from that specific semester, leaving other copies untouched', () => {
+    const sems = semesters([
+      { code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 },
+      { code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 2, sem: 1 },
+    ]);
+    const result = removeModule(sems, 'CS1101S', { year: 1, sem: 1 });
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    const y2s1 = result.find((s) => s.year === 2 && s.sem === 1)!;
+    expect(y1s1.modules).toEqual([]);
+    expect(y2s1.modules.map((m) => m.code)).toEqual(['CS1101S']);
+  });
+
+  it('removing a code that is not placed anywhere is a no-op', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    const result = removeModule(sems, 'MA1521');
+    expect(result).toEqual(sems);
+  });
+});
+
+describe('isModuleLocked', () => {
+  const major: Major = {
+    id: 'cs', label: 'CS', school: 'SoC', batches: [], totalMcTarget: 160,
+    categories: [], requirements: [], moduleCatalog: {},
+    defaultPlan: [
+      { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'cs-foundation', locked: true },
+      { year: 1, sem: 2, moduleCode: 'CS2030S', categoryId: 'cs-foundation' },
+    ],
+  };
+
+  it("is true for a code whose defaultPlan entry has locked: true", () => {
+    expect(isModuleLocked(major, 'CS1101S')).toBe(true);
+  });
+
+  it('is false for a code present in defaultPlan but without locked set', () => {
+    expect(isModuleLocked(major, 'CS2030S')).toBe(false);
+  });
+
+  it('is false for a code not present in defaultPlan at all', () => {
+    expect(isModuleLocked(major, 'MA1521')).toBe(false);
+  });
+});
+
+describe('renameModule', () => {
+  it("updates a module's code/name/mcs/categoryId in place, wherever it is currently placed", () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'old name', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    const result = renameModule(sems, 'CS1101S', {
+      code: 'CS1101', name: 'new name', mcs: 5, categoryId: 'math-sciences',
+    });
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules).toEqual([{ code: 'CS1101', name: 'new name', mcs: 5, categoryId: 'math-sciences' }]);
+  });
+
+  it('is a no-op (no crash, no phantom insertion) for a module code that is not currently placed anywhere', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    const result = renameModule(sems, 'MA1521', { code: 'MA1521B', name: 'y', mcs: 4, categoryId: 'math-sciences' });
+    expect(result).toEqual(sems);
+  });
+});
+
+describe('recategorizeModule', () => {
+  // Regression test for a real reported bug: a CS student maps CS1010 (not a
+  // recognized CS-NUSC code, so autoCategoryId falls back to Unrestricted
+  // Electives on first add) to satisfy "Programming Methodology (CS1101S)" via
+  // the manual requirement-mapping picker. Without recategorization, CS1010
+  // stayed tagged Unrestricted Electives forever — its MC counted toward the
+  // wrong category bar even though the SoC Common Curriculum requirement
+  // checklist showed it fulfilled.
+  it('moves a module into a new category wherever it is currently placed', () => {
+    const sems = semesters([{ code: 'CS1010', name: 'Programming Methodology', mcs: 4, categoryId: 'unrestricted-electives', year: 1, sem: 1 }]);
+    const result = recategorizeModule(sems, 'CS1010', 'soc-common');
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules).toEqual([{ code: 'CS1010', name: 'Programming Methodology', mcs: 4, categoryId: 'soc-common' }]);
+  });
+
+  it('only changes categoryId, leaving code/name/mcs untouched', () => {
+    const sems = semesters([{ code: 'CS1010', name: 'Programming Methodology', mcs: 4, categoryId: 'unrestricted-electives', year: 1, sem: 1 }]);
+    const [module] = recategorizeModule(sems, 'CS1010', 'soc-common').find((s) => s.year === 1 && s.sem === 1)!.modules;
+    expect(module.code).toBe('CS1010');
+    expect(module.name).toBe('Programming Methodology');
+    expect(module.mcs).toBe(4);
+  });
+
+  it('is a no-op for a module code that is not currently placed anywhere', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
+    expect(recategorizeModule(sems, 'MA1521', 'math-sciences')).toEqual(sems);
+  });
+
+  it('leaves every other placed module untouched', () => {
+    const sems = semesters([
+      { code: 'CS1010', name: 'x', mcs: 4, categoryId: 'unrestricted-electives', year: 1, sem: 1 },
+      { code: 'MA1521', name: 'y', mcs: 4, categoryId: 'math-sciences', year: 1, sem: 1 },
+    ]);
+    const result = recategorizeModule(sems, 'CS1010', 'soc-common');
+    const y1s1 = result.find((s) => s.year === 1 && s.sem === 1)!;
+    expect(y1s1.modules.find((m) => m.code === 'MA1521')?.categoryId).toBe('math-sciences');
+  });
+});
+
+describe('recategorizeWaivedModule', () => {
+  const waived: WaivedModule[] = [
+    { code: 'CS1010', name: 'Programming Methodology', mcs: 4, categoryId: 'unrestricted-electives' },
+  ];
+
+  it('moves a waived module into a new category', () => {
+    const result = recategorizeWaivedModule(waived, 'CS1010', 'soc-common');
+    expect(result).toEqual([{ code: 'CS1010', name: 'Programming Methodology', mcs: 4, categoryId: 'soc-common' }]);
+  });
+
+  it('is a no-op for a code not present in the waived list', () => {
+    expect(recategorizeWaivedModule(waived, 'MA1521', 'math-sciences')).toEqual(waived);
+  });
+});
+
+describe('getCompletedCodesUpTo', () => {
+  it('excludes a module placed in the target {year, sem} itself — only strictly earlier terms count as completed', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 2, sem: 1 }]);
+    expect(getCompletedCodesUpTo(sems, 2, 1)).toEqual([]);
+  });
+
+  it('treats an earlier year with a later sem (Y1S2) as before a later year with an earlier sem (Y2S1)', () => {
+    // A naive `s.year <= year && s.sem < sem` implementation would wrongly exclude
+    // this: sem(2) < sem(1) is false, even though Y1S2 is chronologically earlier.
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 2 }]);
+    expect(getCompletedCodesUpTo(sems, 2, 1)).toEqual(['CS1101S']);
+  });
+
+  it('treats the same year with an earlier sem (Y2S1) as before a later sem in the same year (Y2S2)', () => {
+    const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 2, sem: 1 }]);
+    expect(getCompletedCodesUpTo(sems, 2, 2)).toEqual(['CS1101S']);
   });
 });
