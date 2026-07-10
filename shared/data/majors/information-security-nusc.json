@@ -20,7 +20,7 @@
     { "name": "Introduction to Information Security (CS2107)", "fulfilledBy": ["CS2107"], "categoryId": "security-requirements" },
     { "name": "Computer Security (CS3235)", "fulfilledBy": ["CS3235"], "categoryId": "security-requirements" },
     { "name": "Information Security Management (IS4231)", "fulfilledBy": ["IS4231"], "categoryId": "security-requirements" },
-    { "name": "Information Security Capstone Project (IFS4205)", "fulfilledBy": ["IFS4205"], "categoryId": "security-requirements" },
+    { "name": "Information Security Capstone Project (IFS4205)", "fulfilledBy": ["IFS4205"], "altGroups": [["CS4238", "IFS4103"]], "categoryId": "security-requirements" },
     { "name": "Thinking with Writing (NTW)", "fulfilledBy": ["NTW*"], "categoryId": "nus-college" },
     { "name": "Understanding the Social World (NSW)", "fulfilledBy": ["NSW*"], "categoryId": "nus-college" },
     { "name": "Reasoning with Data (GEA1000N)", "fulfilledBy": ["GEA1000N"], "categoryId": "nus-college" },

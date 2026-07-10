@@ -1,5 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Major, StudentPlan, StudentSemester, PlacedModule, WaivedModule, SecondaryProgramme } from '@shared/types';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type {
+  Major,
+  StudentPlan,
+  StudentSemester,
+  PlacedModule,
+  WaivedModule,
+  SecondaryProgramme,
+  NocDuration,
+} from '@shared/types';
 import {
   createEmptySemesters,
   defaultPlanToSemesters,
@@ -11,6 +19,7 @@ import {
   getCompletedCodesUpTo,
   autoCategoryId,
   isModuleLocked,
+  applyNocAdjustment,
 } from '../lib/studyPlan';
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
@@ -40,7 +49,11 @@ interface SavedPlanState {
   secondMajorId: string | null;
   minorIds: string[];
   requirementMappings: Record<string, string[]>;
+  nocDuration: NocDuration | null;
 }
+
+const normalizeNocDuration = (value: unknown): NocDuration | null =>
+  value === '6-month' || value === '1-year' ? value : null;
 
 const normalizeRequirementMappings = (value: unknown): Record<string, string[]> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -102,6 +115,7 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
       secondMajorId: typeof plan.secondMajorId === 'string' ? plan.secondMajorId : null,
       minorIds: Array.isArray(plan.minorIds) ? plan.minorIds.slice(0, MAX_MINORS) : [],
       requirementMappings: normalizeRequirementMappings(plan.requirementMappings),
+      nocDuration: normalizeNocDuration(plan.nocDuration),
     };
   } catch {
     return null;
@@ -114,6 +128,7 @@ const jsonDefaultPlan = (major: Major): SavedPlanState => ({
   secondMajorId: null,
   minorIds: [],
   requirementMappings: {},
+  nocDuration: null,
 });
 
 const loadPlanForMajor = (major: Major): SavedPlanState => {
@@ -125,6 +140,7 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
     secondMajorId: savedPlan?.secondMajorId ?? defaultPlan.secondMajorId,
     minorIds: savedPlan?.minorIds ?? defaultPlan.minorIds,
     requirementMappings: savedPlan?.requirementMappings ?? defaultPlan.requirementMappings,
+    nocDuration: savedPlan?.nocDuration ?? defaultPlan.nocDuration,
   };
 };
 
@@ -136,6 +152,7 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
     secondMajorId: state.secondMajorId ?? undefined,
     minorIds: state.minorIds,
     requirementMappings: state.requirementMappings,
+    nocDuration: state.nocDuration ?? undefined,
     lastUpdated: new Date().toISOString(),
   };
   localStorage.setItem(planKey(majorId), JSON.stringify(plan));
@@ -149,11 +166,11 @@ export const useStudyPlan = () => {
   const [majorId, setMajorId] = useState<string>(defaultMajor?.id ?? '');
   const [personalMajorId, setPersonalMajorId] = useState<string>(defaultMajor?.id ?? '');
   const [mode, setMode] = useState<PlanMode>('personal');
-  const major = majors.find((m) => m.id === majorId) ?? defaultMajor;
+  const rawMajor = majors.find((m) => m.id === majorId) ?? defaultMajor;
 
-  const initialPlan = major ? loadPlanForMajor(major) : null;
+  const initialPlan = rawMajor ? loadPlanForMajor(rawMajor) : null;
   const [semesters, setSemesters] = useState<StudentSemester[]>(() => {
-    if (!major) return [];
+    if (!rawMajor) return [];
     return initialPlan?.semesters ?? [];
   });
   const [waivedModules, setWaivedModules] = useState<WaivedModule[]>(() =>
@@ -166,14 +183,26 @@ export const useStudyPlan = () => {
   const [requirementMappings, setRequirementMappings] = useState<Record<string, string[]>>(
     () => initialPlan?.requirementMappings ?? {},
   );
+  const [nocDuration, setNocDurationState] = useState<NocDuration | null>(
+    () => initialPlan?.nocDuration ?? null,
+  );
+
+  const major = useMemo(
+    () => (rawMajor ? applyNocAdjustment(rawMajor, nocDuration) : rawMajor),
+    [rawMajor, nocDuration],
+  );
 
   useEffect(() => {
     if (!major || mode !== 'personal') return;
-    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings });
-  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, major, mode]);
+    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration });
+  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, major, mode]);
 
   const setSecondMajorId = useCallback((id: string | null) => {
     setSecondMajorIdState(id);
+  }, []);
+
+  const setNocDuration = useCallback((duration: NocDuration | null) => {
+    setNocDurationState(duration);
   }, []);
 
   const toggleMinorId = useCallback((id: string) => {
@@ -214,6 +243,7 @@ export const useStudyPlan = () => {
       setSecondMajorIdState(nextPlan.secondMajorId);
       setMinorIds(nextPlan.minorIds);
       setRequirementMappings(nextPlan.requirementMappings);
+      setNocDurationState(nextPlan.nocDuration);
       setMajorId(newMajorId);
       if (mode === 'personal') setPersonalMajorId(newMajorId);
     },
@@ -277,6 +307,7 @@ export const useStudyPlan = () => {
     setSecondMajorIdState(defaultPlan.secondMajorId);
     setMinorIds(defaultPlan.minorIds);
     setRequirementMappings(defaultPlan.requirementMappings);
+    setNocDurationState(defaultPlan.nocDuration);
   }, [major]);
 
   const importSharedPlan = useCallback(
@@ -287,6 +318,7 @@ export const useStudyPlan = () => {
       importedSecondMajorId: string | null = null,
       importedMinorIds: string[] = [],
       importedRequirementMappings: Record<string, string[]> = {},
+      importedNocDuration: NocDuration | null = null,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
@@ -300,6 +332,7 @@ export const useStudyPlan = () => {
       );
       setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
+      setNocDurationState(normalizeNocDuration(importedNocDuration));
       setMajorId(newMajorId);
       setPersonalMajorId(newMajorId);
       return true;
@@ -315,6 +348,7 @@ export const useStudyPlan = () => {
       importedSecondMajorId: string | null = null,
       importedMinorIds: string[] = [],
       importedRequirementMappings: Record<string, string[]> = {},
+      importedNocDuration: NocDuration | null = null,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
@@ -328,6 +362,7 @@ export const useStudyPlan = () => {
       );
       setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
+      setNocDurationState(normalizeNocDuration(importedNocDuration));
       setMajorId(newMajorId);
       return true;
     },
@@ -344,6 +379,7 @@ export const useStudyPlan = () => {
     setSecondMajorIdState(personalPlan.secondMajorId);
     setMinorIds(personalPlan.minorIds);
     setRequirementMappings(personalPlan.requirementMappings);
+    setNocDurationState(personalPlan.nocDuration);
     setMajorId(personalMajor.id);
   }, [majors, personalMajorId, defaultMajor]);
 
@@ -362,6 +398,8 @@ export const useStudyPlan = () => {
     minorIds,
     setSecondMajorId,
     toggleMinorId,
+    nocDuration,
+    setNocDuration,
     requirementMappings,
     addRequirementMapping,
     removeRequirementMapping,

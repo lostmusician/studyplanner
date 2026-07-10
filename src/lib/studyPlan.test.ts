@@ -10,6 +10,7 @@ import {
   computeFocusAreas,
   computeBreadthDepth,
   computeProgrammeElectives,
+  applyNocAdjustment,
   autoCategoryId,
 } from './studyPlan';
 
@@ -98,6 +99,26 @@ describe('computeRequirements', () => {
     const empty = semesters([]);
     const [removedResult] = computeRequirements(source, empty, [], mappings);
     expect(removedResult.fulfilled).toBe(false);
+  });
+
+  it('is fulfilled via an altGroups alternative even without meeting fulfilledBy/count', () => {
+    const withAlt = {
+      requirements: [
+        { name: 'Capstone', fulfilledBy: ['IFS4205'], altGroups: [['CS4238', 'IFS4103']] },
+      ],
+    };
+
+    const onlyOneAltCode = semesters([{ code: 'CS4238', name: 'x', mcs: 4, categoryId: 'security-requirements', year: 4, sem: 1 }]);
+    expect(computeRequirements(withAlt, onlyOneAltCode)[0].fulfilled).toBe(false);
+
+    const bothAltCodes = semesters([
+      { code: 'CS4238', name: 'x', mcs: 4, categoryId: 'security-requirements', year: 4, sem: 1 },
+      { code: 'IFS4103', name: 'y', mcs: 4, categoryId: 'security-requirements', year: 4, sem: 1 },
+    ]);
+    expect(computeRequirements(withAlt, bothAltCodes)[0].fulfilled).toBe(true);
+
+    const primaryCode = semesters([{ code: 'IFS4205', name: 'z', mcs: 8, categoryId: 'security-requirements', year: 4, sem: 1 }]);
+    expect(computeRequirements(withAlt, primaryCode)[0].fulfilled).toBe(true);
   });
 });
 
@@ -339,5 +360,53 @@ describe('computeProgrammeElectives', () => {
     ]);
     const result = computeProgrammeElectives(major, sems);
     expect(result?.specialisations[0].fulfilled).toBe(true);
+  });
+});
+
+describe('applyNocAdjustment', () => {
+  const major: Major = {
+    id: 'cs', label: 'CS', school: 'SoC', batches: [], totalMcTarget: 160,
+    categories: [
+      { id: 'nus-college', label: 'NUS College', mcTarget: 52, color: '#fff' },
+      { id: 'unrestricted-electives', label: 'Unrestricted Electives', mcTarget: 20, color: '#fff' },
+    ],
+    requirements: [
+      { name: 'Making Connections', fulfilledBy: ['NHS*'], count: 6, categoryId: 'nus-college' },
+    ],
+    moduleCatalog: {},
+    defaultPlan: [],
+  };
+
+  it('returns the major unchanged when no duration is declared', () => {
+    expect(applyNocAdjustment(major, null)).toBe(major);
+    expect(applyNocAdjustment(major, undefined)).toBe(major);
+  });
+
+  it('waives 2 Making Connections electives and shifts 8 MC for a 6-month NOC', () => {
+    const adjusted = applyNocAdjustment(major, '6-month');
+    expect(adjusted.requirements[0].count).toBe(4);
+    expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(44);
+    expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')?.mcTarget).toBe(28);
+  });
+
+  it('waives 4 Making Connections electives and shifts 16 MC for a 1-year NOC', () => {
+    const adjusted = applyNocAdjustment(major, '1-year');
+    expect(adjusted.requirements[0].count).toBe(2);
+    expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(36);
+    expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')?.mcTarget).toBe(36);
+  });
+
+  it('never touches soc-common (NOC waives NUSC requirements only)', () => {
+    const withSocCommon: Major = {
+      ...major,
+      categories: [...major.categories, { id: 'soc-common', label: 'SoC Common', mcTarget: 8, color: '#fff' }],
+    };
+    const adjusted = applyNocAdjustment(withSocCommon, '1-year');
+    expect(adjusted.categories.find((c) => c.id === 'soc-common')?.mcTarget).toBe(8);
+  });
+
+  it('returns the major unchanged when it has no nus-college category', () => {
+    const noNusCollege: Major = { ...major, categories: [], requirements: [] };
+    expect(applyNocAdjustment(noNusCollege, '1-year')).toBe(noNusCollege);
   });
 });

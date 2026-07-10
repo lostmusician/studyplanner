@@ -53,6 +53,13 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
         fail(`requirement "${req.name}" fulfilledBy "${f}" not in moduleCatalog`);
       }
     }
+    for (const group of req.altGroups ?? []) {
+      for (const code of group) {
+        if (major.moduleCatalog && !major.moduleCatalog[code]) {
+          fail(`requirement "${req.name}" altGroups code "${code}" not in moduleCatalog`);
+        }
+      }
+    }
   }
 
   for (const [code, mod] of Object.entries(major.moduleCatalog ?? {})) {
