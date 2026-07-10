@@ -104,7 +104,16 @@ export const PrintView = ({
         </div>
         <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
           {major.categories.map((cat) => (
-            <li key={cat.id} className="border-l-2 pl-2" style={{ borderColor: cat.color }}>
+            <li key={cat.id} className="flex items-center gap-1.5">
+              <span
+                className="h-2 w-2 flex-shrink-0 rounded-full"
+                style={{
+                  backgroundColor: cat.color,
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust: 'exact',
+                }}
+                aria-hidden="true"
+              />
               {cat.label}: {stats.byCategory[cat.id] ?? 0}
               {cat.mcTarget ? `/${cat.mcTarget}` : ''} MC
             </li>

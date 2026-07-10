@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Major, StudentSemester, WaivedModule } from '@shared/types';
 import { computeFocusAreas, courseLevel } from '../lib/studyPlan';
+import { MUTED } from '../lib/colors';
 
 interface Props {
   major: Major;
@@ -60,8 +61,7 @@ export const FocusAreaExplorer = ({ major, semesters, waivedModules, onClose }: 
             return (
               <section
                 key={area.id}
-                className="rounded-3xl bg-canvas/50 p-4"
-                style={{ borderLeft: `4px solid ${area.fulfilled ? 'rgb(20,20,19)' : 'transparent'}` }}
+                className={`rounded-3xl p-4 ${area.fulfilled ? 'bg-canvas' : 'bg-canvas/50'}`}
               >
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-ink">{area.label}</h3>
@@ -70,7 +70,7 @@ export const FocusAreaExplorer = ({ major, semesters, waivedModules, onClose }: 
                     style={
                       area.fulfilled
                         ? { backgroundColor: 'rgb(20,20,19)', color: 'rgb(239,238,231)' }
-                        : { backgroundColor: 'rgba(20,20,19,0.08)', color: 'rgb(108,107,104)' }
+                        : { backgroundColor: 'rgba(20,20,19,0.08)', color: MUTED }
                     }
                   >
                     {area.fulfilled
@@ -118,7 +118,7 @@ const CodeGroup = ({
                 ? { backgroundColor: 'rgb(20,20,19)', color: 'rgb(239,238,231)' }
                 : {
                     backgroundColor: muted ? 'transparent' : 'rgba(20,20,19,0.05)',
-                    color: 'rgb(108,107,104)',
+                    color: MUTED,
                     border: muted ? '1px solid rgba(20,20,19,0.12)' : 'none',
                   }
             }
@@ -137,7 +137,7 @@ const LevelTag = ({ on = false }: { on?: boolean }) => (
     className="rounded px-1 text-[8px] font-bold leading-none"
     style={{
       backgroundColor: on ? 'rgba(239,238,231,0.25)' : 'rgba(20,20,19,0.12)',
-      color: on ? 'rgb(239,238,231)' : 'rgb(108,107,104)',
+      color: on ? 'rgb(239,238,231)' : MUTED,
     }}
   >
     4K

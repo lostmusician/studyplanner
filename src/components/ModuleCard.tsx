@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { Major, PlacedModule } from '@shared/types';
 import { fetchNusModsModuleDetail, assessPrerequisiteConflict } from '@shared/nusmods';
-import { XIcon, EditIcon, LockIcon } from './Icons';
+import { XIcon, EditIcon, LockIcon, MoveIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
 import { AppDialog } from './AppDialog';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { Dropdown } from './Dropdown';
 import { isModuleLocked } from '../lib/studyPlan';
+import { FOCUS_RING } from '../lib/colors';
 
 interface Props {
   module: PlacedModule;
@@ -64,6 +65,24 @@ export const ModuleCard = ({
   const [showMoveMenu, setShowMoveMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isLocked = isModuleLocked(major, module.code);
+
+  useEffect(() => {
+    if (!showMoveMenu) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setShowMoveMenu(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowMoveMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showMoveMenu]);
 
   useEffect(() => {
     if (isOverlay) return;
@@ -132,7 +151,11 @@ export const ModuleCard = ({
   };
 
   // On touch there is no hover, so reveal the card controls unconditionally.
-  const controlVisibility = isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100';
+  // group-focus-within keeps controls reachable by keyboard (tabbing into the card),
+  // not just mouse hover.
+  const controlVisibility = isMobile
+    ? 'opacity-100'
+    : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100';
   const showInsertBar = isDropTarget && !isDragging && !isOverlay;
 
   return (
@@ -175,19 +198,19 @@ export const ModuleCard = ({
         </div>
         <p className="text-[11px] text-ink/70 leading-snug mt-0.5 line-clamp-2">{module.name}</p>
         <div className="flex items-center justify-between gap-1 mt-2">
-          <span className="text-[10px] text-ink/50">{module.mcs} MC</span>
+          <span className="text-[10px] text-ink/80">{module.mcs} MC</span>
           <div className="flex min-w-0 items-center gap-1">
             {category && (
-              <span className="truncate max-w-[72px] text-[10px] text-ink/50">{category.label}</span>
+              <span className="truncate max-w-[72px] text-[10px] text-ink/80">{category.label}</span>
             )}
             {isLocked && (
-              <span className="flex-shrink-0 text-ink/40" title="Compulsory NEP module" aria-label="Compulsory NEP module">
+              <span className="flex-shrink-0 text-ink/60" title="Compulsory NEP module" aria-label="Compulsory NEP module">
                 <LockIcon className="h-3 w-3" />
               </span>
             )}
             {!isOverlay && !isLocked && onEditModule && (
               <button
-                className={`flex-shrink-0 text-ink/40 ${controlVisibility} transition-opacity hover:text-ink`}
+                className={`flex-shrink-0 rounded-full text-ink/60 ${controlVisibility} transition-opacity hover:text-ink ${FOCUS_RING}`}
                 onClick={(e) => { e.stopPropagation(); openEditor(); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 aria-label={`Edit ${module.code}`}
@@ -265,7 +288,7 @@ export const ModuleCard = ({
       {/* Delete button */}
       {!isOverlay && (
         <button
-          className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity`}
+          className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity ${FOCUS_RING}`}
           onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
@@ -291,7 +314,7 @@ export const ModuleCard = ({
       {/* Details button */}
       {!isOverlay && (
         <button
-          className={`absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas ${controlVisibility} transition-opacity`}
+          className={`absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas ${controlVisibility} transition-opacity ${FOCUS_RING}`}
           onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Details for ${module.code}`}
@@ -333,21 +356,29 @@ export const ModuleCard = ({
         />
       )}
 
-      {/* Move menu — touch-friendly alternative to dragging */}
-      {!isOverlay && !isLocked && isMobile && onMove && moveTargets.length > 0 && (
-        <div className="relative mt-2">
+      {/* Move button — keyboard/touch-reachable alternative to dragging.
+          Available on desktop too (not just mobile): dragging has no
+          keyboard equivalent, so this is the only way a keyboard or
+          switch-access user can relocate a module. */}
+      {!isOverlay && !isLocked && onMove && moveTargets.length > 0 && (
+        <div className="absolute -bottom-1.5 -right-1.5">
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setShowMoveMenu((open) => !open); }}
             onPointerDown={(e) => e.stopPropagation()}
-            className="flex w-full items-center justify-center gap-1 rounded-xl bg-ink/10 px-2 py-1 text-[10px] font-medium text-ink/70"
+            className={`flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity ${FOCUS_RING}`}
             aria-haspopup="listbox"
             aria-expanded={showMoveMenu}
+            aria-label={`Move ${module.code} to another semester`}
+            title="Move to another semester"
           >
-            ⇄ Move
+            <MoveIcon className="h-3 w-3" />
           </button>
           {showMoveMenu && (
-            <ul className="absolute z-40 left-0 right-0 mt-1 max-h-52 overflow-y-auto rounded-2xl bg-ink shadow-soft" role="listbox">
+            <ul
+              className="absolute z-40 bottom-6 right-0 max-h-52 w-40 overflow-y-auto rounded-2xl bg-ink shadow-soft"
+              role="listbox"
+            >
               {moveTargets
                 .filter((target) => !(target.year === fromYear && target.sem === fromSem))
                 .map((target) => (

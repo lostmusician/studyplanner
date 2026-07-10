@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Major, StudentSemester, WaivedModule } from '@shared/types';
 import { computeProgrammeElectives, courseLevel } from '../lib/studyPlan';
+import { MUTED } from '../lib/colors';
 
 interface Props {
   major: Major;
@@ -86,7 +87,7 @@ export const ProgrammeElectivesExplorer = ({ major, semesters, waivedModules, on
                   <h3 className="text-sm font-semibold text-ink">{cat.label}</h3>
                   <span
                     className="rounded-full px-2.5 py-1 text-[10px] font-medium"
-                    style={{ backgroundColor: 'rgba(20,20,19,0.08)', color: 'rgb(108,107,104)' }}
+                    style={{ backgroundColor: 'rgba(20,20,19,0.08)', color: MUTED }}
                   >
                     {status?.matched.length ?? 0}/{cat.courses.length} taken
                   </span>
@@ -110,7 +111,7 @@ export const ProgrammeElectivesExplorer = ({ major, semesters, waivedModules, on
                       <h3 className="text-xs font-medium text-muted">{spec.label}</h3>
                       <span
                         className="rounded-full px-2.5 py-1 text-[10px] font-medium"
-                        style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: 'rgb(108,107,104)' }}
+                        style={{ backgroundColor: 'rgba(20,20,19,0.06)', color: MUTED }}
                       >
                         {status?.matched.length ?? 0}/{need}
                       </span>
@@ -149,7 +150,7 @@ const CodeGroup = ({
               ? { backgroundColor: 'rgb(20,20,19)', color: 'rgb(239,238,231)' }
               : {
                   backgroundColor: muted ? 'transparent' : 'rgba(20,20,19,0.05)',
-                  color: 'rgb(108,107,104)',
+                  color: MUTED,
                   border: muted ? '1px solid rgba(20,20,19,0.12)' : 'none',
                 }
           }
@@ -167,7 +168,7 @@ const LevelTag = ({ on = false }: { on?: boolean }) => (
     className="rounded px-1 text-[8px] font-bold leading-none"
     style={{
       backgroundColor: on ? 'rgba(239,238,231,0.25)' : 'rgba(20,20,19,0.12)',
-      color: on ? 'rgb(239,238,231)' : 'rgb(108,107,104)',
+      color: on ? 'rgb(239,238,231)' : MUTED,
     }}
   >
     4K

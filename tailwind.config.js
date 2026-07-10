@@ -12,7 +12,7 @@ export default {
         canvas: 'rgb(239, 238, 231)',
         paper: 'rgb(225, 218, 205)',
         ink: 'rgb(20, 20, 19)',
-        muted: 'rgb(108, 107, 104)',
+        muted: 'rgb(90, 89, 86)',
       },
       boxShadow: {
         soft: '0 18px 40px rgba(20, 20, 19, 0.08)',

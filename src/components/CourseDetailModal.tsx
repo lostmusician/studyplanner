@@ -6,6 +6,7 @@ import {
   formatPrerequisiteSummary,
 } from '@shared/nusmods';
 import type { NusModsModuleDetail } from '@shared/nusmods';
+import { MUTED } from '../lib/colors';
 
 interface Props {
   module: PlacedModule;
@@ -172,7 +173,7 @@ const Section = ({ label, children }: { label: string; children: React.ReactNode
 const Pill = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <span
     className="rounded-full px-2.5 py-0.5 text-[10px] font-medium"
-    style={style ?? { backgroundColor: 'rgba(20,20,19,0.08)', color: 'rgb(108,107,104)' }}
+    style={style ?? { backgroundColor: 'rgba(20,20,19,0.08)', color: MUTED }}
   >
     {children}
   </span>
