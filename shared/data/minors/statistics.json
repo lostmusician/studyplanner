@@ -15,8 +15,8 @@
       "count": 1
     },
     {
-      "name": "Probability (ST2131/MA2116 or ST2334)",
-      "fulfilledBy": ["ST2131", "MA2116", "ST2334"],
+      "name": "Probability (ST2131/MA2116/MA2116T or ST2334)",
+      "fulfilledBy": ["ST2131", "MA2116", "MA2116T", "ST2334"],
       "count": 1
     },
     {
@@ -38,6 +38,7 @@
     "MA1505": { "code": "MA1505", "name": "Mathematics I", "mcs": 4 },
     "ST2131": { "code": "ST2131", "name": "Probability", "mcs": 4 },
     "MA2116": { "code": "MA2116", "name": "Probability", "mcs": 4 },
+    "MA2116T": { "code": "MA2116T", "name": "Probability (T)", "mcs": 4 },
     "ST2334": { "code": "ST2334", "name": "Probability and Statistics", "mcs": 4 },
     "ST2132": { "code": "ST2132", "name": "Mathematical Statistics", "mcs": 4 },
     "ST2137": { "code": "ST2137", "name": "Statistical Computing and Programming", "mcs": 4 },

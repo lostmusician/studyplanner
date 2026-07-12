@@ -13,6 +13,7 @@
         "EC2204",
         "MKT1705X",
         "BSP1702X",
+        "BSP1703",
         "BSP1703X",
         "EC1101E",
         "DAO1704X"
@@ -26,7 +27,7 @@
         "DAO27*",
         "MNO27*",
         "RE27*",
-        "EC2102"
+        "FIN2704X"
       ],
       "count": 2
     },
@@ -38,14 +39,14 @@
         "DBA38*",
         "BSE37*",
         "FIN37*",
-        "BSN37*",
+        "BSN3701",
+        "BSN3702",
         "ETP32*",
         "IS3251",
         "MNO37*",
         "MKT37*",
         "DOS37*",
-        "RE37*",
-        "RE38*"
+        "RE37*"
       ],
       "count": 1
     }
@@ -81,6 +82,11 @@
       "name": "Legal Environment of Business",
       "mcs": 4
     },
+    "BSP1703": {
+      "code": "BSP1703",
+      "name": "Managerial Economics",
+      "mcs": 4
+    },
     "BSP1703X": {
       "code": "BSP1703X",
       "name": "Managerial Economics",
@@ -96,9 +102,19 @@
       "name": "Decision Analytics using Spreadsheets",
       "mcs": 4
     },
-    "EC2102": {
-      "code": "EC2102",
-      "name": "Macroeconomic Analysis I",
+    "FIN2704X": {
+      "code": "FIN2704X",
+      "name": "Finance",
+      "mcs": 4
+    },
+    "BSN3701": {
+      "code": "BSN3701",
+      "name": "Technological Innovation",
+      "mcs": 4
+    },
+    "BSN3702": {
+      "code": "BSN3702",
+      "name": "New Venture Creation",
       "mcs": 4
     },
     "IS3251": {

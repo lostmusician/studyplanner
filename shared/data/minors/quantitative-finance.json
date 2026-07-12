@@ -10,8 +10,8 @@
       "count": 1
     },
     {
-      "name": "Level-2000 mathematics (MA2301, or one calculus/linear algebra/probability course)",
-      "fulfilledBy": ["MA2301", "MA2002", "MA1312", "MA1505", "MA1507", "MA1521", "MA2001", "MA1508E", "MA1522", "MA2216", "MA2116", "ST2131", "ST2334"],
+      "name": "Level-2000 mathematics prerequisite (MA2301 [discontinued from AY2025/26 S1], or MA15xx/MA1312/MA2001/MA2002/MA2104/MA2213/MA2216/MA2116/MA2116T/ST2131/MA2311/DSA2102/QF2103/ST2334)",
+      "fulfilledBy": ["MA2301", "MA15*", "MA1312", "MA2001", "MA2002", "MA2104", "MA2213", "MA2216", "MA2116", "MA2116T", "ST2131", "MA2311", "DSA2102", "QF2103", "ST2334"],
       "count": 1
     },
     {
@@ -25,8 +25,8 @@
       "count": 1
     },
     {
-      "name": "Level-3000 elective (QF3103, ST3131, EC3303, FIN3702, or FIN3716)",
-      "fulfilledBy": ["QF3103", "ST3131", "EC3303", "FIN3702", "FIN3716"],
+      "name": "Level-3000 elective (QF3103, ST3131, EC3303, FIN3702/A/B/C/D, or FIN3716)",
+      "fulfilledBy": ["QF3103", "ST3131", "EC3303", "FIN3702", "FIN3702A", "FIN3702B", "FIN3702C", "FIN3702D", "FIN3716"],
       "count": 1
     }
   ],
@@ -36,21 +36,30 @@
     "MA2002": { "code": "MA2002", "name": "Calculus", "mcs": 4 },
     "MA1312": { "code": "MA1312", "name": "Calculus with Applications", "mcs": 4 },
     "MA1505": { "code": "MA1505", "name": "Mathematics I", "mcs": 4 },
-    "MA1507": { "code": "MA1507", "name": "Advanced Calculus", "mcs": 4 },
     "MA1521": { "code": "MA1521", "name": "Calculus for Computing", "mcs": 4 },
     "MA2001": { "code": "MA2001", "name": "Linear Algebra I", "mcs": 4 },
     "MA1508E": { "code": "MA1508E", "name": "Linear Algebra for Engineering", "mcs": 4 },
     "MA1522": { "code": "MA1522", "name": "Linear Algebra for Computing", "mcs": 4 },
+    "MA2104": { "code": "MA2104", "name": "Multivariable Calculus", "mcs": 4 },
+    "MA2213": { "code": "MA2213", "name": "Numerical Analysis I", "mcs": 4 },
+    "MA2311": { "code": "MA2311", "name": "Techniques in Advanced Calculus", "mcs": 4 },
     "MA2216": { "code": "MA2216", "name": "Probability", "mcs": 4 },
     "MA2116": { "code": "MA2116", "name": "Probability", "mcs": 4 },
+    "MA2116T": { "code": "MA2116T", "name": "Probability (T)", "mcs": 4 },
     "ST2131": { "code": "ST2131", "name": "Probability", "mcs": 4 },
     "ST2334": { "code": "ST2334", "name": "Probability and Statistics", "mcs": 4 },
+    "DSA2102": { "code": "DSA2102", "name": "Essential Data Analytics Tools: Numerical Computation", "mcs": 4 },
+    "QF2103": { "code": "QF2103", "name": "Computing for Quantitative Finance", "mcs": 4 },
     "QF2104": { "code": "QF2104", "name": "Fundamentals of Quantitative Finance", "mcs": 4 },
     "QF3101": { "code": "QF3101", "name": "Investment Instruments and Risk Management", "mcs": 4 },
     "QF3103": { "code": "QF3103", "name": "Advanced Mathematics in Quantitative Finance", "mcs": 4 },
     "ST3131": { "code": "ST3131", "name": "Regression Analysis", "mcs": 4 },
     "EC3303": { "code": "EC3303", "name": "Econometrics I", "mcs": 4 },
     "FIN3702": { "code": "FIN3702", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
+    "FIN3702A": { "code": "FIN3702A", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
+    "FIN3702B": { "code": "FIN3702B", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
+    "FIN3702C": { "code": "FIN3702C", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
+    "FIN3702D": { "code": "FIN3702D", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
     "FIN3716": { "code": "FIN3716", "name": "Financial Modelling", "mcs": 4 }
   }
 }

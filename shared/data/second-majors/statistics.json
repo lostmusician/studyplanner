@@ -12,18 +12,38 @@
       "count": 1
     },
     {
-      "name": "Calculus (MA1521 or MA1102R)",
+      "name": "Linear Algebra (MA1508E, MA1522, or MA2001)",
       "fulfilledBy": [
-        "MA1521",
-        "MA1102R"
+        "MA1508E",
+        "MA1522",
+        "MA2001"
       ],
       "count": 1
     },
     {
-      "name": "Linear Algebra (MA1101R or MA1508E)",
+      "name": "Calculus (MA1312, MA1521, or MA2002)",
       "fulfilledBy": [
-        "MA1101R",
-        "MA1508E"
+        "MA1312",
+        "MA1521",
+        "MA2002"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Multivariable Calculus (MA2104 or MA2311)",
+      "fulfilledBy": [
+        "MA2104",
+        "MA2311"
+      ],
+      "count": 1
+    },
+    {
+      "name": "Probability (ST2131, MA2116, MA2116T, or ST2334)",
+      "fulfilledBy": [
+        "ST2131",
+        "MA2116",
+        "MA2116T",
+        "ST2334"
       ],
       "count": 1
     },
@@ -35,9 +55,11 @@
       "count": 1
     },
     {
-      "name": "Computer-Aided Data Analysis (ST2137)",
+      "name": "Statistical Computing (ST2137, or an ST32xx/ST42xx elective)",
       "fulfilledBy": [
-        "ST2137"
+        "ST2137",
+        "ST32*",
+        "ST42*"
       ],
       "count": 1
     },
@@ -49,14 +71,6 @@
         "ST42*"
       ],
       "count": 3
-    },
-    {
-      "name": "Additional Statistics elective (ST32xx or ST42xx)",
-      "fulfilledBy": [
-        "ST32*",
-        "ST42*"
-      ],
-      "count": 1
     }
   ],
   "moduleCatalog": {
@@ -65,24 +79,64 @@
       "name": "Introduction to Statistics and Statistical Computing",
       "mcs": 4
     },
+    "MA1508E": {
+      "code": "MA1508E",
+      "name": "Linear Algebra for Engineering",
+      "mcs": 4
+    },
+    "MA1522": {
+      "code": "MA1522",
+      "name": "Linear Algebra for Computing",
+      "mcs": 4
+    },
+    "MA2001": {
+      "code": "MA2001",
+      "name": "Linear Algebra I",
+      "mcs": 4
+    },
+    "MA1312": {
+      "code": "MA1312",
+      "name": "Calculus with Applications",
+      "mcs": 4
+    },
     "MA1521": {
       "code": "MA1521",
       "name": "Calculus for Computing",
       "mcs": 4
     },
-    "MA1102R": {
-      "code": "MA1102R",
+    "MA2002": {
+      "code": "MA2002",
       "name": "Calculus",
       "mcs": 4
     },
-    "MA1101R": {
-      "code": "MA1101R",
-      "name": "Linear Algebra I",
+    "MA2104": {
+      "code": "MA2104",
+      "name": "Multivariable Calculus",
       "mcs": 4
     },
-    "MA1508E": {
-      "code": "MA1508E",
-      "name": "Linear Algebra for Engineering",
+    "MA2311": {
+      "code": "MA2311",
+      "name": "Techniques in Advanced Calculus",
+      "mcs": 4
+    },
+    "ST2131": {
+      "code": "ST2131",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "MA2116": {
+      "code": "MA2116",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "MA2116T": {
+      "code": "MA2116T",
+      "name": "Probability (T)",
+      "mcs": 4
+    },
+    "ST2334": {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
       "mcs": 4
     },
     "ST2132": {
