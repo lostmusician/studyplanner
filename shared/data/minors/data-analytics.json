@@ -5,12 +5,14 @@
   "mcTarget": 20,
   "requirements": [
     {
-      "name": "Level-1000 foundation (BT1101, DSA1101, GEA1000/GEA1000N, or ST1131)",
+      "name": "Level-1000 foundation (BT1101, DSA1101, DSE1101, GEA1000/GEA1000N, IE1111R, or ST1131)",
       "fulfilledBy": [
         "BT1101",
         "DSA1101",
+        "DSE1101",
         "GEA1000",
         "GEA1000N",
+        "IE1111R",
         "ST1131"
       ],
       "count": 1
@@ -23,8 +25,9 @@
       "count": 1
     },
     {
-      "name": "Level-2000 mathematics/statistics (MA1522, MA2001, MA1508E, or ST2334)",
+      "name": "Level-2000 mathematics/statistics (MA2401, MA1522, MA2001, MA1508E, or ST2334)",
       "fulfilledBy": [
+        "MA2401",
         "MA1522",
         "MA2001",
         "MA1508E",
@@ -70,6 +73,16 @@
       "name": "Quantitative Reasoning with Data",
       "mcs": 4
     },
+    "DSE1101": {
+      "code": "DSE1101",
+      "name": "Introductory Data Science for Economics",
+      "mcs": 4
+    },
+    "IE1111R": {
+      "code": "IE1111R",
+      "name": "Industrial and Systems Engineering Principles and Practice I",
+      "mcs": 4
+    },
     "ST1131": {
       "code": "ST1131",
       "name": "Introduction to Statistics and Statistical Computing",
@@ -78,6 +91,11 @@
     "DSA2101": {
       "code": "DSA2101",
       "name": "Essential Data Analytics Tools: Data Visualisation",
+      "mcs": 4
+    },
+    "MA2401": {
+      "code": "MA2401",
+      "name": "Introductory Mathematics with R",
       "mcs": 4
     },
     "MA1522": {

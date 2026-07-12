@@ -15,19 +15,81 @@
       "count": 1
     },
     {
-      "name": "SPH-coded courses, incl. cores + at least 8 MC electives (4 courses)",
+      "name": "At least 8 MC of electives at Level-3000 and above (2 courses)",
+      "fulfilledBy": [
+        "SPH3001",
+        "SPH3101",
+        "SPH3106",
+        "SPH3107",
+        "SPH3108",
+        "SPH3202",
+        "SPH3203",
+        "SPH3204",
+        "SPH3401",
+        "SPH3402",
+        "SPH3403",
+        "SPH3404",
+        "SPH3501",
+        "GE3249",
+        "NM4258",
+        "NM4258HM",
+        "PL3242",
+        "SW4228",
+        "SW4228HM",
+        "FST3202",
+        "LSM3225",
+        "LSM4217"
+      ],
+      "count": 2
+    },
+    {
+      "name": "At least 8 MC of SPH-coded courses, incl. cores (4 courses)",
       "fulfilledBy": ["SPH*", "GEC1015"],
       "count": 4
     },
     {
-      "name": "Level-3000 electives, 8 MC (2 courses)",
-      "fulfilledBy": ["SPH3*"],
-      "count": 2
+      "name": "Elective and core courses toward 20 MC total (5 courses)",
+      "fulfilledBy": [
+        "SPH*",
+        "GEC1015",
+        "GE3249",
+        "NM4258",
+        "NM4258HM",
+        "PL3242",
+        "SW4228",
+        "SW4228HM",
+        "FST3202",
+        "LSM3225",
+        "LSM4217"
+      ],
+      "count": 5
     }
   ],
   "moduleCatalog": {
     "SPH2001": { "code": "SPH2001", "name": "Fundamental Public Health Methods", "mcs": 4 },
     "SPH2002": { "code": "SPH2002", "name": "Public Health and Epidemiology", "mcs": 4 },
-    "GEC1015": { "code": "GEC1015", "name": "Public Health in Action", "mcs": 4 }
+    "SPH3001": { "code": "SPH3001", "name": "Public Health Practice", "mcs": 4 },
+    "SPH3101": { "code": "SPH3101", "name": "Biostatistics for Public Health", "mcs": 4 },
+    "SPH3106": { "code": "SPH3106", "name": "Data Analysis for Pathogen Genomics", "mcs": 4 },
+    "SPH3107": { "code": "SPH3107", "name": "Infectious Disease Modelling for Public Health", "mcs": 4 },
+    "SPH3108": { "code": "SPH3108", "name": "Geospatial Mapping for Public Health", "mcs": 4 },
+    "SPH3202": { "code": "SPH3202", "name": "Infectious Disease Epidemiology and Public Health", "mcs": 4 },
+    "SPH3203": { "code": "SPH3203", "name": "Prevention and Control of Non-Communicable Diseases", "mcs": 4 },
+    "SPH3204": { "code": "SPH3204", "name": "One Health: People, Animals and the Environment", "mcs": 4 },
+    "SPH3401": { "code": "SPH3401", "name": "Designing Public Health Programmes", "mcs": 4 },
+    "SPH3402": { "code": "SPH3402", "name": "Mental Health: An Interdisciplinary Approach", "mcs": 4 },
+    "SPH3403": { "code": "SPH3403", "name": "Public Health Economics", "mcs": 4 },
+    "SPH3404": { "code": "SPH3404", "name": "Physical Activity For Better Population Health", "mcs": 4 },
+    "SPH3501": { "code": "SPH3501", "name": "Introduction to Public Health Communication", "mcs": 4 },
+    "GEC1015": { "code": "GEC1015", "name": "Public Health in Action", "mcs": 4 },
+    "GE3249": { "code": "GE3249", "name": "Geographies of Life and Death", "mcs": 4 },
+    "NM4258": { "code": "NM4258", "name": "Health Communication", "mcs": 4 },
+    "NM4258HM": { "code": "NM4258HM", "name": "Health Communication", "mcs": 5 },
+    "PL3242": { "code": "PL3242", "name": "Health Psychology", "mcs": 4 },
+    "SW4228": { "code": "SW4228", "name": "Social Work In Medical Setting", "mcs": 4 },
+    "SW4228HM": { "code": "SW4228HM", "name": "Social Work In Medical Setting", "mcs": 5 },
+    "FST3202": { "code": "FST3202", "name": "Nutrition and Disease Prevention", "mcs": 4 },
+    "LSM3225": { "code": "LSM3225", "name": "Molecular Microbiology in Human Diseases", "mcs": 4 },
+    "LSM4217": { "code": "LSM4217", "name": "Functional Ageing", "mcs": 4 }
   }
 }

@@ -12,19 +12,21 @@
       "count": 1
     },
     {
-      "name": "Data Structures and Algorithms (CS2040/CS2040C/CS2040S)",
+      "name": "Data Structures and Algorithms (CS2040/CS2040C/CS2040S/CS2040DE)",
       "fulfilledBy": [
         "CS2040",
         "CS2040C",
-        "CS2040S"
+        "CS2040S",
+        "CS2040DE"
       ],
       "count": 1
     },
     {
-      "name": "Probability (ST2131 or MA2116)",
+      "name": "Probability (ST2131/MA2116/MA2116T)",
       "fulfilledBy": [
         "ST2131",
-        "MA2116"
+        "MA2116",
+        "MA2116T"
       ],
       "count": 1
     },
@@ -105,6 +107,11 @@
       "name": "Data Structures and Algorithms",
       "mcs": 4
     },
+    "CS2040DE": {
+      "code": "CS2040DE",
+      "name": "Data Structures and Algorithms",
+      "mcs": 4
+    },
     "ST2131": {
       "code": "ST2131",
       "name": "Probability",
@@ -113,6 +120,11 @@
     "MA2116": {
       "code": "MA2116",
       "name": "Probability",
+      "mcs": 4
+    },
+    "MA2116T": {
+      "code": "MA2116T",
+      "name": "Probability (T)",
       "mcs": 4
     },
     "ST2132": {

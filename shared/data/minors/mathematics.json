@@ -5,30 +5,39 @@
   "mcTarget": 20,
   "requirements": [
     {
-      "name": "Foundational Mathematics module (MA1521, MA1102R, or CS1231/CS1231S)",
+      "name": "Level-1000 module, 8 MC (MA1xxx except MA1301/MA1301X, MA20xx, or CS1231/CS1231S)",
       "fulfilledBy": [
-        "MA1521",
-        "MA1102R",
+        "MA1*",
+        "MA20*",
         "CS1231",
         "CS1231S"
       ],
       "count": 2
     },
     {
-      "name": "2000-level Mathematics elective or ST2131",
+      "name": "Level-2000 modules (2): Linear Algebra II, Multivariable Calculus/MA22xx, Mathematical Analysis I, or Probability",
       "fulfilledBy": [
-        "MA2*",
-        "ST2131"
+        "MA2101",
+        "MA2101S",
+        "MA2104",
+        "MA2311",
+        "MA22*",
+        "MA2108",
+        "MA2108S",
+        "MA2116",
+        "MA2116T",
+        "MA2216",
+        "ST2131",
+        "ST2334"
       ],
       "count": 2
     },
     {
-      "name": "3000+ Mathematics elective or ST3236/ST4238",
+      "name": "Level-3000 module (any MA32xx, ST3236, or PC3274A)",
       "fulfilledBy": [
-        "MA3*",
-        "MA4*",
+        "MA32*",
         "ST3236",
-        "ST4238"
+        "PC3274A"
       ],
       "count": 1
     }
@@ -37,11 +46,6 @@
     "MA1521": {
       "code": "MA1521",
       "name": "Calculus for Computing",
-      "mcs": 4
-    },
-    "MA1102R": {
-      "code": "MA1102R",
-      "name": "Calculus",
       "mcs": 4
     },
     "CS1231": {
@@ -54,9 +58,59 @@
       "name": "Discrete Structures",
       "mcs": 4
     },
+    "MA2101": {
+      "code": "MA2101",
+      "name": "Linear Algebra II",
+      "mcs": 4
+    },
+    "MA2101S": {
+      "code": "MA2101S",
+      "name": "Linear Algebra II (S)",
+      "mcs": 5
+    },
+    "MA2104": {
+      "code": "MA2104",
+      "name": "Multivariable Calculus",
+      "mcs": 4
+    },
+    "MA2311": {
+      "code": "MA2311",
+      "name": "Techniques in Advanced Calculus",
+      "mcs": 4
+    },
+    "MA2108": {
+      "code": "MA2108",
+      "name": "Mathematical Analysis I",
+      "mcs": 4
+    },
+    "MA2108S": {
+      "code": "MA2108S",
+      "name": "Mathematical Analysis I (S)",
+      "mcs": 5
+    },
+    "MA2116": {
+      "code": "MA2116",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "MA2116T": {
+      "code": "MA2116T",
+      "name": "Probability (T)",
+      "mcs": 4
+    },
+    "MA2216": {
+      "code": "MA2216",
+      "name": "Probability",
+      "mcs": 4
+    },
     "ST2131": {
       "code": "ST2131",
       "name": "Probability",
+      "mcs": 4
+    },
+    "ST2334": {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
       "mcs": 4
     },
     "ST3236": {
@@ -64,9 +118,9 @@
       "name": "Stochastic Processes I",
       "mcs": 4
     },
-    "ST4238": {
-      "code": "ST4238",
-      "name": "Stochastic Processes II",
+    "PC3274A": {
+      "code": "PC3274A",
+      "name": "Mathematical Methods in Physics II",
       "mcs": 4
     }
   }

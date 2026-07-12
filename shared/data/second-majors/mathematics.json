@@ -5,12 +5,23 @@
   "mcTarget": 40,
   "requirements": [
     {
-      "name": "Calculus (MA1521 or MA1102R)",
+      "name": "Discrete Mathematics (MA1100/MA1100T or CS1231/CS1231S)",
       "fulfilledBy": [
-        "MA1521",
-        "MA1102R"
+        "MA1100",
+        "MA1100T",
+        "CS1231",
+        "CS1231S"
       ],
       "count": 1
+    },
+    {
+      "name": "Level-1000 Mathematics electives, 8 MC (MA15xx, MA20xx, or MA22xx-coded)",
+      "fulfilledBy": [
+        "MA15*",
+        "MA20*",
+        "MA22*"
+      ],
+      "count": 2
     },
     {
       "name": "Linear Algebra II (MA2101 or MA2101S)",
@@ -21,9 +32,11 @@
       "count": 1
     },
     {
-      "name": "Multivariable Calculus (MA2104)",
+      "name": "Multivariable Calculus (MA2104, MA2311, or any MA22xx)",
       "fulfilledBy": [
-        "MA2104"
+        "MA2104",
+        "MA2311",
+        "MA22*"
       ],
       "count": 1
     },
@@ -36,41 +49,54 @@
       "count": 1
     },
     {
-      "name": "Probability (MA2216 or ST2131)",
+      "name": "Probability (MA2116/MA2116T/MA2216/ST2131 or ST2334)",
       "fulfilledBy": [
+        "MA2116",
+        "MA2116T",
         "MA2216",
-        "ST2131"
+        "ST2131",
+        "ST2334"
       ],
       "count": 1
     },
     {
-      "name": "3000+ Mathematics electives (MA-coded)",
-      "fulfilledBy": [
-        "MA3*",
-        "MA4*"
-      ],
-      "count": 2
-    },
-    {
-      "name": "Additional 3000+ elective (MA-coded, or ST3236/ST4238)",
+      "name": "3000+ electives (MA32xx/MA42xx, ST3236, ST4238, ME3291, ME4291, or PC3274A)",
       "fulfilledBy": [
         "MA3*",
         "MA4*",
         "ST3236",
-        "ST4238"
+        "ST4238",
+        "ME3291",
+        "ME4291",
+        "PC3274A"
       ],
-      "count": 1
+      "count": 3
     }
   ],
   "moduleCatalog": {
+    "MA1100": {
+      "code": "MA1100",
+      "name": "Basic Discrete Mathematics",
+      "mcs": 4
+    },
+    "MA1100T": {
+      "code": "MA1100T",
+      "name": "Basic Discrete Mathematics (T)",
+      "mcs": 4
+    },
+    "CS1231": {
+      "code": "CS1231",
+      "name": "Discrete Structures",
+      "mcs": 4
+    },
+    "CS1231S": {
+      "code": "CS1231S",
+      "name": "Discrete Structures",
+      "mcs": 4
+    },
     "MA1521": {
       "code": "MA1521",
       "name": "Calculus for Computing",
-      "mcs": 4
-    },
-    "MA1102R": {
-      "code": "MA1102R",
-      "name": "Calculus",
       "mcs": 4
     },
     "MA2101": {
@@ -88,6 +114,11 @@
       "name": "Multivariable Calculus",
       "mcs": 4
     },
+    "MA2311": {
+      "code": "MA2311",
+      "name": "Techniques in Advanced Calculus",
+      "mcs": 4
+    },
     "MA2108": {
       "code": "MA2108",
       "name": "Mathematical Analysis I",
@@ -97,6 +128,16 @@
       "code": "MA2108S",
       "name": "Mathematical Analysis I (S)",
       "mcs": 5
+    },
+    "MA2116": {
+      "code": "MA2116",
+      "name": "Probability",
+      "mcs": 4
+    },
+    "MA2116T": {
+      "code": "MA2116T",
+      "name": "Probability (T)",
+      "mcs": 4
     },
     "MA2216": {
       "code": "MA2216",
@@ -108,6 +149,11 @@
       "name": "Probability",
       "mcs": 4
     },
+    "ST2334": {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
+      "mcs": 4
+    },
     "ST3236": {
       "code": "ST3236",
       "name": "Stochastic Processes I",
@@ -116,6 +162,21 @@
     "ST4238": {
       "code": "ST4238",
       "name": "Stochastic Processes II",
+      "mcs": 4
+    },
+    "ME3291": {
+      "code": "ME3291",
+      "name": "Numerical Methods in Engineering",
+      "mcs": 4
+    },
+    "ME4291": {
+      "code": "ME4291",
+      "name": "Finite Element Analysis",
+      "mcs": 4
+    },
+    "PC3274A": {
+      "code": "PC3274A",
+      "name": "Mathematical Methods in Physics II",
       "mcs": 4
     }
   }

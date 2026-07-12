@@ -340,8 +340,8 @@ count formula, double-counting with the primary major is capped at `40 * 0.4 = 1
 | Requirement | Fulfilled by | Count |
 |---|---|---|
 | Introduction to Data Science | DSA1101 | 1 |
-| Data Structures and Algorithms | CS2040, CS2040C, CS2040S | 1 |
-| Probability | ST2131, MA2116 | 1 |
+| Data Structures and Algorithms | CS2040, CS2040C, CS2040S, CS2040DE | 1 |
+| Probability | ST2131, MA2116, MA2116T | 1 |
 | Mathematical Statistics | ST2132 | 1 |
 | Data Visualisation or Numerical Computation | DSA2101, DSA2102 | 1 |
 | Calculus | MA1521, MA2002, MA1312, MA1505 | 1 |
@@ -353,22 +353,33 @@ count formula, double-counting with the primary major is capped at `40 * 0.4 = 1
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
-| Foundation Business courses | MNO1706X, PL3239, ACC1701X, EC2204, MKT1705X, BSP1702X, BSP1703X, EC1101E, DAO1704X | 4 |
-| Advanced electives Level-2000 | ACC27*, DAO27*, MNO27*, RE27*, EC2102 | 2 |
-| Advanced electives Level-3000 | ACC37*, DBA37*, DBA38*, BSE37*, FIN37*, BSN37*, ETP32*, IS3251, MNO37*, MKT37*, DOS37*, RE37*, RE38* | 3 |
+| Foundation Business courses | MNO1706X, PL3239, ACC1701X, EC2204, MKT1705X, BSP1702X, BSP1703, BSP1703X, EC1101E, DAO1704X | 4 |
+| Advanced electives Level-2000 | ACC27*, DAO27*, MNO27*, RE27*, FIN2704X | 2 |
+| Advanced electives Level-3000 | ACC37*, DBA37*, DBA38*, BSE37*, FIN37*, BSN3701, BSN3702, ETP32*, IS3251, MNO37*, MKT37*, DOS37*, RE37* | 3 |
 | Advanced Business electives, 24 MC total (6 courses, union of the above two pools) | (union of Level-2000 + Level-3000 lists) | 6 |
+
+Corrected 2026-07-11 against the live NUS Business School "Cohort 2023 & After" non-Business-students table
+(bba.nus.edu.sg): added BSP1703 (plain, non-X variant); dropped EC2102 (no longer on the current elective list —
+was valid only under the older 2021/2022-cohort table) and added FIN2704X in its place; narrowed BSN37* to
+BSN3701/BSN3702 (BSN3703/3712/3717 are Entrepreneurship-minor-only, not valid for Management); dropped RE38*
+(no basis in the official Real Estate elective area). Same fixes apply to `minors/management.json` (2/2/1 counts,
+20 MC target).
 
 ### 3.5 Mathematics — `second-majors/mathematics.json`
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
-| Calculus | MA1521, MA1102R | 1 |
+| Discrete Mathematics | MA1100, MA1100T, CS1231, CS1231S | 1 |
+| Level-1000 electives, 8 MC | MA15*, MA20*, MA22* | 2 |
 | Linear Algebra II | MA2101, MA2101S | 1 |
-| Multivariable Calculus | MA2104 | 1 |
+| Multivariable Calculus | MA2104, MA2311, MA22* | 1 |
 | Mathematical Analysis I | MA2108, MA2108S | 1 |
-| Probability | MA2216, ST2131 | 1 |
-| 3000+ Mathematics electives | MA3*, MA4* | 2 |
-| Additional 3000+ elective | MA3*, MA4*, ST3236, ST4238 | 1 |
+| Probability | MA2116, MA2116T, MA2216, ST2131, ST2334 | 1 |
+| 3000+ electives | MA3*, MA4*, ST3236, ST4238, ME3291, ME4291, PC3274A | 3 |
+
+Corrected 2026-07-11 against the official math.nus.edu.sg "Second Major in Mathematics" PDF (AY2021/2022-onwards
+cohorts, updated 14 October 2025) — the prior version was missing the Discrete Mathematics requirement entirely
+(present in every curriculum version, current and superseded) and under-modeled the Level-1000 pool by 8 MC.
 
 ### 3.6 Public Health — `second-majors/public-health.json`
 
@@ -380,20 +391,33 @@ count formula, double-counting with the primary major is capped at `40 * 0.4 = 1
 | Lifestyle, Behaviour and Public Health | SPH2004 | 1 |
 | Health, Society and the Social Determinants | SPH2005 | 1 |
 | Public Health Practice | SPH3001 | 1 |
+| Level-3000+ electives incl. SPH3001, named codes + 7 approved SPH5xxx + cross-faculty electives | SPH3001, 12 named SPH3xxx, 7 named SPH5xxx, GE3249, NM4258(HM), PL3242, SW4228(HM), FST3202, LSM3225, LSM4217 | 4 |
 | SPH-coded courses incl. cores + ≥8 MC electives | SPH*, GEC1015 | 8 |
-| Level-3000+ courses, 12 MC electives incl. SPH3001 | SPH3*, SPH5* | 4 |
+| Elective and core courses toward 40 MC total | SPH*, GEC1015, GE3249, NM4258(HM), PL3242, SW4228(HM), FST3202, LSM3225, LSM4217 | 10 |
+
+Corrected 2026-07-11 against the official Saw Swee Hock School of Public Health curriculum sheet for
+AY2024/2025-onwards cohorts. The prior `SPH5*` wildcard over-matched ~50 graduate-only MPH/PhD module codes
+never authorized for undergraduate credit — replaced with the 7 specifically approved codes. A terminal
+"toward 40 MC total" row was also added: without it, 8 MC of the requirement was unenforced (nothing required
+reaching the full mcTarget). Same fixes (scaled to 20 MC / 2+4+5 counts) apply to `minors/public-health.json`.
 
 ### 3.7 Statistics — `second-majors/statistics.json`
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
 | Introduction to Statistics | ST1131 | 1 |
-| Calculus | MA1521, MA1102R | 1 |
-| Linear Algebra | MA1101R, MA1508E | 1 |
+| Linear Algebra | MA1508E, MA1522, MA2001 | 1 |
+| Calculus | MA1312, MA1521, MA2002 | 1 |
+| Multivariable Calculus | MA2104, MA2311 | 1 |
+| Probability | ST2131, MA2116, MA2116T, ST2334 | 1 |
 | Mathematical Statistics | ST2132 | 1 |
-| Computer-Aided Data Analysis | ST2137 | 1 |
+| Statistical Computing | ST2137, ST32*, ST42* | 1 |
 | Statistics electives | ST3131, ST32*, ST42* | 3 |
-| Additional Statistics elective | ST32*, ST42* | 1 |
+
+Corrected 2026-07-11 against the official stat.nus.edu.sg curriculum PDF (AY2021/22-onwards, updated July 2026).
+The prior version was missing the Probability and Multivariable Calculus requirements entirely and used two dead
+module codes (MA1101R, MA1102R — both renamed, to MA2001 and MA2002 respectively); named-row MC summed to only
+36 against the 40 MC target as a direct result.
 
 ---
 
@@ -408,19 +432,28 @@ double-counting with the primary major is capped at `20 * 0.4 = 8 MC`.
 |---|---|---|
 | Introduction to Statistics | ST1131 | 1 |
 | Calculus | MA1521, MA2002, MA1312, MA1505 | 1 |
-| Probability | ST2131, MA2116, ST2334 | 1 |
+| Probability | ST2131, MA2116, MA2116T, ST2334 | 1 |
 | Mathematical Statistics or Statistical Computing | ST2132, ST2137 | 1 |
 | Level-3000 Statistics | ST3131, ST32* | 1 |
+
+Corrected 2026-07-11: Probability row was missing MA2116T.
 
 ### 4.2 Quantitative Finance — `minors/quantitative-finance.json`
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
 | Introduction to Quantitative Finance | QF1100 | 1 |
-| Level-2000 mathematics | MA2301, MA2002, MA1312, MA1505, MA1507, MA1521, MA2001, MA1508E, MA1522, MA2216, MA2116, ST2131, ST2334 | 1 |
+| Level-2000 mathematics | MA2301 (discontinued from AY2025/26 S1), MA15*, MA1312, MA2001, MA2002, MA2104, MA2213, MA2216, MA2116, MA2116T, ST2131, MA2311, DSA2102, QF2103, ST2334 | 1 |
 | Fundamentals of Quantitative Finance | QF2104 | 1 |
 | Investment Instruments and Risk Management | QF3101 | 1 |
-| Level-3000 elective | QF3103, ST3131, EC3303, FIN3702, FIN3716 | 1 |
+| Level-3000 elective | QF3103, ST3131, EC3303, FIN3702/A/B/C/D, FIN3716 | 1 |
+
+Corrected 2026-07-11 against the official math.nus.edu.sg "Minor in Quantitative Finance" PDF (AY2021/2022-onwards,
+updated 1 Dec 2025 — a distinct, smaller curriculum from the QF Second Major). MA2301 is being discontinued from
+AY2025/26 Semester 1 (footnoted in the source PDF, confirmed via empty NUSMods semester data) but the code is
+kept since it remains the officially published option; MA1507 was removed (does not exist in the NUS module
+catalog — likely a data-entry confusion with MA1505); MA2116T, MA2213, DSA2102, QF2103, and the FIN3702A–D
+sections were added.
 
 ### 4.3 Economics — `minors/economics.json`
 
@@ -443,18 +476,29 @@ double-counting with the primary major is capped at `20 * 0.4 = 8 MC`.
 |---|---|---|
 | Fundamental Public Health Methods | SPH2001 | 1 |
 | Public Health and Epidemiology | SPH2002 | 1 |
+| Level-3000+ electives, 8 MC (named SPH3xxx + cross-faculty electives) | SPH3001 + 12 named SPH3xxx, GE3249, NM4258(HM), PL3242, SW4228(HM), FST3202, LSM3225, LSM4217 | 2 |
 | SPH-coded courses incl. cores + ≥8 MC electives | SPH*, GEC1015 | 4 |
-| Level-3000 electives, 8 MC | SPH3* | 2 |
+| Elective and core courses toward 20 MC total | SPH*, GEC1015, GE3249, NM4258(HM), PL3242, SW4228(HM), FST3202, LSM3225, LSM4217 | 5 |
+
+Corrected 2026-07-11 — same fixes as the second major (§3.6): added a terminal "toward 20 MC total" row (4 MC
+was previously unenforced) and the recognized non-SPH cross-faculty electives. The minor has no Level-5000
+section in its official elective list, so (unlike the second major) no SPH5* over-match existed here to fix.
 
 ### 4.6 Data Analytics — `minors/data-analytics.json`
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
-| Level-1000 foundation | BT1101, DSA1101, GEA1000, GEA1000N, ST1131 | 1 |
+| Level-1000 foundation | BT1101, DSA1101, DSE1101, GEA1000, GEA1000N, IE1111R, ST1131 | 1 |
 | Data Visualisation | DSA2101 | 1 |
-| Level-2000 mathematics/statistics | MA1522, MA2001, MA1508E, ST2334 | 1 |
+| Level-2000 mathematics/statistics | MA2401, MA1522, MA2001, MA1508E, ST2334 | 1 |
 | Inferential Data Analytics | DSA3361 | 1 |
 | Level-3000 elective | DBA3701, DSA3102, DSA3362 | 1 |
+
+Corrected 2026-07-11 against the official stat.nus.edu.sg "Minor in Data Analytics" PDF (AY2019/20-onwards). The
+official minor splits into two tracks by primary major ("Group A" quantitative majors vs. "Group B" — the
+default track for most minor-takers, e.g. FASS/Science students). Only Group A's Level-2000 pool was modeled;
+added MA2401 "Introductory Mathematics with R" (Group B's path) plus two missing Level-1000 options (DSE1101,
+IE1111R).
 
 ### 4.7 Entrepreneurship — `minors/entrepreneurship.json`
 
@@ -467,21 +511,46 @@ double-counting with the primary major is capped at `20 * 0.4 = 8 MC`.
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
-| Foundation Business courses, 8 MC | MNO1706X, PL3239, ACC1701X, EC2204, MKT1705X, BSP1702X, BSP1703X, EC1101E, DAO1704X | 2 |
-| Advanced electives Level-2000 | ACC27*, DAO27*, MNO27*, RE27*, EC2102 | 2 |
-| Advanced elective Level-3000 | ACC37*, DBA37*, DBA38*, BSE37*, FIN37*, BSN37*, ETP32*, IS3251, MNO37*, MKT37*, DOS37*, RE37*, RE38* | 1 |
+| Foundation Business courses, 8 MC | MNO1706X, PL3239, ACC1701X, EC2204, MKT1705X, BSP1702X, BSP1703, BSP1703X, EC1101E, DAO1704X | 2 |
+| Advanced electives Level-2000 | ACC27*, DAO27*, MNO27*, RE27*, FIN2704X | 2 |
+| Advanced elective Level-3000 | ACC37*, DBA37*, DBA38*, BSE37*, FIN37*, BSN3701, BSN3702, ETP32*, IS3251, MNO37*, MKT37*, DOS37*, RE37* | 1 |
+
+Corrected 2026-07-11 — same fixes as the second major (§3.4).
 
 ### 4.9 Mathematics — `minors/mathematics.json`
 
 | Requirement | Fulfilled by | Count |
 |---|---|---|
-| Foundational Mathematics module | MA1521, MA1102R, CS1231, CS1231S | 2 |
-| 2000-level Mathematics elective or ST2131 | MA2*, ST2131 | 2 |
-| 3000+ Mathematics elective or ST3236/ST4238 | MA3*, MA4*, ST3236, ST4238 | 1 |
+| Level-1000 module, 8 MC | MA1*, MA20*, CS1231, CS1231S | 2 |
+| Level-2000 modules (Linear Algebra II, Multivariable Calculus/MA22xx, Analysis I, or Probability) | MA2101, MA2101S, MA2104, MA2311, MA22*, MA2108, MA2108S, MA2116, MA2116T, MA2216, ST2131, ST2334 | 2 |
+| Level-3000 module | MA32*, ST3236, PC3274A | 1 |
+
+Corrected 2026-07-11 against the official math.nus.edu.sg "Minor in Mathematics" PDF (AY2021/2022-onwards,
+updated 14 Oct 2025). All three rows were off: Row 1 was hard-coded to only 3 codes when the real pool is any
+MA1xxx (except MA1301/X) or MA20xx — the minor's Level-1000 pool is genuinely broader than the second major's;
+Row 2's bare `MA2*` wildcard admitted non-eligible codes (MA2001, MA2213, etc.); Row 3 allowed `MA4*` (not
+permitted for the minor — second-major-only) and `ST4238` (not on the minor's list) while missing the minor's
+actual third alternative, PC3274A. MA1102R (retired, last offered ~AY2020/2021) was also removed.
 
 ---
 
 ## 5. Known gaps / not yet modeled
+
+**Resolved 2026-07-11 (third pass, second majors & minors):** every second-major and minor file (§3, §4)
+was audited module-by-module against its official department source and cross-checked live against the
+NUSMods API. 10 of 16 files had real discrepancies, now fixed: Mathematics 2nd major (missing Discrete
+Math requirement), Statistics 2nd major (two missing requirement rows, two dead module codes), Statistics
+minor and Data Analytics 2nd major (missing valid module codes), Data Analytics minor (an entire
+alternate "Group B" track was unmodeled), Management 2nd major + minor (stale/missing codes, an
+overbroad wildcard), Public Health 2nd major + minor (a wildcard over-matching ~50 graduate-only codes,
+a chunk of the MC target going unenforced), Mathematics minor (all three rows off), and Quantitative
+Finance minor (one prerequisite module being discontinued, one nonexistent code). Economics (2nd major +
+minor), Psychology minor, and Entrepreneurship minor needed no changes — already exact matches to their
+official curricula. Two schema-inherent gaps surfaced repeatedly and were left unfixed (not fixable
+without a schema change): `RequirementRule.fulfilledBy` has no exclusion syntax (e.g. "MA22xx except
+MA2288/89"), so prefix wildcards can slightly over-match; and there's no way to express a "maximum X
+units may double-count" cap (distinct from the app's own generic `computeDoubleCount`), so a few
+programme-specific double-counting ceilings (e.g. Economics' 4-8 MC caps) aren't enforced per-programme.
 
 **Resolved since the first version of this document (2026-07-10):** all 4 non-CS majors' elective
 structures are now modeled. AI got a `breadthDepth` config (reusing CS's schema, extended with a new
