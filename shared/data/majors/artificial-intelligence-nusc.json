@@ -37,7 +37,7 @@
     "industryExperience": {
       "minUnits": 6,
       "maxUnits": 12,
-      "courses": ["CP3880", "IS4010", "ETP3201L", "CP3200", "CP3202", "CP3107", "CP3110", "ETP3205"],
+      "courses": ["CP3880", "IS4010", "ETP3201L", "ETP3202", "ETP3203", "ETP3205", "ETP3206", "CP3200", "CP3202", "CP3107", "CP3110"],
       "dissertationAlternative": "CP4101"
     },
     "technicalElectives": {
@@ -48,6 +48,9 @@
     "maxCpUnits": 12,
     "cpPrefix": "CP"
   },
+  "sameSemesterGroups": [
+    ["CS2101", "CS2103T"]
+  ],
   "moduleCatalog": {
     "CS1101S": { "code": "CS1101S", "name": "Programming Methodology", "mcs": 4 },
     "CS1231S": { "code": "CS1231S", "name": "Discrete Structures", "mcs": 4 },
@@ -84,11 +87,14 @@
     "CP3880": { "code": "CP3880", "name": "Advanced Technology Attachment Programme", "mcs": 12 },
     "IS4010": { "code": "IS4010", "name": "Digital Transformation Leadership Programme", "mcs": 12 },
     "ETP3201L": { "code": "ETP3201L", "name": "Innovation & Enterprise Internship", "mcs": 12 },
+    "ETP3202": { "code": "ETP3202", "name": "Innovation & Enterprise Internship II", "mcs": 12 },
+    "ETP3203": { "code": "ETP3203", "name": "Innovation & Enterprise Internship III", "mcs": 12 },
     "CP3200": { "code": "CP3200", "name": "Internship", "mcs": 6 },
     "CP3202": { "code": "CP3202", "name": "Internship II", "mcs": 6 },
     "CP3107": { "code": "CP3107", "name": "Computing for Social Service Agencies I", "mcs": 6 },
     "CP3110": { "code": "CP3110", "name": "Computing for Social Service Agencies II", "mcs": 6 },
     "ETP3205": { "code": "ETP3205", "name": "Innovation & Enterprise Internship", "mcs": 6 },
+    "ETP3206": { "code": "ETP3206", "name": "Innovation & Enterprise Internship IV", "mcs": 6 },
     "CP4101": { "code": "CP4101", "name": "B.Comp. Dissertation", "mcs": 12 }
   },
   "defaultPlan": [
@@ -100,10 +106,10 @@
     { "year": 1, "sem": 2, "moduleCode": "MA1522", "categoryId": "math-sciences" },
     { "year": 1, "sem": 2, "moduleCode": "NTW2035", "categoryId": "nus-college" },
     { "year": 2, "sem": 1, "moduleCode": "CS2101", "categoryId": "computing-foundation" },
+    { "year": 2, "sem": 1, "moduleCode": "CS2103T", "categoryId": "computing-foundation" },
     { "year": 2, "sem": 1, "moduleCode": "ST2334", "categoryId": "math-sciences" },
     { "year": 2, "sem": 1, "moduleCode": "CS2109S", "categoryId": "ai-foundation" },
     { "year": 2, "sem": 1, "moduleCode": "GEA1000N", "categoryId": "nus-college" },
-    { "year": 2, "sem": 2, "moduleCode": "CS2103T", "categoryId": "computing-foundation" },
     { "year": 2, "sem": 2, "moduleCode": "CS2251", "categoryId": "math-sciences" },
     { "year": 2, "sem": 2, "moduleCode": "CS3230", "categoryId": "computing-foundation" },
     { "year": 3, "sem": 1, "moduleCode": "CS3263", "categoryId": "ai-foundation" },

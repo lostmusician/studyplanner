@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme, NocDuration } from '@shared/types';
+import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme, NocDuration, SpecialProgramme } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { computeTripleCountedCodes } from '../lib/studyPlan';
 import { MUTED } from '../lib/colors';
@@ -23,7 +23,8 @@ interface Props {
   setSecondMajorId: (id: string | null) => void;
   toggleMinorId: (id: string) => void;
   nocDuration: NocDuration | null;
-  setNocDuration: (duration: NocDuration | null) => void;
+  specialProgramme: SpecialProgramme | null;
+  setSpecialProgramme: (programme: SpecialProgramme | null) => void;
   requirementMappings: Record<string, string[]>;
   addRequirementMapping: (requirementName: string, moduleCode: string) => void;
   removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
@@ -42,6 +43,8 @@ interface Props {
   deleteWaivedModule: (code: string) => void;
   resetPlan: () => void;
   getCompletedCodes: (year: number, sem: number) => string[];
+  addSpecialTerm: (year: number, sem: number) => void;
+  deleteSpecialTerm: (year: number, sem: number) => void;
   studentName: string;
   setStudentName: (name: string) => void;
   matricNumber: string;
@@ -64,7 +67,8 @@ export const StudyPlan = ({
   setSecondMajorId,
   toggleMinorId,
   nocDuration,
-  setNocDuration,
+  specialProgramme,
+  setSpecialProgramme,
   requirementMappings,
   addRequirementMapping,
   removeRequirementMapping,
@@ -80,6 +84,8 @@ export const StudyPlan = ({
   deleteWaivedModule,
   resetPlan,
   getCompletedCodes,
+  addSpecialTerm,
+  deleteSpecialTerm,
   studentName,
   setStudentName,
   matricNumber,
@@ -104,7 +110,7 @@ export const StudyPlan = ({
   const copyShareLink = async (name: string) => {
     const link = buildShareLink({
       profile: { name, matricNumber, year: studentYear },
-      plan: { majorId, semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration },
+      plan: { majorId, semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme },
     }, major.moduleCatalog);
     try {
       await navigator.clipboard.writeText(link);
@@ -258,7 +264,8 @@ export const StudyPlan = ({
           setSecondMajorId={setSecondMajorId}
           toggleMinorId={toggleMinorId}
           nocDuration={nocDuration}
-          setNocDuration={setNocDuration}
+          specialProgramme={specialProgramme}
+          setSpecialProgramme={setSpecialProgramme}
           studentName={studentName}
           setStudentName={setStudentName}
           matricNumber={matricNumber}
@@ -349,6 +356,8 @@ export const StudyPlan = ({
                 addWaivedModule={addWaivedModule}
                 deleteWaivedModule={deleteWaivedModule}
                 getCompletedCodes={getCompletedCodes}
+                addSpecialTerm={addSpecialTerm}
+                deleteSpecialTerm={deleteSpecialTerm}
               />
             </div>
           </div>
@@ -448,6 +457,7 @@ export const StudyPlan = ({
         secondMajorId={secondMajorId}
         minorIds={minorIds}
         nocDuration={nocDuration}
+        specialProgramme={specialProgramme}
       />
     </>
   );
@@ -518,7 +528,8 @@ const SettingsPage = ({
   setSecondMajorId,
   toggleMinorId,
   nocDuration,
-  setNocDuration,
+  specialProgramme,
+  setSpecialProgramme,
   studentName,
   setStudentName,
   matricNumber,
@@ -537,7 +548,8 @@ const SettingsPage = ({
   setSecondMajorId: (id: string | null) => void;
   toggleMinorId: (id: string) => void;
   nocDuration: NocDuration | null;
-  setNocDuration: (duration: NocDuration | null) => void;
+  specialProgramme: SpecialProgramme | null;
+  setSpecialProgramme: (programme: SpecialProgramme | null) => void;
   studentName: string;
   setStudentName: (name: string) => void;
   matricNumber: string;
@@ -629,17 +641,19 @@ const SettingsPage = ({
           </label>
 
           <label className="mt-4 flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-wide text-muted">NOC (Overseas Colleges)</span>
+            <span className="text-[10px] uppercase tracking-wide text-muted">Special Programme / Global Pathways</span>
             <Dropdown
               variant="field"
-              ariaLabel="NOC duration"
-              value={nocDuration ?? ''}
-              onChange={(v) => setNocDuration(v === '' ? null : (v as NocDuration))}
+              ariaLabel="Special programme"
+              value={specialProgramme ?? ''}
+              onChange={(v) => setSpecialProgramme(v === '' ? null : (v as SpecialProgramme))}
               className={field}
               options={[
                 { value: '', label: 'None' },
-                { value: '6-month', label: '6-month (2 MCEs waived)' },
-                { value: '1-year', label: '1-year (4 MCEs waived)' },
+                { value: 'noc-3-month', label: 'NOC 3-month (no MCEs waived)' },
+                { value: 'noc-6-month', label: 'NOC 6-month (2 MCEs waived)' },
+                { value: 'noc-1-year', label: 'NOC 1-year (4 MCEs waived)' },
+                { value: 'gex', label: 'Global Experience Course (GEx)' },
               ]}
             />
           </label>

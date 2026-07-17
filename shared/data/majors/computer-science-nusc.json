@@ -119,13 +119,16 @@
     "industryExperience": {
       "minUnits": 6,
       "maxUnits": 12,
-      "courses": ["CP3880", "IS4010", "ETP3201L", "CP3200", "CP3202", "CP3107", "CP3110", "ETP3205"],
+      "courses": ["CP3880", "IS4010", "ETP3201L", "ETP3202", "ETP3203", "ETP3205", "ETP3206", "CP3200", "CP3202", "CP3107", "CP3110"],
       "dissertationAlternative": "CP4101"
     },
     "allowedPrefixes": ["CS", "IFS", "CP"],
     "maxCpUnits": 12,
     "cpPrefix": "CP"
   },
+  "sameSemesterGroups": [
+    ["CS2101", "CS2103T"]
+  ],
   "focusAreas": [
     {
       "id": "algorithms-theory",
@@ -300,6 +303,16 @@
       "name": "Innovation & Enterprise Internship",
       "mcs": 12
     },
+    "ETP3202": {
+      "code": "ETP3202",
+      "name": "Innovation & Enterprise Internship II",
+      "mcs": 12
+    },
+    "ETP3203": {
+      "code": "ETP3203",
+      "name": "Innovation & Enterprise Internship III",
+      "mcs": 12
+    },
     "CP3200": {
       "code": "CP3200",
       "name": "Internship",
@@ -323,6 +336,11 @@
     "ETP3205": {
       "code": "ETP3205",
       "name": "Innovation & Enterprise Internship",
+      "mcs": 6
+    },
+    "ETP3206": {
+      "code": "ETP3206",
+      "name": "Innovation & Enterprise Internship IV",
       "mcs": 6
     },
     "CP4101": {
@@ -381,14 +399,14 @@
       "categoryId": "math-sciences"
     },
     {
-      "year": 2,
-      "sem": 1,
+      "year": 1,
+      "sem": 2,
       "moduleCode": "GEA1000N",
       "categoryId": "nus-college"
     },
     {
       "year": 2,
-      "sem": 2,
+      "sem": 1,
       "moduleCode": "CS2103T",
       "categoryId": "cs-foundation"
     },
@@ -455,12 +473,6 @@
     {
       "code": "MA1301",
       "name": "Introductory Mathematics",
-      "mcs": 4,
-      "categoryId": "cs-foundation"
-    },
-    {
-      "code": "CS1010S",
-      "name": "Programming Methodology",
       "mcs": 4,
       "categoryId": "cs-foundation"
     }

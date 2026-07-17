@@ -7,9 +7,16 @@ import type {
   SecondaryProgramme,
   RequirementRule,
   NocDuration,
+  SpecialProgramme,
 } from '@shared/types';
 
-export const semesterLabel = (year: number, sem: number): string => `Y${year}S${sem}`;
+export const semesterLabel = (year: number, sem: number): string => {
+  if (sem === 1) return `Y${year}S1`;
+  if (sem === 2) return `Y${year}S2`;
+  if (sem === 3) return `Y${year} ST I`;
+  if (sem === 4) return `Y${year} ST II`;
+  return `Y${year}S${sem}`;
+};
 
 export const createEmptySemesters = (): StudentSemester[] =>
   [1, 2, 3, 4].flatMap((year) => [1, 2].map((sem) => ({ year, sem, modules: [] })));
@@ -76,6 +83,32 @@ export const renameModule = (
     modules: s.modules.map((m) => (m.code === oldCode ? { ...updates } : m)),
   }));
 
+/** Moves a module and any same-semester linked modules together as one group.
+ * The module being moved stays first in the target semester; linked modules are
+ * appended after it so the semester order stays stable and predictable. */
+export const moveLinkedModules = (
+  major: Major,
+  semesters: StudentSemester[],
+  year: number,
+  sem: number,
+  module: PlacedModule,
+  insertBeforeCode?: string,
+): StudentSemester[] => {
+  const group = major.sameSemesterGroups?.find((codes) => codes.includes(module.code));
+  const codesToMove = group ? [module.code, ...group.filter((code) => code !== module.code)] : [module.code];
+  let next = semesters;
+
+  for (const code of codesToMove) {
+    const currentModule = code === module.code
+      ? module
+      : next.flatMap((semester) => semester.modules).find((placed) => placed.code === code);
+    if (!currentModule) continue;
+    next = upsertModule(next, year, sem, currentModule, code === module.code ? insertBeforeCode : undefined);
+  }
+
+  return next;
+};
+
 /** Reassigns a placed module's `categoryId` in place, wherever it's currently
  * scheduled. Used when a manual requirement mapping links a module to a
  * requirement row (see `StudentPlan.requirementMappings`) — without this, a
@@ -126,6 +159,11 @@ export const autoCategoryId = (major: Major, code: string): string => {
   const planned = major.defaultPlan.find((entry) => entry.moduleCode === c);
   if (planned) return planned.categoryId;
 
+  // 1b. NOC courses (starts with ETP or TR) when NOC is declared
+  if (categoryExists('noc') && /^(ETP|TR)\d/.test(c)) {
+    return 'noc';
+  }
+
   // 2. Courses named by a requirement rule.
   const req = major.requirements.find(
     (r) => r.categoryId && r.fulfilledBy.some((f) => matchesFulfiller(c, f)),
@@ -167,6 +205,7 @@ export interface RequirementStatus {
   categoryId?: string;
   have: number;
   need: number;
+  info?: string;
 }
 
 export const computeRequirements = (
@@ -174,6 +213,7 @@ export const computeRequirements = (
   semesters: StudentSemester[],
   waivedModules: WaivedModule[] = [],
   requirementMappings: Record<string, string[]> = {},
+  specialProgramme: SpecialProgramme | null = null,
 ): RequirementStatus[] => {
   const plannedCodes = semesters.flatMap((s) => s.modules.map((m) => m.code));
   const waivedCodes = waivedModules.map((m) => m.code);
@@ -190,12 +230,42 @@ export const computeRequirements = (
     const need = req.count ?? 1;
     const codeSet = new Set(allCodes);
     const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) => codeSet.has(code)));
+    const specialProgrammeBonus =
+      specialProgramme === 'gex' && req.name === 'Making Connections'
+        ? 1
+        : 0;
+    const have = matchCount + specialProgrammeBonus;
+    
+    const nocSatisfied =
+      (req.name.toLowerCase().includes('industry') || req.name.toLowerCase().includes('industrial')) &&
+      Boolean(specialProgramme && specialProgramme.startsWith('noc'));
+    let fulfilled = have >= need || altGroupSatisfied || nocSatisfied;
+    let info: string | undefined = undefined;
+
+    if (req.name.startsWith('Making Connections')) {
+      const hssCount = allCodes.filter((code) =>
+        ['NHS', 'NFB', 'NHT'].some((p) => code.startsWith(p))
+      ).length;
+      const stCount = allCodes.filter((code) =>
+        ['NST', 'NFC'].some((p) => code.startsWith(p))
+      ).length;
+      const isNoc = specialProgramme && specialProgramme.startsWith('noc');
+      const minHss = isNoc ? 1 : 2;
+      const minSt = isNoc ? 1 : 2;
+
+      if (hssCount < minHss || stCount < minSt) {
+        fulfilled = false;
+        info = `Need at least ${minHss} HSS & ${minSt} ST courses (${hssCount} HSS, ${stCount} ST on plan)`;
+      }
+    }
+
     return {
       name: req.name,
-      fulfilled: matchCount >= need || altGroupSatisfied,
+      fulfilled,
       categoryId: req.categoryId,
-      have: matchCount,
+      have: nocSatisfied ? need : have,
       need,
+      info,
     };
   });
 };
@@ -254,6 +324,7 @@ export const computeTripleCountedCodes = (
  * `nus-college` MC total (52 for SoC/NUSC majors, 56 generically) — the
  * waived count is what shrinks, the per-elective 4 MC weight is fixed. */
 const NOC_MCE_WAIVERS: Record<NocDuration, { wavered: number; freedMc: number }> = {
+  '3-month': { wavered: 0, freedMc: 0 },
   '6-month': { wavered: 2, freedMc: 8 },
   '1-year': { wavered: 4, freedMc: 16 },
 };
@@ -280,17 +351,31 @@ export const applyNocAdjustment = (major: Major, duration?: NocDuration | null):
   const mceReq = major.requirements[mceIndex];
   const newCount = Math.max(0, (mceReq.count ?? 1) - rule.wavered);
 
+  const nocTarget = duration === '3-month' ? 6 : (duration === '6-month' ? 12 : 36);
+  const bdReduction = duration === '1-year' ? 12 : 6;
+
+  let categories = major.categories.map((cat) => {
+    if (cat.id === 'nus-college' && cat.mcTarget !== undefined) {
+      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - rule.freedMc) };
+    }
+    if ((cat.id === 'breadth-depth' || cat.id === 'ai-breadth-depth' || cat.id === 'industry-experience') && cat.mcTarget !== undefined) {
+      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - bdReduction) };
+    }
+    return cat;
+  });
+
+  if (!categories.some((c) => c.id === 'noc')) {
+    categories.push({
+      id: 'noc',
+      label: 'NUS Overseas Colleges (NOC)',
+      mcTarget: nocTarget,
+      color: '#e07a5f',
+    });
+  }
+
   return {
     ...major,
-    categories: major.categories.map((cat) => {
-      if (cat.id === 'nus-college' && cat.mcTarget !== undefined) {
-        return { ...cat, mcTarget: Math.max(0, cat.mcTarget - rule.freedMc) };
-      }
-      if (cat.id === 'unrestricted-electives' && cat.mcTarget !== undefined) {
-        return { ...cat, mcTarget: cat.mcTarget + rule.freedMc };
-      }
-      return cat;
-    }),
+    categories,
     requirements: major.requirements.map((r, i) => (i === mceIndex ? { ...r, count: newCount } : r)),
   };
 };

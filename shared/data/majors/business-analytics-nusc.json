@@ -25,7 +25,8 @@
     { "name": "Global Narratives (NGN)", "fulfilledBy": ["NGN*"], "categoryId": "nus-college" },
     { "name": "Science and Society (NSS)", "fulfilledBy": ["NSS*"], "categoryId": "nus-college" },
     { "name": "Making Connections", "fulfilledBy": ["NHS*", "NFB*", "NST*", "NFC*", "NHT*"], "count": 6, "categoryId": "nus-college" },
-    { "name": "Impact Experience Project (NEP)", "fulfilledBy": ["NEP*"], "categoryId": "nus-college" }
+    { "name": "Impact Experience Project (NEP)", "fulfilledBy": ["NEP*"], "categoryId": "nus-college" },
+    { "name": "Industry Experience (12 MC, or BT4101 dissertation)", "fulfilledBy": ["CP3880", "IS4010", "ETP3201L", "ETP3205", "CP3200", "CP3202", "CP3107", "CP3110", "BT4101"], "count": 1, "categoryId": "ba-foundation" }
   ],
   "programmeElectives": {
     "categoryId": "ba-electives",
@@ -126,7 +127,18 @@
     "IS4262": { "code": "IS4262", "name": "Digital Product Management", "mcs": 4 },
     "IS4302": { "code": "IS4302", "name": "Blockchain and Distributed Ledger Technologies", "mcs": 4 },
     "IS4303": { "code": "IS4303", "name": "IT-mediated financial solutions and platforms", "mcs": 4 },
-    "ST4245": { "code": "ST4245", "name": "Statistical Methods for Finance", "mcs": 4 }
+    "ST4245": { "code": "ST4245", "name": "Statistical Methods for Finance", "mcs": 4 },
+    "CP3880": { "code": "CP3880", "name": "Advanced Technology Attachment Programme", "mcs": 12 },
+    "IS4010": { "code": "IS4010", "name": "Digital Transformation Leadership Programme", "mcs": 12 },
+    "ETP3201L": { "code": "ETP3201L", "name": "Innovation & Enterprise Internship", "mcs": 12 },
+    "ETP3202": { "code": "ETP3202", "name": "Innovation & Enterprise Internship II", "mcs": 12 },
+    "ETP3203": { "code": "ETP3203", "name": "Innovation & Enterprise Internship III", "mcs": 12 },
+    "ETP3205": { "code": "ETP3205", "name": "Innovation & Enterprise Internship", "mcs": 6 },
+    "ETP3206": { "code": "ETP3206", "name": "Innovation & Enterprise Internship IV", "mcs": 6 },
+    "CP3200": { "code": "CP3200", "name": "Internship", "mcs": 6 },
+    "CP3202": { "code": "CP3202", "name": "Internship II", "mcs": 6 },
+    "CP3107": { "code": "CP3107", "name": "Computing for Social Service Agencies I", "mcs": 6 },
+    "CP3110": { "code": "CP3110", "name": "Computing for Social Service Agencies II", "mcs": 6 }
   },
   "defaultPlan": [
     { "year": 1, "sem": 1, "moduleCode": "CS1010A", "categoryId": "soc-common" },

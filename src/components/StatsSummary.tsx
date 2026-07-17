@@ -29,6 +29,12 @@ export const StatsSummary = ({
 }: Props) => {
   const [openId, setOpenId] = useState<string | null>(null);
   const openCategory = major.categories.find((cat) => cat.id === openId) ?? null;
+  const remainingDegreeMc = Math.max(0, major.totalMcTarget - stats.totalMc);
+
+  const otherCategoriesMc = Object.entries(stats.byCategory)
+    .filter(([catId]) => catId !== 'unrestricted-electives')
+    .reduce((sum, [, mcs]) => sum + mcs, 0);
+  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesMc);
 
   return (
     <div className="flex flex-col gap-3">
@@ -36,13 +42,14 @@ export const StatsSummary = ({
         <TotalStatCard
           value={stats.totalMc}
           target={major.totalMcTarget}
+          remaining={remainingDegreeMc}
         />
         {major.categories.map((cat) => (
           <StatCard
             key={cat.id}
             label={cat.label}
             value={stats.byCategory[cat.id] ?? 0}
-            target={cat.mcTarget}
+            target={cat.id === 'unrestricted-electives' ? dynamicUeTarget : cat.mcTarget}
             color={cat.color}
             isOpen={openId === cat.id}
             controlsId={`category-panel-${cat.id}`}
@@ -63,6 +70,7 @@ export const StatsSummary = ({
           requirementMappings={requirementMappings}
           addRequirementMapping={addRequirementMapping}
           removeRequirementMapping={removeRequirementMapping}
+          dynamicUeTarget={dynamicUeTarget}
         />
       )}
     </div>
@@ -72,9 +80,11 @@ export const StatsSummary = ({
 const TotalStatCard = ({
   value,
   target,
+  remaining,
 }: {
   value: number;
   target: number;
+  remaining: number;
 }) => {
   const pct = Math.min(100, (value / target) * 100);
 
@@ -88,6 +98,7 @@ const TotalStatCard = ({
         {value}
         <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>
       </span>
+      <span className="text-xs text-muted">Remaining degree MC: {remaining}</span>
       <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
         <div
           className="h-full rounded-full bg-ink/40 transition-all duration-300"
@@ -173,6 +184,7 @@ const CategoryPanel = ({
   requirementMappings,
   addRequirementMapping,
   removeRequirementMapping,
+  dynamicUeTarget,
 }: {
   id: string;
   category: MajorCategory;
@@ -184,6 +196,7 @@ const CategoryPanel = ({
   requirementMappings: Record<string, string[]>;
   addRequirementMapping: (requirementName: string, moduleCode: string) => void;
   removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
+  dynamicUeTarget: number;
 }) => {
   const categoryRequirements = requirements.filter((req) => req.categoryId === category.id);
   const expectedModules = major.defaultPlan
@@ -197,7 +210,9 @@ const CategoryPanel = ({
   const placedCodes = new Set(placedModules.map((module) => module.code));
   const waivedCodes = new Set(waivedForCategory.map((module) => module.code));
   const placedMc = stats.byCategory[category.id] ?? 0;
-  const remainingMc = Math.max(0, (category.mcTarget ?? 0) - placedMc);
+  const hasTarget = category.id === 'unrestricted-electives' ? true : category.mcTarget !== undefined;
+  const targetMc = category.id === 'unrestricted-electives' ? dynamicUeTarget : (category.mcTarget ?? 0);
+  const remainingMc = Math.max(0, targetMc - placedMc);
   const showFocusAreas =
     category.id === major.breadthDepth?.categoryId && Boolean(major.focusAreas?.length);
   const showProgrammeElectives = category.id === major.programmeElectives?.categoryId;
@@ -221,8 +236,8 @@ const CategoryPanel = ({
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
         <h2 className="text-sm font-semibold text-ink">{category.label}</h2>
-        {category.mcTarget && (
-          <span className="text-xs text-muted">{placedMc}/{category.mcTarget} MC</span>
+        {hasTarget && (
+          <span className="text-xs text-muted">{placedMc}/{targetMc} MC</span>
         )}
       </div>
 
@@ -287,7 +302,7 @@ const CategoryPanel = ({
           ) : (
             <p className="text-xs text-muted">No modules added yet.</p>
           )}
-          {category.mcTarget && (
+          {hasTarget && (
             <p className="text-xs font-medium text-ink">{remainingMc} MC remaining to target</p>
           )}
         </div>
@@ -539,14 +554,21 @@ export const RequirementRow = ({
       ref={containerRef}
       className="relative flex min-h-10 flex-col gap-1.5 rounded-2xl bg-canvas/60 px-3 py-2"
     >
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start gap-2.5 w-full">
         <StatusDot fulfilled={req.fulfilled} />
-        <span
-          className="text-xs leading-relaxed"
-          style={{ color: req.fulfilled ? 'rgb(20,20,19)' : MUTED }}
-        >
-          {req.name}
-        </span>
+        <div className="flex flex-col min-w-0 flex-grow">
+          <span
+            className="text-xs leading-relaxed"
+            style={{ color: req.fulfilled ? 'rgb(20,20,19)' : MUTED }}
+          >
+            {req.name}
+          </span>
+          {req.info && !req.fulfilled && (
+            <span className="text-[10px] text-amber-800 font-medium leading-snug mt-0.5">
+              {req.info}
+            </span>
+          )}
+        </div>
         {req.need > 1 && (
           <span className="ml-auto flex-shrink-0 rounded-full bg-ink/10 px-2 py-0.5 text-[10px] text-muted">
             {req.have}/{req.need}

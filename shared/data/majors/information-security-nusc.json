@@ -7,7 +7,7 @@
   "categories": [
     { "id": "computing-foundation", "label": "Computing Foundation", "mcTarget": 32, "color": "#d4c9b8" },
     { "id": "security-requirements", "label": "Security Requirements", "mcTarget": 28, "color": "#c9d4b8" },
-    { "id": "industrial-experience", "label": "Industrial Experience", "mcTarget": 12, "color": "#d0c6b0" },
+    { "id": "industry-experience", "label": "Industry Experience", "mcTarget": 12, "color": "#d0c6b0" },
     { "id": "math-sciences", "label": "Math & Sciences", "mcTarget": 12, "color": "#c6d0ca" },
     { "id": "soc-common", "label": "SoC Common Curriculum", "mcTarget": 8, "color": "#abb89b" },
     { "id": "nus-college", "label": "NUS College", "mcTarget": 52, "color": "#b8c9d4" },
@@ -35,11 +35,14 @@
       "categoryId": "security-requirements"
     },
     {
-      "name": "Industrial Experience (≥ 6 MC, or CP4101 dissertation)",
-      "fulfilledBy": ["CP3880", "IS4010", "TR3202", "CP3200", "CP3202", "CP3107", "CP3110", "CP4101"],
+      "name": "Industry Experience (≥ 6 MC, or CP4101 dissertation)",
+      "fulfilledBy": ["CP3880", "IS4010", "TR3202", "ETP3201L", "ETP3202", "ETP3203", "ETP3205", "ETP3206", "CP3200", "CP3202", "CP3107", "CP3110", "CP4101"],
       "count": 1,
-      "categoryId": "industrial-experience"
+      "categoryId": "industry-experience"
     }
+  ],
+  "sameSemesterGroups": [
+    ["CS2101", "CS2103T"]
   ],
   "moduleCatalog": {
     "CS1010": { "code": "CS1010", "name": "Programming Methodology", "mcs": 4 },
@@ -86,6 +89,11 @@
     "CP3880": { "code": "CP3880", "name": "Advanced Technology Attachment Programme", "mcs": 12 },
     "IS4010": { "code": "IS4010", "name": "Digital Transformation Leadership Programme", "mcs": 12 },
     "TR3202": { "code": "TR3202", "name": "Start-up Internship Programme", "mcs": 12 },
+    "ETP3201L": { "code": "ETP3201L", "name": "Innovation & Enterprise Internship", "mcs": 12 },
+    "ETP3202": { "code": "ETP3202", "name": "Innovation & Enterprise Internship II", "mcs": 12 },
+    "ETP3203": { "code": "ETP3203", "name": "Innovation & Enterprise Internship III", "mcs": 12 },
+    "ETP3205": { "code": "ETP3205", "name": "Innovation & Enterprise Internship", "mcs": 6 },
+    "ETP3206": { "code": "ETP3206", "name": "Innovation & Enterprise Internship IV", "mcs": 6 },
     "CP3200": { "code": "CP3200", "name": "Internship", "mcs": 6 },
     "CP3202": { "code": "CP3202", "name": "Internship II", "mcs": 6 },
     "CP3107": { "code": "CP3107", "name": "Computing for Social Service Agencies I", "mcs": 6 },
@@ -102,9 +110,9 @@
     { "year": 1, "sem": 2, "moduleCode": "NTW2035", "categoryId": "nus-college" },
     { "year": 2, "sem": 1, "moduleCode": "CS2100", "categoryId": "computing-foundation" },
     { "year": 2, "sem": 1, "moduleCode": "CS2101", "categoryId": "computing-foundation" },
+    { "year": 2, "sem": 1, "moduleCode": "CS2103T", "categoryId": "computing-foundation" },
     { "year": 2, "sem": 1, "moduleCode": "ST2334", "categoryId": "math-sciences" },
     { "year": 2, "sem": 1, "moduleCode": "GEA1000N", "categoryId": "nus-college" },
-    { "year": 2, "sem": 2, "moduleCode": "CS2103T", "categoryId": "computing-foundation" },
     { "year": 2, "sem": 2, "moduleCode": "CS2105", "categoryId": "computing-foundation" },
     { "year": 2, "sem": 2, "moduleCode": "CS2107", "categoryId": "security-requirements" },
     { "year": 2, "sem": 2, "moduleCode": "IS1108", "categoryId": "soc-common" },

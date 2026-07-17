@@ -12,7 +12,7 @@ import { WaivedCourses } from './WaivedCourses';
 import { AppDialog } from './AppDialog';
 import { PlusIcon, XIcon } from './Icons';
 
-const UNDERLOAD_MCS = 16;
+const UNDERLOAD_MCS = 18;
 const OVERLOAD_MCS = 20;
 const YEAR_ONE_MAX_MCS = 26;
 
@@ -29,6 +29,8 @@ interface Props {
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
   getCompletedCodes: (year: number, sem: number) => string[];
+  addSpecialTerm: (year: number, sem: number) => void;
+  deleteSpecialTerm: (year: number, sem: number) => void;
 }
 
 export const SemesterGrid = ({
@@ -41,6 +43,8 @@ export const SemesterGrid = ({
   addWaivedModule,
   deleteWaivedModule,
   getCompletedCodes,
+  addSpecialTerm,
+  deleteSpecialTerm,
 }: Props) => {
   const [activeDrag, setActiveDrag] = useState<PlacedModule | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
@@ -93,6 +97,15 @@ export const SemesterGrid = ({
   const [selectedKey, setSelectedKey] = useState<string>(
     semesters[0] ? `${semesters[0].year}-${semesters[0].sem}` : 'waived',
   );
+
+  const possibleSpecialTerms = [1, 2, 3, 4].flatMap((year) =>
+    [3, 4].map((sem) => ({
+      year,
+      sem,
+      label: `Y${year} ${sem === 3 ? 'Special Term I' : 'Special Term II'}`,
+    }))
+  ).filter((term) => !semesters.some((s) => s.year === term.year && s.sem === term.sem));
+
   const chips = [
     { key: 'waived', label: 'Waived', warn: false },
     ...semesters.map((s) => {
@@ -124,6 +137,30 @@ export const SemesterGrid = ({
                 {chip.warn && <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
               </button>
             ))}
+            {possibleSpecialTerms.length > 0 && (
+              <div className="relative flex flex-shrink-0 items-center">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [y, s] = e.target.value.split('-').map(Number);
+                      addSpecialTerm(y, s);
+                      setSelectedKey(`${y}-${s}`);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="appearance-none rounded-full bg-paper border border-ink/10 px-3 py-1.5 text-xs font-medium text-ink/70 pr-8 focus:outline-none focus:ring-2 focus:ring-ink/20"
+                  defaultValue=""
+                >
+                  <option value="" disabled>+ Special Term</option>
+                  {possibleSpecialTerms.map((term) => (
+                    <option key={`${term.year}-${term.sem}`} value={`${term.year}-${term.sem}`}>
+                      {term.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-2.5 text-ink/40 text-[10px]" aria-hidden="true">▼</span>
+              </div>
+            )}
           </div>
 
           {selectedKey === 'waived' ? (
@@ -146,6 +183,7 @@ export const SemesterGrid = ({
               isMobile={isMobile}
               moveTargets={moveTargets}
               onMoveModule={moveModule}
+              onDeleteSpecialTerm={deleteSpecialTerm}
               fullWidth
             />
           ) : null}
@@ -170,8 +208,33 @@ export const SemesterGrid = ({
               isMobile={isMobile}
               moveTargets={moveTargets}
               onMoveModule={moveModule}
+              onDeleteSpecialTerm={deleteSpecialTerm}
             />
           ))}
+          {possibleSpecialTerms.length > 0 && (
+            <div className="w-56 flex-shrink-0 flex flex-col gap-2 rounded-3xl border border-dashed border-ink/20 p-4 justify-center items-center text-center bg-paper/30">
+              <span className="text-xs font-semibold text-ink/70">Special Term</span>
+              <p className="text-[10px] text-muted max-w-[150px]">Plan Orbital, internship, winter/summer school, etc.</p>
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [y, s] = e.target.value.split('-').map(Number);
+                    addSpecialTerm(y, s);
+                    e.target.value = '';
+                  }
+                }}
+                className="mt-1 w-full rounded-xl border border-ink/10 bg-paper px-2.5 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+                defaultValue=""
+              >
+                <option value="" disabled>+ Add Special Term</option>
+                {possibleSpecialTerms.map((term) => (
+                  <option key={`${term.year}-${term.sem}`} value={`${term.year}-${term.sem}`}>
+                    {term.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       )}
 
@@ -223,10 +286,11 @@ interface ColumnProps {
   isMobile: boolean;
   moveTargets: { year: number; sem: number; label: string }[];
   onMoveModule: (module: PlacedModule, year: number, sem: number, insertBeforeCode?: string) => void;
+  onDeleteSpecialTerm?: (year: number, sem: number) => void;
   fullWidth?: boolean;
 }
 
-const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, fullWidth = false }: ColumnProps) => {
+const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, onDeleteSpecialTerm, fullWidth = false }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
@@ -252,6 +316,20 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
         <span className="text-xs font-semibold text-ink">{semesterLabel(semester.year, semester.sem)}</span>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-muted">{totalMcs} MC</span>
+          {(semester.sem === 3 || semester.sem === 4) && onDeleteSpecialTerm && (
+            <button
+              type="button"
+              onClick={() => {
+                if (semester.modules.length === 0 || window.confirm(`Delete ${semesterLabel(semester.year, semester.sem)} and all its modules?`)) {
+                  onDeleteSpecialTerm(semester.year, semester.sem);
+                }
+              }}
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/20 text-ink/75 transition-colors hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+              aria-label={`Delete ${semesterLabel(semester.year, semester.sem)}`}
+            >
+              <XIcon />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
