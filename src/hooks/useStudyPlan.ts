@@ -229,10 +229,49 @@ export const useStudyPlan = () => {
 
   const nocDuration = useMemo(() => specialProgrammeToNocDuration(specialProgramme), [specialProgramme]);
 
-  const major = useMemo(
-    () => (rawMajor ? applyNocAdjustment(rawMajor, nocDuration) : rawMajor),
-    [rawMajor, nocDuration],
-  );
+  const major = useMemo<Major>(() => {
+    let adjusted = applyNocAdjustment(rawMajor, nocDuration);
+    
+    // Add second major category card
+    if (secondMajorId) {
+      const sm = secondMajors.find((m) => m.id === secondMajorId);
+      if (sm) {
+        adjusted = {
+          ...adjusted,
+          categories: [
+            ...adjusted.categories,
+            {
+              id: `second-major-${sm.id}`,
+              label: `${sm.label} (2nd Major)`,
+              mcTarget: 40,
+              color: '#d48c8c',
+            },
+          ],
+        };
+      }
+    }
+    
+    // Add minor category cards
+    for (const minorId of minorIds) {
+      const m = minors.find((x) => x.id === minorId);
+      if (m) {
+        adjusted = {
+          ...adjusted,
+          categories: [
+            ...adjusted.categories,
+            {
+              id: `minor-${m.id}`,
+              label: `${m.label} (Minor)`,
+              mcTarget: 20,
+              color: '#8cbcd4',
+            },
+          ],
+        };
+      }
+    }
+    
+    return adjusted;
+  }, [rawMajor, nocDuration, secondMajorId, minorIds, secondMajors, minors]);
 
   useEffect(() => {
     if (!major || mode !== 'personal') return;

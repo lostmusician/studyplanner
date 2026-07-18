@@ -31,10 +31,10 @@ export const StatsSummary = ({
   const openCategory = major.categories.find((cat) => cat.id === openId) ?? null;
   const remainingDegreeMc = Math.max(0, major.totalMcTarget - stats.totalMc);
 
-  const otherCategoriesMc = Object.entries(stats.byCategory)
-    .filter(([catId]) => catId !== 'unrestricted-electives')
-    .reduce((sum, [, mcs]) => sum + mcs, 0);
-  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesMc);
+  const otherCategoriesTargetSum = major.categories
+    .filter((cat) => cat.id !== 'unrestricted-electives')
+    .reduce((sum, cat) => sum + (cat.mcTarget ?? 0), 0);
+  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
 
   return (
     <div className="flex flex-col gap-3">

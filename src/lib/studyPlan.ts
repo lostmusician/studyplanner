@@ -189,6 +189,38 @@ export const autoCategoryId = (major: Major, code: string): string => {
     if (inCategory || inSpecialisation) return pe.categoryId;
   }
 
+  // 3c. Secondary Programme prefixes (Second Majors / Minors)
+  const SECONDARY_PREFIXES: Record<string, string[]> = {
+    'economics': ['EC'],
+    'psychology': ['PL'],
+    'public-health': ['SPH'],
+    'management': ['MNO', 'BSP', 'ACC'],
+    'data-analytics': ['DSA'],
+    'mathematics': ['MA'],
+    'statistics': ['ST'],
+    'quantitative-finance': ['QF'],
+    'entrepreneurship': ['ETP', 'TR'],
+  };
+
+  const getSecondaryCat = (progId: string): string | undefined => {
+    const idPart = progId.replace('second-major-', '').replace('minor-', '');
+    const prefixes = SECONDARY_PREFIXES[idPart] || [idPart.toUpperCase().substring(0, 2)];
+    if (prefixes.some((p) => c.startsWith(p))) {
+      // Avoid stealing core math-sci courses
+      if (['MA', 'ST'].some((p) => c.startsWith(p)) && ['MA1521', 'MA1522', 'ST2334', 'GEA1000N'].includes(c)) {
+        return undefined;
+      }
+      return progId;
+    }
+    return undefined;
+  };
+
+  const activeSecondaryCats = major.categories.filter((cat) => cat.id.startsWith('second-major-') || cat.id.startsWith('minor-'));
+  for (const sCat of activeSecondaryCats) {
+    const catId = getSecondaryCat(sCat.id);
+    if (catId) return catId;
+  }
+
   // 4. Maths & sciences by prefix.
   if (/^(MA|ST|PC|LSM|CM|PH)\d/.test(c)) {
     const math = categoryExists('math-sciences');
@@ -243,15 +275,11 @@ export const computeRequirements = (
     let info: string | undefined = undefined;
 
     if (req.name.startsWith('Making Connections')) {
-      const hssCount = allCodes.filter((code) =>
-        ['NHS', 'NFB', 'NHT'].some((p) => code.startsWith(p))
-      ).length;
-      const stCount = allCodes.filter((code) =>
-        ['NST', 'NFC'].some((p) => code.startsWith(p))
-      ).length;
-      const isNoc = specialProgramme && specialProgramme.startsWith('noc');
-      const minHss = isNoc ? 1 : 2;
-      const minSt = isNoc ? 1 : 2;
+      const hssCount = allCodes.filter((code) => code.startsWith('NHS')).length;
+      const stCount = allCodes.filter((code) => code.startsWith('NST')).length;
+      const isNocWaiver = specialProgramme === 'noc-6-month' || specialProgramme === 'noc-1-year';
+      const minHss = isNocWaiver ? 1 : 2;
+      const minSt = isNocWaiver ? 1 : 2;
 
       if (hssCount < minHss || stCount < minSt) {
         fulfilled = false;

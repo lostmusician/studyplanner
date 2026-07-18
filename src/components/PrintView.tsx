@@ -48,10 +48,10 @@ export const PrintView = ({
   const declaredMinors = minors.filter((m) => minorIds.includes(m.id));
   const declaredSecondaries = declaredSecondMajor ? [declaredSecondMajor, ...declaredMinors] : declaredMinors;
 
-  const otherCategoriesMc = Object.entries(stats.byCategory)
-    .filter(([catId]) => catId !== 'unrestricted-electives')
-    .reduce((sum, [, mcs]) => sum + mcs, 0);
-  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesMc);
+  const otherCategoriesTargetSum = major.categories
+    .filter((cat) => cat.id !== 'unrestricted-electives')
+    .reduce((sum, cat) => sum + (cat.mcTarget ?? 0), 0);
+  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
 
   const depthConfig = major.breadthDepth
     ? computeBreadthDepth(major, semesters, waivedModules)
