@@ -291,7 +291,7 @@ export const computeRequirements = (
       name: req.name,
       fulfilled,
       categoryId: req.categoryId,
-      have: nocSatisfied ? need : have,
+      have: (nocSatisfied || altGroupSatisfied) ? need : have,
       need,
       info,
     };
@@ -388,6 +388,14 @@ export const applyNocAdjustment = (major: Major, duration?: NocDuration | null):
     }
     if ((cat.id === 'breadth-depth' || cat.id === 'ai-breadth-depth' || cat.id === 'industry-experience') && cat.mcTarget !== undefined) {
       return { ...cat, mcTarget: Math.max(0, cat.mcTarget - bdReduction) };
+    }
+    if ((cat.id === 'ba-foundation' || cat.id === 'bais-foundation') && cat.mcTarget !== undefined) {
+      const reduction = duration === '3-month' ? 6 : 12;
+      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - reduction) };
+    }
+    if ((cat.id === 'ba-electives' || cat.id === 'bais-electives') && cat.mcTarget !== undefined) {
+      const reduction = duration === '1-year' ? 4 : 0;
+      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - reduction) };
     }
     return cat;
   });
@@ -559,11 +567,11 @@ export const computeBreadthDepth = (
       id: 'industry-experience',
       label: 'Industry Experience (6–12 units, or CP4101 dissertation)',
       short: 'Industry exp',
-      detail: hasDissertation
-        ? `via ${dissCode}`
-        : `${ieUnits}/${minUnits}–${maxUnits}u`,
-      fulfilled: hasDissertation || (ieUnits >= minUnits && ieUnits <= maxUnits),
-      warn: !hasDissertation && ieUnits > maxUnits,
+      detail: major.categories.some((c) => c.id === 'noc')
+        ? 'satisfied via NOC'
+        : (hasDissertation ? `via ${dissCode}` : `${ieUnits}/${minUnits}–${maxUnits}u`),
+      fulfilled: major.categories.some((c) => c.id === 'noc') || hasDissertation || (ieUnits >= minUnits && ieUnits <= maxUnits),
+      warn: !major.categories.some((c) => c.id === 'noc') && !hasDissertation && ieUnits > maxUnits,
     },
     {
       id: 'coding',

@@ -213,8 +213,7 @@ const CategoryPanel = ({
   const hasTarget = category.id === 'unrestricted-electives' ? true : category.mcTarget !== undefined;
   const targetMc = category.id === 'unrestricted-electives' ? dynamicUeTarget : (category.mcTarget ?? 0);
   const remainingMc = Math.max(0, targetMc - placedMc);
-  const showFocusAreas =
-    category.id === major.breadthDepth?.categoryId && Boolean(major.focusAreas?.length);
+  const showBreadthDepth = category.id === major.breadthDepth?.categoryId;
   const showProgrammeElectives = category.id === major.programmeElectives?.categoryId;
 
   // All modules currently on the planner (any category) plus waived ones, deduped by
@@ -241,7 +240,7 @@ const CategoryPanel = ({
         )}
       </div>
 
-      {showFocusAreas && (
+      {showBreadthDepth && (
         <BreadthDepthPanel major={major} semesters={semesters} waivedModules={waivedModules} />
       )}
 
@@ -337,7 +336,9 @@ const BreadthDepthPanel = ({
         </div>
       )}
 
-      <FocusAreaTracker major={major} semesters={semesters} waivedModules={waivedModules} />
+      {Boolean(major.focusAreas?.length) && (
+        <FocusAreaTracker major={major} semesters={semesters} waivedModules={waivedModules} />
+      )}
     </div>
   );
 };
