@@ -306,6 +306,26 @@
       "name": "Art and the Attention Economy",
       "mcs": 4
     },
+    "NSW2001A": {
+      "code": "NSW2001A",
+      "name": "Understanding the Social World: Singapore & Beyond",
+      "mcs": 4
+    },
+    "NGN2001A": {
+      "code": "NGN2001A",
+      "name": "Global Narratives",
+      "mcs": 4
+    },
+    "NSS2001A": {
+      "code": "NSS2001A",
+      "name": "Science and Society",
+      "mcs": 4
+    },
+    "NHS2006": {
+      "code": "NHS2006",
+      "name": "Close Reading and Its Alternatives",
+      "mcs": 4
+    },
     "GEA1000N": {
       "code": "GEA1000N",
       "name": "Quantitative Reasoning with Data",
@@ -525,63 +545,15 @@
     },
     {
       "year": 1,
-      "sem": 1,
-      "moduleCode": "CS2030",
-      "categoryId": "computing-foundation"
-    },
-    {
-      "year": 1,
-      "sem": 1,
-      "moduleCode": "CS2040C",
-      "categoryId": "computing-foundation"
-    },
-    {
-      "year": 1,
       "sem": 2,
-      "moduleCode": "MA1522",
-      "categoryId": "math-sciences"
-    },
-    {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "NSW2002A",
+      "moduleCode": "NSS2001A",
       "categoryId": "nus-college"
     },
     {
       "year": 1,
       "sem": 2,
-      "moduleCode": "NGN2003A",
+      "moduleCode": "NHS2006",
       "categoryId": "nus-college"
-    },
-    {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "NSS2004A",
-      "categoryId": "nus-college"
-    },
-    {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "NHS2005A",
-      "categoryId": "nus-college"
-    },
-    {
-      "year": 1,
-      "sem": 1,
-      "moduleCode": "NTW2035",
-      "categoryId": "nus-college"
-    },
-    {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "CS1231S",
-      "categoryId": "computing-foundation"
-    },
-    {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "MA1521",
-      "categoryId": "math-sciences"
     },
     {
       "year": 1,
