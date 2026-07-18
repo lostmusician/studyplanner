@@ -145,6 +145,8 @@ export interface Major {
   focusAreas?: FocusArea[];
   breadthDepth?: BreadthDepthConfig;
   programmeElectives?: ProgrammeElectivesConfig;
+  /** Module groups that must share the same semester placement. */
+  sameSemesterGroups?: string[][];
   moduleCatalog: Record<string, Module>;
   defaultPlan: DefaultPlanEntry[];
   defaultWaivedModules?: WaivedModule[];
@@ -176,8 +178,13 @@ export interface StudentSemester {
 /** NUS Overseas Colleges duration. A student on NOC is on a "Programme-With-
  * Waivers" (PWW) that waives some Making Connections Electives only — NUSC
  * requirements, never Faculty/SoC common curriculum. 3-month NOC waives
- * nothing, so it isn't tracked as a distinct value here (equivalent to `null`). */
-export type NocDuration = '6-month' | '1-year';
+ * nothing, but is tracked so it can satisfy Industry Experience. */
+export type NocDuration = '3-month' | '6-month' | '1-year';
+
+/** NUSC Global Pathways / special-programme choices carried in the plan.
+ * Only NOC currently changes the planner's Making Connections MC targets; the
+ * other options are tracked so the plan can represent the official pathways. */
+export type SpecialProgramme = 'noc-3-month' | 'noc-6-month' | 'noc-1-year' | 'gex';
 
 export interface StudentPlan {
   majorId: string;
@@ -187,6 +194,8 @@ export interface StudentPlan {
   minorIds?: string[];
   /** Declared NOC Programme-With-Waivers duration, if any. See {@link NocDuration}. */
   nocDuration?: NocDuration | null;
+  /** Declared NUSC special programme / Global Pathways choice, if any. */
+  specialProgramme?: SpecialProgramme | null;
   /** Manual links from a requirement (by its `RequirementRule.name`) to planner
    * module codes that should count toward it even though they don't match its
    * `fulfilledBy` list. A mapped code only counts while that module is actually

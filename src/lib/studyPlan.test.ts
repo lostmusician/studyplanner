@@ -18,6 +18,7 @@ import {
   removeModule,
   isModuleLocked,
   renameModule,
+  moveLinkedModules,
   getCompletedCodesUpTo,
   recategorizeModule,
   recategorizeWaivedModule,
@@ -106,6 +107,13 @@ describe('computeRequirements', () => {
   it('requires `count` distinct matches for a multi-count requirement', () => {
     const sems = semesters([{ code: 'NHS2001', name: 'x', mcs: 4, categoryId: 'nus-college', year: 1, sem: 1 }]);
     const [, mce] = computeRequirements(source, sems);
+    expect(mce.have).toBe(1);
+    expect(mce.fulfilled).toBe(false);
+  });
+
+  it('counts GEx as one Making Connections slot when the special programme is selected', () => {
+    const sems = semesters([]);
+    const [, mce] = computeRequirements(source, sems, [], {}, 'gex');
     expect(mce.have).toBe(1);
     expect(mce.fulfilled).toBe(false);
   });
@@ -445,18 +453,18 @@ describe('applyNocAdjustment', () => {
     expect(applyNocAdjustment(major, undefined)).toBe(major);
   });
 
-  it('waives 2 Making Connections electives and shifts 8 MC for a 6-month NOC', () => {
+  it('waives 2 Making Connections electives and appends NOC category for a 6-month NOC', () => {
     const adjusted = applyNocAdjustment(major, '6-month');
     expect(adjusted.requirements[0].count).toBe(4);
     expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(44);
-    expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')?.mcTarget).toBe(28);
+    expect(adjusted.categories.find((c) => c.id === 'noc')?.mcTarget).toBe(12);
   });
 
-  it('waives 4 Making Connections electives and shifts 16 MC for a 1-year NOC', () => {
+  it('waives 4 Making Connections electives and appends NOC category for a 1-year NOC', () => {
     const adjusted = applyNocAdjustment(major, '1-year');
     expect(adjusted.requirements[0].count).toBe(2);
     expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(36);
-    expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')?.mcTarget).toBe(36);
+    expect(adjusted.categories.find((c) => c.id === 'noc')?.mcTarget).toBe(36);
   });
 
   it('never touches soc-common (NOC waives NUSC requirements only)', () => {
@@ -473,9 +481,7 @@ describe('applyNocAdjustment', () => {
     expect(applyNocAdjustment(noNusCollege, '1-year')).toBe(noNusCollege);
   });
 
-  it('freed MC is not redistributed anywhere when the major has no unrestricted-electives category', () => {
-    // A hypothetical major modeled with the NUSC block but no unrestricted-electives
-    // bucket: nus-college still shrinks, but there's nowhere for the freed MC to land.
+  it('freed MC is not redistributed to unrestricted-electives when missing, but noc category is still appended', () => {
     const noUnrestricted: Major = {
       ...major,
       categories: major.categories.filter((c) => c.id !== 'unrestricted-electives'),
@@ -483,7 +489,8 @@ describe('applyNocAdjustment', () => {
     const adjusted = applyNocAdjustment(noUnrestricted, '6-month');
     expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(44);
     expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')).toBeUndefined();
-    expect(adjusted.categories).toHaveLength(1);
+    expect(adjusted.categories.find((c) => c.id === 'noc')?.mcTarget).toBe(12);
+    expect(adjusted.categories).toHaveLength(2);
   });
 });
 
@@ -669,6 +676,30 @@ describe('renameModule', () => {
     const sems = semesters([{ code: 'CS1101S', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 }]);
     const result = renameModule(sems, 'MA1521', { code: 'MA1521B', name: 'y', mcs: 4, categoryId: 'math-sciences' });
     expect(result).toEqual(sems);
+  });
+});
+
+describe('moveLinkedModules', () => {
+  const major: Major = {
+    id: 'cs', label: 'CS', school: 'SoC', batches: [], totalMcTarget: 160,
+    categories: [], requirements: [], moduleCatalog: {}, defaultPlan: [],
+    sameSemesterGroups: [['CS2101', 'CS2103T']],
+  };
+
+  it('moves a same-semester linked pair together when either module is relocated', () => {
+    const sems = semesters([
+      { code: 'CS2101', name: 'x', mcs: 4, categoryId: 'cs-foundation', year: 2, sem: 1 },
+      { code: 'CS2103T', name: 'y', mcs: 4, categoryId: 'cs-foundation', year: 2, sem: 2 },
+    ]);
+
+    const result = moveLinkedModules(major, sems, 3, 1, { code: 'CS2101', name: 'x', mcs: 4, categoryId: 'cs-foundation' });
+    const y2s1 = result.find((s) => s.year === 2 && s.sem === 1)!;
+    const y2s2 = result.find((s) => s.year === 2 && s.sem === 2)!;
+    const y3s1 = result.find((s) => s.year === 3 && s.sem === 1)!;
+
+    expect(y2s1.modules).toEqual([]);
+    expect(y2s2.modules).toEqual([]);
+    expect(y3s1.modules.map((m) => m.code)).toEqual(['CS2101', 'CS2103T']);
   });
 });
 

@@ -2,153 +2,850 @@
   "id": "business-analytics-nusc",
   "label": "Business Analytics (NUS College)",
   "school": "School of Computing",
-  "batches": ["AY2026/2027"],
+  "batches": [
+    "AY2026/2027"
+  ],
   "totalMcTarget": 160,
   "categories": [
-    { "id": "ba-foundation", "label": "BA Foundation", "mcTarget": 52, "color": "#d4c9b8" },
-    { "id": "math-sciences", "label": "Math & Sciences", "mcTarget": 12, "color": "#c6d0ca" },
-    { "id": "ba-electives", "label": "Programme Electives", "mcTarget": 20, "color": "#c9d4b8" },
-    { "id": "soc-common", "label": "SoC Common Curriculum", "mcTarget": 8, "color": "#abb89b" },
-    { "id": "nus-college", "label": "NUS College", "mcTarget": 52, "color": "#b8c9d4" },
-    { "id": "unrestricted-electives", "label": "Unrestricted Electives", "mcTarget": 16, "color": "#c3bace" }
+    {
+      "id": "ba-foundation",
+      "label": "BA Foundation",
+      "mcTarget": 52,
+      "color": "#d4c9b8"
+    },
+    {
+      "id": "math-sciences",
+      "label": "Math & Sciences",
+      "mcTarget": 12,
+      "color": "#c6d0ca"
+    },
+    {
+      "id": "ba-electives",
+      "label": "Programme Electives",
+      "mcTarget": 20,
+      "color": "#c9d4b8"
+    },
+    {
+      "id": "soc-common",
+      "label": "SoC Common Curriculum",
+      "mcTarget": 8,
+      "color": "#abb89b"
+    },
+    {
+      "id": "nus-college",
+      "label": "NUS College",
+      "mcTarget": 52,
+      "color": "#b8c9d4"
+    },
+    {
+      "id": "unrestricted-electives",
+      "label": "Unrestricted Electives",
+      "mcTarget": 16,
+      "color": "#c3bace"
+    }
   ],
   "requirements": [
-    { "name": "Programming Methodology (CS1010A)", "fulfilledBy": ["CS1010A"], "categoryId": "soc-common" },
-    { "name": "Digital and AI Ethics (IS1108)", "fulfilledBy": ["IS1108"], "categoryId": "soc-common" },
-    { "name": "Introduction to Business Analytics (BT1101)", "fulfilledBy": ["BT1101"], "categoryId": "ba-foundation" },
-    { "name": "Econometrics Modeling for Business Analytics (BT2101)", "fulfilledBy": ["BT2101"], "categoryId": "ba-foundation" },
-    { "name": "Application Systems Development for Business Analytics (BT3103)", "fulfilledBy": ["BT3103"], "categoryId": "ba-foundation" },
-    { "name": "Business Analytics Capstone Project (BT4103)", "fulfilledBy": ["BT4103"], "categoryId": "ba-foundation" },
-    { "name": "Thinking with Writing (NTW)", "fulfilledBy": ["NTW*"], "categoryId": "nus-college" },
-    { "name": "Understanding the Social World (NSW)", "fulfilledBy": ["NSW*"], "categoryId": "nus-college" },
-    { "name": "Reasoning with Data (GEA1000N)", "fulfilledBy": ["GEA1000N"], "categoryId": "nus-college" },
-    { "name": "Global Narratives (NGN)", "fulfilledBy": ["NGN*"], "categoryId": "nus-college" },
-    { "name": "Science and Society (NSS)", "fulfilledBy": ["NSS*"], "categoryId": "nus-college" },
-    { "name": "Making Connections", "fulfilledBy": ["NHS*", "NFB*", "NST*", "NFC*", "NHT*"], "count": 6, "categoryId": "nus-college" },
-    { "name": "Impact Experience Project (NEP)", "fulfilledBy": ["NEP*"], "categoryId": "nus-college" }
+    {
+      "name": "Programming Methodology (CS1010A)",
+      "fulfilledBy": [
+        "CS1010A"
+      ],
+      "categoryId": "soc-common"
+    },
+    {
+      "name": "Digital and AI Ethics (IS1108)",
+      "fulfilledBy": [
+        "IS1108"
+      ],
+      "categoryId": "soc-common"
+    },
+    {
+      "name": "Introduction to Business Analytics (BT1101)",
+      "fulfilledBy": [
+        "BT1101"
+      ],
+      "categoryId": "ba-foundation"
+    },
+    {
+      "name": "Econometrics Modeling for Business Analytics (BT2101)",
+      "fulfilledBy": [
+        "BT2101"
+      ],
+      "categoryId": "ba-foundation"
+    },
+    {
+      "name": "Application Systems Development for Business Analytics (BT3103)",
+      "fulfilledBy": [
+        "BT3103"
+      ],
+      "categoryId": "ba-foundation"
+    },
+    {
+      "name": "Business Analytics Capstone Project (BT4103)",
+      "fulfilledBy": [
+        "BT4103"
+      ],
+      "categoryId": "ba-foundation"
+    },
+    {
+      "name": "Thinking with Writing (NTW)",
+      "fulfilledBy": [
+        "NTW*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Understanding the Social World (NSW)",
+      "fulfilledBy": [
+        "NSW*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Reasoning with Data (GEA1000N)",
+      "fulfilledBy": [
+        "GEA1000N"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Global Narratives (NGN)",
+      "fulfilledBy": [
+        "NGN*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Science and Society (NSS)",
+      "fulfilledBy": [
+        "NSS*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Making Connections",
+      "fulfilledBy": [
+        "NHS*",
+        "NFB*",
+        "NST*",
+        "NFC*",
+        "NHT*"
+      ],
+      "count": 6,
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Impact Experience Project (NEP)",
+      "fulfilledBy": [
+        "NEP*"
+      ],
+      "categoryId": "nus-college"
+    },
+    {
+      "name": "Industry Experience (12 MC, or BT4101 dissertation)",
+      "fulfilledBy": [
+        "CP3880",
+        "IS4010",
+        "ETP3201L",
+        "ETP3205",
+        "ETP3206L",
+        "CP3200",
+        "CP3202",
+        "CP3107",
+        "CP3110",
+        "BT4101"
+      ],
+      "count": 1,
+      "altGroups": [
+        [
+          "CP3200",
+          "CP3202"
+        ],
+        [
+          "CP3200",
+          "IS4236",
+          "CP3201"
+        ],
+        [
+          "CP3200",
+          "IS4236",
+          "CS4352"
+        ],
+        [
+          "CP3200",
+          "IS4243",
+          "CP3201"
+        ],
+        [
+          "CP3200",
+          "IS4243",
+          "CS4352"
+        ],
+        [
+          "CP3200",
+          "BT4301",
+          "CP3201"
+        ],
+        [
+          "CP3200",
+          "BT4301",
+          "CS4352"
+        ],
+        [
+          "CP3200",
+          "IS4236",
+          "IS4243"
+        ],
+        [
+          "CP3200",
+          "IS4236",
+          "BT4301"
+        ],
+        [
+          "CP3200",
+          "IS4243",
+          "BT4301"
+        ],
+        [
+          "ETP3202L",
+          "ETP3203L"
+        ]
+      ],
+      "categoryId": "ba-foundation"
+    }
   ],
   "programmeElectives": {
     "categoryId": "ba-electives",
     "totalUnits": 20,
     "minCourses": 5,
     "minLevel4000Courses": 3,
-    "minPrefixCourses": [{ "prefix": "BT", "minCourses": 3 }],
+    "minPrefixCourses": [
+      {
+        "prefix": "BT",
+        "minCourses": 3
+      }
+    ],
     "categories": [
       {
         "id": "business-applications",
         "label": "Business Applications",
-        "courses": ["BT4013", "BT4016", "BT4211", "BT4212", "DBA4811", "IE3120", "IS3150", "IS3240", "IS4241", "IS4242", "IS4250", "IS4262"]
+        "courses": [
+          "BT4013",
+          "BT4016",
+          "BT4211",
+          "BT4212",
+          "DBA4811",
+          "IE3120",
+          "IS3150",
+          "IS3240",
+          "IS4241",
+          "IS4242",
+          "IS4250",
+          "IS4262"
+        ]
       },
       {
         "id": "analytics-methods",
         "label": "Analytics Methods",
-        "courses": ["BT3017", "BT3102", "BT3104", "BT4012", "BT4015", "BT4221", "BT4222", "BT4240", "BT4241", "CP3100", "CS3243", "CS3244", "CS4248", "IS4241", "ST4245"]
+        "courses": [
+          "BT3017",
+          "BT3102",
+          "BT3104",
+          "BT4012",
+          "BT4015",
+          "BT4221",
+          "BT4222",
+          "BT4240",
+          "BT4241",
+          "CP3100",
+          "CS3243",
+          "CS3244",
+          "CS4248",
+          "IS4241",
+          "ST4245"
+        ]
       },
       {
         "id": "technology-implementation",
         "label": "Technology Implementation",
-        "courses": ["BT4014", "BT4301", "IS3107", "IS3221", "IS4226", "IS4228", "IS4234", "IS4246", "IS4302", "IS4303"]
+        "courses": [
+          "BT4014",
+          "BT4301",
+          "IS3107",
+          "IS3221",
+          "IS4226",
+          "IS4228",
+          "IS4234",
+          "IS4246",
+          "IS4302",
+          "IS4303"
+        ]
       }
     ],
     "specialisations": [
       {
         "id": "financial-analytics",
         "label": "Financial Analytics",
-        "courses": ["BT3102", "BT4012", "BT4013", "BT4016", "BT4221", "IS4226", "IS4228", "IS4234", "IS4302", "IS4303"],
+        "courses": [
+          "BT3102",
+          "BT4012",
+          "BT4013",
+          "BT4016",
+          "BT4221",
+          "IS4226",
+          "IS4228",
+          "IS4234",
+          "IS4302",
+          "IS4303"
+        ],
         "minCourses": 5
       },
       {
         "id": "ml-analytics",
         "label": "Machine Learning-based Analytics",
-        "courses": ["BT3017", "BT4012", "BT4014", "BT4221", "BT4222", "BT4240", "BT4241", "BT4301", "CS3243", "CS4248", "IS4246"],
+        "courses": [
+          "BT3017",
+          "BT4012",
+          "BT4014",
+          "BT4221",
+          "BT4222",
+          "BT4240",
+          "BT4241",
+          "BT4301",
+          "CS3243",
+          "CS4248",
+          "IS4246"
+        ],
         "minCourses": 5
       },
       {
         "id": "marketing-analytics",
         "label": "Marketing Analytics",
-        "courses": ["BT3017", "BT4014", "BT4015", "BT4211", "BT4212", "BT4222", "IS3150", "IS4241", "IS4262"],
+        "courses": [
+          "BT3017",
+          "BT4014",
+          "BT4015",
+          "BT4211",
+          "BT4212",
+          "BT4222",
+          "IS3150",
+          "IS4241",
+          "IS4262"
+        ],
         "minCourses": 5
       }
     ]
   },
   "moduleCatalog": {
-    "CS1010A": { "code": "CS1010A", "name": "Programming Methodology", "mcs": 4 },
-    "BT1101": { "code": "BT1101", "name": "Introduction to Business Analytics", "mcs": 4 },
-    "BT2101": { "code": "BT2101", "name": "Econometrics Modeling for Business Analytics", "mcs": 4 },
-    "BT2102": { "code": "BT2102", "name": "Data Management and Visualisation", "mcs": 4 },
-    "CS2030": { "code": "CS2030", "name": "Programming Methodology II", "mcs": 4 },
-    "CS2040": { "code": "CS2040", "name": "Data Structures and Algorithms", "mcs": 4 },
-    "IS2101": { "code": "IS2101", "name": "Business and Technical Communication", "mcs": 4 },
-    "BT3103": { "code": "BT3103", "name": "Application Systems Development for Business Analytics", "mcs": 4 },
-    "IS3103": { "code": "IS3103", "name": "Information Systems Leadership and Communication", "mcs": 4 },
-    "BT4103": { "code": "BT4103", "name": "Business Analytics Capstone Project", "mcs": 8 },
-    "BT4101": { "code": "BT4101", "name": "B.Sc. Dissertation", "mcs": 12 },
-    "MA1521": { "code": "MA1521", "name": "Calculus for Computing", "mcs": 4 },
-    "MA1522": { "code": "MA1522", "name": "Linear Algebra for Computing", "mcs": 4 },
-    "ST2334": { "code": "ST2334", "name": "Probability and Statistics", "mcs": 4 },
-    "IS1108": { "code": "IS1108", "name": "Digital and AI Ethics", "mcs": 4 },
-    "NTW2035": { "code": "NTW2035", "name": "Art and the Attention Economy", "mcs": 4 },
-    "GEA1000N": { "code": "GEA1000N", "name": "Quantitative Reasoning with Data", "mcs": 4 },
-    "MA1301": { "code": "MA1301", "name": "Introductory Mathematics", "mcs": 4 },
-    "NEP2001A": { "code": "NEP2001A", "name": "Impact Experience Project", "mcs": 2 },
-    "BT3017": { "code": "BT3017", "name": "Feature Engineering for Machine Learning", "mcs": 4 },
-    "BT3102": { "code": "BT3102", "name": "Computational Methods for Business Analytics", "mcs": 4 },
-    "BT3104": { "code": "BT3104", "name": "Optimization Methods for Business Analytics", "mcs": 4 },
-    "BT4012": { "code": "BT4012", "name": "Fraud Analytics", "mcs": 4 },
-    "BT4013": { "code": "BT4013", "name": "Analytics for Capital Market Trading and Investment", "mcs": 4 },
-    "BT4014": { "code": "BT4014", "name": "Analytics Driven Design of Adaptive Systems", "mcs": 4 },
-    "BT4015": { "code": "BT4015", "name": "Geospatial Analytics", "mcs": 4 },
-    "BT4016": { "code": "BT4016", "name": "Risk Analytics for Financial Services", "mcs": 4 },
-    "BT4211": { "code": "BT4211", "name": "Data-Driven Marketing", "mcs": 4 },
-    "BT4212": { "code": "BT4212", "name": "Search Engine Optimization and Analytics", "mcs": 4 },
-    "BT4221": { "code": "BT4221", "name": "Advanced Analytics with Big Data Technologies", "mcs": 4 },
-    "BT4222": { "code": "BT4222", "name": "Mining Web Data for Business Insights", "mcs": 4 },
-    "BT4240": { "code": "BT4240", "name": "Machine Learning for Predictive Data Analytics", "mcs": 4 },
-    "BT4241": { "code": "BT4241", "name": "Causal Impact Analytics for Business Applications", "mcs": 4 },
-    "BT4301": { "code": "BT4301", "name": "Business Analytics Solutions Development and Deployment", "mcs": 4 },
-    "CP3100": { "code": "CP3100", "name": "Information Systems and Analytics Research Methodology", "mcs": 4 },
-    "CS3243": { "code": "CS3243", "name": "Introduction to Artificial Intelligence", "mcs": 4 },
-    "CS3244": { "code": "CS3244", "name": "Machine Learning", "mcs": 4 },
-    "CS4248": { "code": "CS4248", "name": "Natural Language Processing", "mcs": 4 },
-    "DBA4811": { "code": "DBA4811", "name": "Analytics for Consulting", "mcs": 4 },
-    "IE3120": { "code": "IE3120", "name": "Manufacturing Logistics", "mcs": 4 },
-    "IS3107": { "code": "IS3107", "name": "Data Engineering", "mcs": 4 },
-    "IS3150": { "code": "IS3150", "name": "Digital Media Marketing", "mcs": 4 },
-    "IS3221": { "code": "IS3221", "name": "ERP Systems with Analytics Solutions", "mcs": 4 },
-    "IS3240": { "code": "IS3240", "name": "Digital Platform Strategy and Architecture", "mcs": 4 },
-    "IS4226": { "code": "IS4226", "name": "Systematic Trading Strategies and Systems", "mcs": 4 },
-    "IS4228": { "code": "IS4228", "name": "Information Technologies in Financial Services", "mcs": 4 },
-    "IS4234": { "code": "IS4234", "name": "Governance, Regulation, and Compliance Technology", "mcs": 4 },
-    "IS4241": { "code": "IS4241", "name": "Social Media Network Analysis", "mcs": 4 },
-    "IS4242": { "code": "IS4242", "name": "Intelligent Systems and Techniques", "mcs": 4 },
-    "IS4246": { "code": "IS4246", "name": "Smart Systems and AI Governance", "mcs": 4 },
-    "IS4250": { "code": "IS4250", "name": "IT-enabled Healthcare Solutioning", "mcs": 4 },
-    "IS4262": { "code": "IS4262", "name": "Digital Product Management", "mcs": 4 },
-    "IS4302": { "code": "IS4302", "name": "Blockchain and Distributed Ledger Technologies", "mcs": 4 },
-    "IS4303": { "code": "IS4303", "name": "IT-mediated financial solutions and platforms", "mcs": 4 },
-    "ST4245": { "code": "ST4245", "name": "Statistical Methods for Finance", "mcs": 4 }
+    "CS1010A": {
+      "code": "CS1010A",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "BT1101": {
+      "code": "BT1101",
+      "name": "Introduction to Business Analytics",
+      "mcs": 4
+    },
+    "BT2101": {
+      "code": "BT2101",
+      "name": "Econometrics Modeling for Business Analytics",
+      "mcs": 4
+    },
+    "BT2102": {
+      "code": "BT2102",
+      "name": "Data Management and Visualisation",
+      "mcs": 4
+    },
+    "CS2030": {
+      "code": "CS2030",
+      "name": "Programming Methodology II",
+      "mcs": 4
+    },
+    "CS2040": {
+      "code": "CS2040",
+      "name": "Data Structures and Algorithms",
+      "mcs": 4
+    },
+    "IS2101": {
+      "code": "IS2101",
+      "name": "Business and Technical Communication",
+      "mcs": 4
+    },
+    "BT3103": {
+      "code": "BT3103",
+      "name": "Application Systems Development for Business Analytics",
+      "mcs": 4
+    },
+    "IS3103": {
+      "code": "IS3103",
+      "name": "Information Systems Leadership and Communication",
+      "mcs": 4
+    },
+    "BT4103": {
+      "code": "BT4103",
+      "name": "Business Analytics Capstone Project",
+      "mcs": 8
+    },
+    "BT4101": {
+      "code": "BT4101",
+      "name": "B.Sc. Dissertation",
+      "mcs": 12
+    },
+    "MA1521": {
+      "code": "MA1521",
+      "name": "Calculus for Computing",
+      "mcs": 4
+    },
+    "MA1522": {
+      "code": "MA1522",
+      "name": "Linear Algebra for Computing",
+      "mcs": 4
+    },
+    "ST2334": {
+      "code": "ST2334",
+      "name": "Probability and Statistics",
+      "mcs": 4
+    },
+    "IS1108": {
+      "code": "IS1108",
+      "name": "Digital and AI Ethics",
+      "mcs": 4
+    },
+    "NTW2035": {
+      "code": "NTW2035",
+      "name": "Art and the Attention Economy",
+      "mcs": 4
+    },
+    "GEA1000N": {
+      "code": "GEA1000N",
+      "name": "Quantitative Reasoning with Data",
+      "mcs": 4
+    },
+    "MA1301": {
+      "code": "MA1301",
+      "name": "Introductory Mathematics",
+      "mcs": 4
+    },
+    "NEP2001A": {
+      "code": "NEP2001A",
+      "name": "Impact Experience Project",
+      "mcs": 2
+    },
+    "BT3017": {
+      "code": "BT3017",
+      "name": "Feature Engineering for Machine Learning",
+      "mcs": 4
+    },
+    "BT3102": {
+      "code": "BT3102",
+      "name": "Computational Methods for Business Analytics",
+      "mcs": 4
+    },
+    "BT3104": {
+      "code": "BT3104",
+      "name": "Optimization Methods for Business Analytics",
+      "mcs": 4
+    },
+    "BT4012": {
+      "code": "BT4012",
+      "name": "Fraud Analytics",
+      "mcs": 4
+    },
+    "BT4013": {
+      "code": "BT4013",
+      "name": "Analytics for Capital Market Trading and Investment",
+      "mcs": 4
+    },
+    "BT4014": {
+      "code": "BT4014",
+      "name": "Analytics Driven Design of Adaptive Systems",
+      "mcs": 4
+    },
+    "BT4015": {
+      "code": "BT4015",
+      "name": "Geospatial Analytics",
+      "mcs": 4
+    },
+    "BT4016": {
+      "code": "BT4016",
+      "name": "Risk Analytics for Financial Services",
+      "mcs": 4
+    },
+    "BT4211": {
+      "code": "BT4211",
+      "name": "Data-Driven Marketing",
+      "mcs": 4
+    },
+    "BT4212": {
+      "code": "BT4212",
+      "name": "Search Engine Optimization and Analytics",
+      "mcs": 4
+    },
+    "BT4221": {
+      "code": "BT4221",
+      "name": "Advanced Analytics with Big Data Technologies",
+      "mcs": 4
+    },
+    "BT4222": {
+      "code": "BT4222",
+      "name": "Mining Web Data for Business Insights",
+      "mcs": 4
+    },
+    "BT4240": {
+      "code": "BT4240",
+      "name": "Machine Learning for Predictive Data Analytics",
+      "mcs": 4
+    },
+    "BT4241": {
+      "code": "BT4241",
+      "name": "Causal Impact Analytics for Business Applications",
+      "mcs": 4
+    },
+    "BT4301": {
+      "code": "BT4301",
+      "name": "Business Analytics Solutions Development and Deployment",
+      "mcs": 4
+    },
+    "CP3100": {
+      "code": "CP3100",
+      "name": "Information Systems and Analytics Research Methodology",
+      "mcs": 4
+    },
+    "CS3243": {
+      "code": "CS3243",
+      "name": "Introduction to Artificial Intelligence",
+      "mcs": 4
+    },
+    "CS3244": {
+      "code": "CS3244",
+      "name": "Machine Learning",
+      "mcs": 4
+    },
+    "CS4248": {
+      "code": "CS4248",
+      "name": "Natural Language Processing",
+      "mcs": 4
+    },
+    "DBA4811": {
+      "code": "DBA4811",
+      "name": "Analytics for Consulting",
+      "mcs": 4
+    },
+    "IE3120": {
+      "code": "IE3120",
+      "name": "Manufacturing Logistics",
+      "mcs": 4
+    },
+    "IS3107": {
+      "code": "IS3107",
+      "name": "Data Engineering",
+      "mcs": 4
+    },
+    "IS3150": {
+      "code": "IS3150",
+      "name": "Digital Media Marketing",
+      "mcs": 4
+    },
+    "IS3221": {
+      "code": "IS3221",
+      "name": "ERP Systems with Analytics Solutions",
+      "mcs": 4
+    },
+    "IS3240": {
+      "code": "IS3240",
+      "name": "Digital Platform Strategy and Architecture",
+      "mcs": 4
+    },
+    "IS4226": {
+      "code": "IS4226",
+      "name": "Systematic Trading Strategies and Systems",
+      "mcs": 4
+    },
+    "IS4228": {
+      "code": "IS4228",
+      "name": "Information Technologies in Financial Services",
+      "mcs": 4
+    },
+    "IS4234": {
+      "code": "IS4234",
+      "name": "Governance, Regulation, and Compliance Technology",
+      "mcs": 4
+    },
+    "IS4241": {
+      "code": "IS4241",
+      "name": "Social Media Network Analysis",
+      "mcs": 4
+    },
+    "IS4242": {
+      "code": "IS4242",
+      "name": "Intelligent Systems and Techniques",
+      "mcs": 4
+    },
+    "IS4246": {
+      "code": "IS4246",
+      "name": "Smart Systems and AI Governance",
+      "mcs": 4
+    },
+    "IS4250": {
+      "code": "IS4250",
+      "name": "IT-enabled Healthcare Solutioning",
+      "mcs": 4
+    },
+    "IS4262": {
+      "code": "IS4262",
+      "name": "Digital Product Management",
+      "mcs": 4
+    },
+    "IS4302": {
+      "code": "IS4302",
+      "name": "Blockchain and Distributed Ledger Technologies",
+      "mcs": 4
+    },
+    "IS4303": {
+      "code": "IS4303",
+      "name": "IT-mediated financial solutions and platforms",
+      "mcs": 4
+    },
+    "ST4245": {
+      "code": "ST4245",
+      "name": "Statistical Methods for Finance",
+      "mcs": 4
+    },
+    "CP3880": {
+      "code": "CP3880",
+      "name": "Advanced Technology Attachment Programme",
+      "mcs": 12
+    },
+    "IS4010": {
+      "code": "IS4010",
+      "name": "Digital Transformation Leadership Programme",
+      "mcs": 12
+    },
+    "ETP3201L": {
+      "code": "ETP3201L",
+      "name": "Innovation & Enterprise Internship",
+      "mcs": 12
+    },
+    "ETP3202": {
+      "code": "ETP3202",
+      "name": "Innovation & Enterprise Internship II",
+      "mcs": 12
+    },
+    "ETP3203": {
+      "code": "ETP3203",
+      "name": "Innovation & Enterprise Internship III",
+      "mcs": 12
+    },
+    "ETP3205": {
+      "code": "ETP3205",
+      "name": "Innovation & Enterprise Internship",
+      "mcs": 6
+    },
+    "ETP3206": {
+      "code": "ETP3206",
+      "name": "Innovation & Enterprise Internship IV",
+      "mcs": 6
+    },
+    "ETP3206L": {
+      "code": "ETP3206L",
+      "name": "Innovation & Enterprise Internship Programme",
+      "mcs": 12
+    },
+    "ETP3202L": {
+      "code": "ETP3202L",
+      "name": "Innovation & Enterprise Case Study and Analysis",
+      "mcs": 8
+    },
+    "ETP3203L": {
+      "code": "ETP3203L",
+      "name": "Innovation & Enterprise Internship Practicum",
+      "mcs": 8
+    },
+    "CP3201": {
+      "code": "CP3201",
+      "name": "Industry Seminar for Computing",
+      "mcs": 2
+    },
+    "CS4352": {
+      "code": "CS4352",
+      "name": "Industry Seminar in Cybersecurity",
+      "mcs": 2
+    },
+    "IS4236": {
+      "code": "IS4236",
+      "name": "Cloud Services and Infrastructure Management",
+      "mcs": 4
+    },
+    "IS4243": {
+      "code": "IS4243",
+      "name": "Digital Transformation Consulting",
+      "mcs": 4
+    },
+    "BT4301": {
+      "code": "BT4301",
+      "name": "Business Analytics Solutions Development and Deployment",
+      "mcs": 4
+    },
+    "CP3200": {
+      "code": "CP3200",
+      "name": "Internship",
+      "mcs": 6
+    },
+    "CP3202": {
+      "code": "CP3202",
+      "name": "Internship II",
+      "mcs": 6
+    },
+    "CP3107": {
+      "code": "CP3107",
+      "name": "Computing for Social Service Agencies I",
+      "mcs": 6
+    },
+    "CP3110": {
+      "code": "CP3110",
+      "name": "Computing for Social Service Agencies II",
+      "mcs": 6
+    }
   },
   "defaultPlan": [
-    { "year": 1, "sem": 1, "moduleCode": "CS1010A", "categoryId": "soc-common" },
-    { "year": 1, "sem": 1, "moduleCode": "BT1101", "categoryId": "ba-foundation" },
-    { "year": 1, "sem": 1, "moduleCode": "MA1521", "categoryId": "math-sciences" },
-    { "year": 1, "sem": 2, "moduleCode": "CS2030", "categoryId": "ba-foundation" },
-    { "year": 1, "sem": 2, "moduleCode": "CS2040", "categoryId": "ba-foundation" },
-    { "year": 1, "sem": 2, "moduleCode": "MA1522", "categoryId": "math-sciences" },
-    { "year": 1, "sem": 2, "moduleCode": "NTW2035", "categoryId": "nus-college" },
-    { "year": 2, "sem": 1, "moduleCode": "BT2101", "categoryId": "ba-foundation" },
-    { "year": 2, "sem": 1, "moduleCode": "BT2102", "categoryId": "ba-foundation" },
-    { "year": 2, "sem": 1, "moduleCode": "ST2334", "categoryId": "math-sciences" },
-    { "year": 2, "sem": 1, "moduleCode": "GEA1000N", "categoryId": "nus-college" },
-    { "year": 2, "sem": 2, "moduleCode": "IS2101", "categoryId": "ba-foundation" },
-    { "year": 2, "sem": 2, "moduleCode": "BT3103", "categoryId": "ba-foundation" },
-    { "year": 2, "sem": 2, "moduleCode": "IS1108", "categoryId": "soc-common" },
-    { "year": 3, "sem": 1, "moduleCode": "IS3103", "categoryId": "ba-foundation" },
-    { "year": 4, "sem": 1, "moduleCode": "BT4103", "categoryId": "ba-foundation" },
-    { "year": 4, "sem": 2, "moduleCode": "BT4101", "categoryId": "ba-foundation" },
-    { "year": 1, "sem": 2, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true },
-    { "year": 2, "sem": 1, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true },
-    { "year": 2, "sem": 2, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true },
-    { "year": 3, "sem": 1, "moduleCode": "NEP2001A", "categoryId": "nus-college", "locked": true }
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "CS1010A",
+      "categoryId": "soc-common"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "BT1101",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "MA1521",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "CS2030",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "CS2040",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "MA1522",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NTW2035",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "BT2101",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "BT2102",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "ST2334",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "GEA1000N",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "IS2101",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "BT3103",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "IS1108",
+      "categoryId": "soc-common"
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "IS3103",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 4,
+      "sem": 1,
+      "moduleCode": "BT4103",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 4,
+      "sem": 2,
+      "moduleCode": "BT4101",
+      "categoryId": "ba-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    }
+  ],
+  "defaultWaivedModules": [
+    {
+      "code": "MA1301",
+      "name": "Introductory Mathematics",
+      "mcs": 4,
+      "categoryId": "cs-foundation"
+    }
   ]
 }

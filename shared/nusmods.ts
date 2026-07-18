@@ -50,6 +50,12 @@ const extractModuleCode = (value: string): string | null => {
   return match ? match[0] : null;
 };
 
+const normalizePrereqCode = (value: string): string => {
+  const normalized = value.trim().toUpperCase();
+  const match = normalized.match(/^([A-Z]+\d{4})[A-Z]*$/);
+  return match ? match[1] : normalized;
+};
+
 const isModuleSummary = (value: unknown): value is { moduleCode: string; title: string; semesters?: number[] } => {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Record<string, unknown>;
@@ -122,7 +128,9 @@ const summarizeMissingPrereqTree = (tree: unknown, completedModuleCodes: Set<str
   if (typeof tree === 'string') {
     const code = extractModuleCode(tree);
     if (!code) return null;
-    return completedModuleCodes.has(code) ? null : code;
+    const normalizedCode = normalizePrereqCode(code);
+    const hasCode = Array.from(completedModuleCodes).some((completed) => normalizePrereqCode(completed) === normalizedCode);
+    return hasCode ? null : code;
   }
 
   if (Array.isArray(tree)) {

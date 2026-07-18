@@ -250,4 +250,14 @@ describe('assessPrerequisiteConflict', () => {
     const result = assessPrerequisiteConflict(detail, ['  cs1010 ', 'ma1521']);
     expect(result.missingRequirement).toBeNull();
   });
+
+  it('ignores trailing letters after the 4-digit core when matching prerequisite codes', () => {
+    const detail: NusModsModuleDetail = {
+      moduleCode: 'FIN2704X',
+      title: 'Finance',
+      prereqTree: { and: ['ACC1701XA'] },
+    };
+    const result = assessPrerequisiteConflict(detail, ['ACC1701X']);
+    expect(result.missingRequirement).toBeNull();
+  });
 });

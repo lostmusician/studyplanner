@@ -7,6 +7,7 @@ import type {
   WaivedModule,
   SecondaryProgramme,
   NocDuration,
+  SpecialProgramme,
 } from '@shared/types';
 import {
   createEmptySemesters,
@@ -14,6 +15,7 @@ import {
   upsertModule,
   removeModule,
   renameModule,
+  moveLinkedModules,
   computeRequirements,
   computeStats,
   getCompletedCodesUpTo,
@@ -55,10 +57,21 @@ interface SavedPlanState {
   minorIds: string[];
   requirementMappings: Record<string, string[]>;
   nocDuration: NocDuration | null;
+  specialProgramme: SpecialProgramme | null;
 }
 
 const normalizeNocDuration = (value: unknown): NocDuration | null =>
-  value === '6-month' || value === '1-year' ? value : null;
+  value === '3-month' || value === '6-month' || value === '1-year' ? value as NocDuration : null;
+
+const normalizeSpecialProgramme = (value: unknown): SpecialProgramme | null =>
+  value === 'noc-3-month' || value === 'noc-6-month' || value === 'noc-1-year' || value === 'gex' ? value as SpecialProgramme : null;
+
+const specialProgrammeToNocDuration = (value: SpecialProgramme | null): NocDuration | null => {
+  if (value === 'noc-3-month') return '3-month';
+  if (value === 'noc-6-month') return '6-month';
+  if (value === 'noc-1-year') return '1-year';
+  return null;
+};
 
 const normalizeRequirementMappings = (value: unknown): Record<string, string[]> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -94,13 +107,23 @@ const normalizeModule = (major: Major, module: Partial<PlacedModule>): PlacedMod
 const normalizeSemesters = (major: Major, semesters: StudentSemester[]): StudentSemester[] => {
   const normalized = createEmptySemesters();
   for (const semester of semesters) {
-    const target = normalized.find((item) => item.year === semester.year && item.sem === semester.sem);
-    if (!target) continue;
+    let target = normalized.find((item) => item.year === semester.year && item.sem === semester.sem);
+    if (!target) {
+      if (semester.sem === 3 || semester.sem === 4) {
+        target = { year: semester.year, sem: semester.sem, modules: [] };
+        normalized.push(target);
+      } else {
+        continue;
+      }
+    }
     target.modules = (semester.modules ?? [])
       .map((module) => normalizeModule(major, module))
       .filter((module): module is PlacedModule => Boolean(module));
   }
-  return normalized;
+  return normalized.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.sem - b.sem;
+  });
 };
 
 const normalizeWaivedModules = (major: Major, modules: WaivedModule[] = []): WaivedModule[] =>
@@ -120,6 +143,7 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
       secondMajorId: typeof plan.secondMajorId === 'string' ? plan.secondMajorId : null,
       minorIds: Array.isArray(plan.minorIds) ? plan.minorIds.slice(0, MAX_MINORS) : [],
       requirementMappings: normalizeRequirementMappings(plan.requirementMappings),
+      specialProgramme: normalizeSpecialProgramme(plan.specialProgramme) ?? (normalizeNocDuration(plan.nocDuration) ? `noc-${normalizeNocDuration(plan.nocDuration)}` as SpecialProgramme : null),
       nocDuration: normalizeNocDuration(plan.nocDuration),
     };
   } catch {
@@ -134,6 +158,7 @@ const jsonDefaultPlan = (major: Major): SavedPlanState => ({
   minorIds: [],
   requirementMappings: {},
   nocDuration: null,
+  specialProgramme: null,
 });
 
 const loadPlanForMajor = (major: Major): SavedPlanState => {
@@ -146,6 +171,7 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
     minorIds: savedPlan?.minorIds ?? defaultPlan.minorIds,
     requirementMappings: savedPlan?.requirementMappings ?? defaultPlan.requirementMappings,
     nocDuration: savedPlan?.nocDuration ?? defaultPlan.nocDuration,
+    specialProgramme: savedPlan?.specialProgramme ?? defaultPlan.specialProgramme,
   };
 };
 
@@ -158,6 +184,7 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
     minorIds: state.minorIds,
     requirementMappings: state.requirementMappings,
     nocDuration: state.nocDuration ?? undefined,
+    specialProgramme: state.specialProgramme ?? undefined,
     lastUpdated: new Date().toISOString(),
   };
   localStorage.setItem(planKey(majorId), JSON.stringify(plan));
@@ -196,26 +223,67 @@ export const useStudyPlan = () => {
   const [requirementMappings, setRequirementMappings] = useState<Record<string, string[]>>(
     () => initialPlan?.requirementMappings ?? {},
   );
-  const [nocDuration, setNocDurationState] = useState<NocDuration | null>(
-    () => initialPlan?.nocDuration ?? null,
+  const [specialProgramme, setSpecialProgrammeState] = useState<SpecialProgramme | null>(
+    () => initialPlan?.specialProgramme ?? (initialPlan?.nocDuration ? `noc-${initialPlan.nocDuration}` as SpecialProgramme : null),
   );
 
-  const major = useMemo(
-    () => (rawMajor ? applyNocAdjustment(rawMajor, nocDuration) : rawMajor),
-    [rawMajor, nocDuration],
-  );
+  const nocDuration = useMemo(() => specialProgrammeToNocDuration(specialProgramme), [specialProgramme]);
+
+  const major = useMemo<Major>(() => {
+    let adjusted = applyNocAdjustment(rawMajor, nocDuration);
+    
+    // Add second major category card
+    if (secondMajorId) {
+      const sm = secondMajors.find((m) => m.id === secondMajorId);
+      if (sm) {
+        adjusted = {
+          ...adjusted,
+          categories: [
+            ...adjusted.categories,
+            {
+              id: `second-major-${sm.id}`,
+              label: `${sm.label} (2nd Major)`,
+              mcTarget: 40,
+              color: '#d48c8c',
+            },
+          ],
+        };
+      }
+    }
+    
+    // Add minor category cards
+    for (const minorId of minorIds) {
+      const m = minors.find((x) => x.id === minorId);
+      if (m) {
+        adjusted = {
+          ...adjusted,
+          categories: [
+            ...adjusted.categories,
+            {
+              id: `minor-${m.id}`,
+              label: `${m.label} (Minor)`,
+              mcTarget: 20,
+              color: '#8cbcd4',
+            },
+          ],
+        };
+      }
+    }
+    
+    return adjusted;
+  }, [rawMajor, nocDuration, secondMajorId, minorIds, secondMajors, minors]);
 
   useEffect(() => {
     if (!major || mode !== 'personal') return;
-    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration });
-  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, major, mode]);
+    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme });
+  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme, major, mode]);
 
   const setSecondMajorId = useCallback((id: string | null) => {
     setSecondMajorIdState(id);
   }, []);
 
-  const setNocDuration = useCallback((duration: NocDuration | null) => {
-    setNocDurationState(duration);
+  const setSpecialProgramme = useCallback((programme: SpecialProgramme | null) => {
+    setSpecialProgrammeState(programme);
   }, []);
 
   const rememberMajorId = (id: string) => {
@@ -280,7 +348,7 @@ export const useStudyPlan = () => {
       setSecondMajorIdState(nextPlan.secondMajorId);
       setMinorIds(nextPlan.minorIds);
       setRequirementMappings(nextPlan.requirementMappings);
-      setNocDurationState(nextPlan.nocDuration);
+      setSpecialProgrammeState(nextPlan.specialProgramme ?? (nextPlan.nocDuration ? `noc-${nextPlan.nocDuration}` as SpecialProgramme : null));
       setMajorId(newMajorId);
       if (mode === 'personal') rememberMajorId(newMajorId);
     },
@@ -298,7 +366,7 @@ export const useStudyPlan = () => {
       setSecondMajorIdState(null);
       setMinorIds([]);
       setRequirementMappings({});
-      setNocDurationState(null);
+      setSpecialProgrammeState(null);
       setMajorId(newMajorId);
       rememberMajorId(newMajorId);
     },
@@ -307,9 +375,24 @@ export const useStudyPlan = () => {
 
   const addOrMoveModule = useCallback((year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => {
     if (major && isModuleLocked(major, module.code)) return;
-    setSemesters((prev) => upsertModule(prev, year, sem, module, insertBeforeCode));
+    setSemesters((prev) => (major ? moveLinkedModules(major, prev, year, sem, module, insertBeforeCode) : upsertModule(prev, year, sem, module, insertBeforeCode)));
     setWaivedModules((prev) => prev.filter((m) => m.code !== module.code));
   }, [major]);
+
+  const addSpecialTerm = useCallback((year: number, sem: number) => {
+    setSemesters((prev) => {
+      if (prev.some((s) => s.year === year && s.sem === sem)) return prev;
+      const next = [...prev, { year, sem, modules: [] }];
+      return next.sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.sem - b.sem;
+      });
+    });
+  }, []);
+
+  const deleteSpecialTerm = useCallback((year: number, sem: number) => {
+    setSemesters((prev) => prev.filter((s) => !(s.year === year && s.sem === sem)));
+  }, []);
 
   const [lastRemovedModule, setLastRemovedModule] = useState<{
     module: PlacedModule;
@@ -399,7 +482,7 @@ export const useStudyPlan = () => {
     setSecondMajorIdState(defaultPlan.secondMajorId);
     setMinorIds(defaultPlan.minorIds);
     setRequirementMappings(defaultPlan.requirementMappings);
-    setNocDurationState(defaultPlan.nocDuration);
+    setSpecialProgrammeState(defaultPlan.specialProgramme ?? (defaultPlan.nocDuration ? `noc-${defaultPlan.nocDuration}` as SpecialProgramme : null));
   }, [major]);
 
   const importSharedPlan = useCallback(
@@ -411,6 +494,7 @@ export const useStudyPlan = () => {
       importedMinorIds: string[] = [],
       importedRequirementMappings: Record<string, string[]> = {},
       importedNocDuration: NocDuration | null = null,
+      importedSpecialProgramme: SpecialProgramme | null = null,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
@@ -424,7 +508,10 @@ export const useStudyPlan = () => {
       );
       setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
-      setNocDurationState(normalizeNocDuration(importedNocDuration));
+      setSpecialProgrammeState(
+        normalizeSpecialProgramme(importedSpecialProgramme) ??
+          (normalizeNocDuration(importedNocDuration) ? `noc-${normalizeNocDuration(importedNocDuration)}` as SpecialProgramme : null),
+      );
       setMajorId(newMajorId);
       rememberMajorId(newMajorId);
       return true;
@@ -441,6 +528,7 @@ export const useStudyPlan = () => {
       importedMinorIds: string[] = [],
       importedRequirementMappings: Record<string, string[]> = {},
       importedNocDuration: NocDuration | null = null,
+      importedSpecialProgramme: SpecialProgramme | null = null,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
@@ -454,7 +542,10 @@ export const useStudyPlan = () => {
       );
       setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
-      setNocDurationState(normalizeNocDuration(importedNocDuration));
+      setSpecialProgrammeState(
+        normalizeSpecialProgramme(importedSpecialProgramme) ??
+          (normalizeNocDuration(importedNocDuration) ? `noc-${normalizeNocDuration(importedNocDuration)}` as SpecialProgramme : null),
+      );
       setMajorId(newMajorId);
       return true;
     },
@@ -471,12 +562,14 @@ export const useStudyPlan = () => {
     setSecondMajorIdState(personalPlan.secondMajorId);
     setMinorIds(personalPlan.minorIds);
     setRequirementMappings(personalPlan.requirementMappings);
-    setNocDurationState(personalPlan.nocDuration);
+    setSpecialProgrammeState(
+      personalPlan.specialProgramme ?? (personalPlan.nocDuration ? `noc-${personalPlan.nocDuration}` as SpecialProgramme : null),
+    );
     setMajorId(personalMajor.id);
   }, [majors, personalMajorId, defaultMajor]);
 
   const requirements = major
-    ? computeRequirements(major, semesters, waivedModules, requirementMappings)
+    ? computeRequirements(major, semesters, waivedModules, requirementMappings, specialProgramme)
     : [];
   const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
 
@@ -491,7 +584,8 @@ export const useStudyPlan = () => {
     setSecondMajorId,
     toggleMinorId,
     nocDuration,
-    setNocDuration,
+    specialProgramme,
+    setSpecialProgramme,
     requirementMappings,
     addRequirementMapping,
     removeRequirementMapping,
@@ -508,6 +602,8 @@ export const useStudyPlan = () => {
     updateModule,
     addWaivedModule,
     deleteWaivedModule,
+    addSpecialTerm,
+    deleteSpecialTerm,
     resetPlan,
     importSharedPlan,
     openReviewPlan,

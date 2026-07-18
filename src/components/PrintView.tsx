@@ -4,6 +4,7 @@ import type {
   WaivedModule,
   SecondaryProgramme,
   NocDuration,
+  SpecialProgramme,
 } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
 import { computeRequirements, computeBreadthDepth, computeProgrammeElectives } from '../lib/studyPlan';
@@ -22,6 +23,7 @@ interface Props {
   secondMajorId: string | null;
   minorIds: string[];
   nocDuration: NocDuration | null;
+  specialProgramme: SpecialProgramme | null;
 }
 
 export const PrintView = ({
@@ -38,12 +40,18 @@ export const PrintView = ({
   secondMajorId,
   minorIds,
   nocDuration,
+  specialProgramme,
 }: Props) => {
   const declaredSecondMajor = secondMajorId
     ? secondMajors.find((m) => m.id === secondMajorId) ?? null
     : null;
   const declaredMinors = minors.filter((m) => minorIds.includes(m.id));
   const declaredSecondaries = declaredSecondMajor ? [declaredSecondMajor, ...declaredMinors] : declaredMinors;
+
+  const otherCategoriesTargetSum = major.categories
+    .filter((cat) => cat.id !== 'unrestricted-electives')
+    .reduce((sum, cat) => sum + (cat.mcTarget ?? 0), 0);
+  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
 
   const depthConfig = major.breadthDepth
     ? computeBreadthDepth(major, semesters, waivedModules)
@@ -76,7 +84,7 @@ export const PrintView = ({
               · {major.school} · {major.batches.join(', ')}
             </span>
           </div>
-          {(declaredSecondMajor || declaredMinors.length > 0 || nocDuration) && (
+          {(declaredSecondMajor || declaredMinors.length > 0 || nocDuration || specialProgramme) && (
             <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
               {declaredSecondMajor && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">
@@ -90,6 +98,9 @@ export const PrintView = ({
               ))}
               {nocDuration && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">NOC: {nocDuration}</span>
+              )}
+              {specialProgramme === 'gex' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">GEx</span>
               )}
             </div>
           )}
@@ -115,7 +126,7 @@ export const PrintView = ({
                 aria-hidden="true"
               />
               {cat.label}: {stats.byCategory[cat.id] ?? 0}
-              {cat.mcTarget ? `/${cat.mcTarget}` : ''} MC
+              /{cat.id === 'unrestricted-electives' ? dynamicUeTarget : (cat.mcTarget ?? 0)} MC
             </li>
           ))}
         </ul>
