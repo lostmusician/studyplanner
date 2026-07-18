@@ -513,6 +513,84 @@
     },
     {
       "year": 1,
+      "sem": 1,
+      "moduleCode": "NSW2001A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "NGN2001A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "CS2030",
+      "categoryId": "computing-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "CS2040C",
+      "categoryId": "computing-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "MA1522",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NSW2002A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NGN2003A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NSS2004A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NHS2005A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "NTW2035",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "CS1231S",
+      "categoryId": "computing-foundation"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "MA1521",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "MA1301",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 1,
       "sem": 2,
       "moduleCode": "CS2030",
       "categoryId": "computing-foundation"

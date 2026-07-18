@@ -729,6 +729,18 @@
     },
     {
       "year": 1,
+      "sem": 1,
+      "moduleCode": "NSW2001A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 1,
+      "moduleCode": "NGN2001A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
       "sem": 2,
       "moduleCode": "CS2030",
       "categoryId": "ba-foundation"
