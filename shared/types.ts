@@ -184,7 +184,14 @@ export type NocDuration = '3-month' | '6-month' | '1-year';
 /** NUSC Global Pathways / special-programme choices carried in the plan.
  * Only NOC currently changes the planner's Making Connections MC targets; the
  * other options are tracked so the plan can represent the official pathways. */
-export type SpecialProgramme = 'noc-3-month' | 'noc-6-month' | 'noc-1-year' | 'gex';
+export type SpecialProgramme =
+  | 'noc-3-month'
+  | 'noc-6-month'
+  | 'noc-1-year'
+  | 'sep'
+  | 'gex'
+  | 'regional-iex'
+  | 'siip';
 
 export interface StudentPlan {
   majorId: string;

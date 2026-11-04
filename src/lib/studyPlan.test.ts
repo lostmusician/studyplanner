@@ -86,6 +86,17 @@ describe('computeStats', () => {
     expect(stats.byCategory['cs-foundation']).toBe(8);
     expect(stats.byCategory['math-sciences']).toBe(4);
   });
+
+  it('includes waived modules in total MCs and category totals', () => {
+    const major = { totalMcTarget: 160 } as Major;
+    const sems = semesters([
+      { code: 'CS1101S', name: 'Programming Methodology', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 },
+    ]);
+    const waived = [{ code: 'CS1010X', name: 'Programming Methodology', mcs: 4, categoryId: 'cs-foundation' }];
+    const stats = computeStats(major, sems, waived);
+    expect(stats.totalMc).toBe(8);
+    expect(stats.byCategory['cs-foundation']).toBe(8);
+  });
 });
 
 describe('computeRequirements', () => {
@@ -116,6 +127,76 @@ describe('computeRequirements', () => {
     const [, mce] = computeRequirements(source, sems, [], {}, 'gex');
     expect(mce.have).toBe(1);
     expect(mce.fulfilled).toBe(false);
+  });
+
+  it('counts SEP as two Making Connections slots and reduces HSS/ST minimums to 1', () => {
+    const mceSource = {
+      requirements: [
+        {
+          name: 'Making Connections',
+          fulfilledBy: ['NHS*', 'NFB*', 'NST*', 'NFC*', 'NHT*'],
+          count: 6,
+          categoryId: 'nus-college',
+        },
+      ],
+    };
+    // 4 courses on plan (2 HSS, 2 ST) + 2 credited by SEP = 6 total
+    const sems = semesters([
+      { code: 'NHS2001', name: 'HSS 1', mcs: 4, categoryId: 'nus-college', year: 2, sem: 1 },
+      { code: 'NFC2001', name: 'HSS 2', mcs: 4, categoryId: 'nus-college', year: 2, sem: 2 },
+      { code: 'NST2001', name: 'ST 1', mcs: 4, categoryId: 'nus-college', year: 3, sem: 1 },
+      { code: 'NFB2001', name: 'ST 2', mcs: 4, categoryId: 'nus-college', year: 3, sem: 2 },
+    ]);
+    const [mce] = computeRequirements(mceSource, sems, [], {}, 'sep');
+    expect(mce.have).toBe(6);
+    expect(mce.fulfilled).toBe(true);
+    expect(mce.info).toBeUndefined();
+  });
+
+  it('fulfills the Global Pathways requirement when any special programme is declared', () => {
+    const gpSource = {
+      requirements: [
+        {
+          name: 'Global Pathways (NOC / SEP / GEx / Regional IEx / SIIP)',
+          fulfilledBy: [],
+          count: 1,
+          categoryId: 'nus-college',
+        },
+      ],
+    };
+    const empty = semesters([]);
+    const [unfulfilled] = computeRequirements(gpSource, empty, [], {}, null);
+    expect(unfulfilled.fulfilled).toBe(false);
+    expect(unfulfilled.info).toContain('Select a Global Pathway');
+
+    const [sepFulfilled] = computeRequirements(gpSource, empty, [], {}, 'sep');
+    expect(sepFulfilled.fulfilled).toBe(true);
+    expect(sepFulfilled.have).toBe(1);
+
+    const [nocFulfilled] = computeRequirements(gpSource, empty, [], {}, 'noc-6-month');
+    expect(nocFulfilled.fulfilled).toBe(true);
+  });
+
+  it('recognizes NFC/NHT as HSS and NFB as ST for Making Connections domain balance', () => {
+    const mceSource = {
+      requirements: [
+        {
+          name: 'Making Connections',
+          fulfilledBy: ['NHS*', 'NFB*', 'NST*', 'NFC*', 'NHT*'],
+          count: 4,
+          categoryId: 'nus-college',
+        },
+      ],
+    };
+    const sems = semesters([
+      { code: 'NFC2001', name: 'HSS 1', mcs: 4, categoryId: 'nus-college', year: 2, sem: 1 },
+      { code: 'NHT2001', name: 'HSS 2', mcs: 4, categoryId: 'nus-college', year: 2, sem: 2 },
+      { code: 'NFB2001', name: 'ST 1', mcs: 4, categoryId: 'nus-college', year: 3, sem: 1 },
+      { code: 'NST2001', name: 'ST 2', mcs: 4, categoryId: 'nus-college', year: 3, sem: 2 },
+    ]);
+    const [mce] = computeRequirements(mceSource, sems);
+    expect(mce.fulfilled).toBe(true);
+    expect(mce.info).toBeUndefined();
   });
 
   it('counts a manually mapped code only while it is actually placed', () => {
@@ -180,6 +261,16 @@ describe('computeDoubleCount', () => {
     const result = computeDoubleCount(wideSecondary, sems);
     expect(result.doubleCountMc).toBe(12);
     expect(result.warn).toBe(true);
+  });
+
+  it('does not treat modules under unrestricted-electives as double-counted against the primary major', () => {
+    const sems = semesters([
+      { code: 'ST2334', name: 'x', mcs: 4, categoryId: 'unrestricted-electives', year: 2, sem: 1 },
+    ]);
+    const result = computeDoubleCount(secondary, sems);
+    expect(result.doubleCountMc).toBe(0);
+    expect(result.doubleCountedCodes).toEqual([]);
+    expect(result.warn).toBe(false);
   });
 
   it('returns the zero baseline for an empty plan (nothing placed, nothing waived)', () => {

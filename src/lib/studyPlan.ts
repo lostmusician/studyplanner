@@ -263,23 +263,34 @@ export const computeRequirements = (
     const codeSet = new Set(allCodes);
     const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) => codeSet.has(code)));
     const specialProgrammeBonus =
-      specialProgramme === 'gex' && req.name === 'Making Connections'
-        ? 1
+      req.name === 'Making Connections'
+        ? (specialProgramme === 'gex' ? 1 : 0) + (specialProgramme === 'sep' ? 2 : 0)
         : 0;
     const have = matchCount + specialProgrammeBonus;
     
     const nocSatisfied =
       (req.name.toLowerCase().includes('industry') || req.name.toLowerCase().includes('industrial')) &&
       Boolean(specialProgramme && specialProgramme.startsWith('noc'));
-    let fulfilled = have >= need || altGroupSatisfied || nocSatisfied;
+    const isGlobalPathwayReq = req.name.toLowerCase().includes('global pathway');
+    const globalPathwaySatisfied = isGlobalPathwayReq && Boolean(specialProgramme);
+    let fulfilled = have >= need || altGroupSatisfied || nocSatisfied || globalPathwaySatisfied;
     let info: string | undefined = undefined;
 
+    if (isGlobalPathwayReq && !fulfilled) {
+      info = 'Select a Global Pathway (NOC, SEP, GEx, etc.) above to fulfill this requirement';
+    }
+
     if (req.name.startsWith('Making Connections')) {
-      const hssCount = allCodes.filter((code) => code.startsWith('NHS')).length;
-      const stCount = allCodes.filter((code) => code.startsWith('NST')).length;
+      const hssCount = allCodes.filter((code) =>
+        code.startsWith('NHS') || code.startsWith('NFC') || code.startsWith('NHT')
+      ).length;
+      const stCount = allCodes.filter((code) =>
+        code.startsWith('NST') || code.startsWith('NFB')
+      ).length;
       const isNocWaiver = specialProgramme === 'noc-6-month' || specialProgramme === 'noc-1-year';
-      const minHss = isNocWaiver ? 1 : 2;
-      const minSt = isNocWaiver ? 1 : 2;
+      const isReducedMce = isNocWaiver || specialProgramme === 'sep' || specialProgramme === 'gex';
+      const minHss = isReducedMce ? 1 : 2;
+      const minSt = isReducedMce ? 1 : 2;
 
       if (hssCount < minHss || stCount < minSt) {
         fulfilled = false;
@@ -291,7 +302,7 @@ export const computeRequirements = (
       name: req.name,
       fulfilled,
       categoryId: req.categoryId,
-      have: (nocSatisfied || altGroupSatisfied) ? need : have,
+      have: (nocSatisfied || altGroupSatisfied || globalPathwaySatisfied) ? need : have,
       need,
       info,
     };
@@ -322,9 +333,16 @@ export const computeDoubleCount = (
   const byCode = new Map<string, PlacedModule>();
   for (const m of allModules) if (!byCode.has(m.code)) byCode.set(m.code, m);
 
-  const doubleCountedCodes = [...byCode.keys()].filter((code) =>
-    matchesAnyRequirement(secondary.requirements, code),
-  );
+  // A course is only double-counted with the primary major if it fulfills a secondary requirement
+  // AND is booked to a primary major category (not Unrestricted Electives or a secondary container).
+  const doubleCountedCodes = [...byCode.entries()]
+    .filter(([code, m]) =>
+      m.categoryId !== 'unrestricted-electives' &&
+      !m.categoryId.startsWith('second-major-') &&
+      !m.categoryId.startsWith('minor-') &&
+      matchesAnyRequirement(secondary.requirements, code),
+    )
+    .map(([code]) => code);
   const doubleCountMc = doubleCountedCodes.reduce((sum, code) => sum + (byCode.get(code)?.mcs ?? 0), 0);
   const capMc = secondary.mcTarget * 0.4;
 
@@ -409,9 +427,27 @@ export const applyNocAdjustment = (major: Major, duration?: NocDuration | null):
     });
   }
 
+  // Balance remaining MCs against unrestricted-electives to keep totalMcTarget fixed at 160.
+  const hasUe = categories.some((c) => c.id === 'unrestricted-electives');
+  if (hasUe) {
+    const nonUeSum = categories
+      .filter((c) => c.id !== 'unrestricted-electives')
+      .reduce((s, c) => s + (c.mcTarget ?? 0), 0);
+    categories = categories.map((cat) =>
+      cat.id === 'unrestricted-electives'
+        ? { ...cat, mcTarget: Math.max(0, major.totalMcTarget - nonUeSum) }
+        : cat,
+    );
+  }
+
+  const updatedBreadthDepth = major.breadthDepth
+    ? { ...major.breadthDepth, totalUnits: Math.max(0, major.breadthDepth.totalUnits - bdReduction) }
+    : undefined;
+
   return {
     ...major,
     categories,
+    breadthDepth: updatedBreadthDepth,
     requirements: major.requirements.map((r, i) => (i === mceIndex ? { ...r, count: newCount } : r)),
   };
 };
@@ -711,7 +747,11 @@ export interface Stats {
   byCategory: Record<string, number>;
 }
 
-export const computeStats = (major: Major, semesters: StudentSemester[]): Stats => {
+export const computeStats = (
+  major: Major,
+  semesters: StudentSemester[],
+  waivedModules: WaivedModule[] = [],
+): Stats => {
   const byCategory: Record<string, number> = {};
   let totalMc = 0;
   for (const sem of semesters) {
@@ -719,6 +759,10 @@ export const computeStats = (major: Major, semesters: StudentSemester[]): Stats 
       totalMc += mod.mcs;
       byCategory[mod.categoryId] = (byCategory[mod.categoryId] ?? 0) + mod.mcs;
     }
+  }
+  for (const mod of waivedModules) {
+    totalMc += mod.mcs;
+    byCategory[mod.categoryId] = (byCategory[mod.categoryId] ?? 0) + mod.mcs;
   }
   return { totalMc, byCategory };
 };

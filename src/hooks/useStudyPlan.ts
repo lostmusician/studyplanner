@@ -64,7 +64,15 @@ const normalizeNocDuration = (value: unknown): NocDuration | null =>
   value === '3-month' || value === '6-month' || value === '1-year' ? value as NocDuration : null;
 
 const normalizeSpecialProgramme = (value: unknown): SpecialProgramme | null =>
-  value === 'noc-3-month' || value === 'noc-6-month' || value === 'noc-1-year' || value === 'gex' ? value as SpecialProgramme : null;
+  value === 'noc-3-month' ||
+  value === 'noc-6-month' ||
+  value === 'noc-1-year' ||
+  value === 'sep' ||
+  value === 'gex' ||
+  value === 'regional-iex' ||
+  value === 'siip'
+    ? (value as SpecialProgramme)
+    : null;
 
 const specialProgrammeToNocDuration = (value: SpecialProgramme | null): NocDuration | null => {
   if (value === 'noc-3-month') return '3-month';
@@ -571,7 +579,7 @@ export const useStudyPlan = () => {
   const requirements = major
     ? computeRequirements(major, semesters, waivedModules, requirementMappings, specialProgramme)
     : [];
-  const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
+  const stats = major ? computeStats(major, semesters, waivedModules) : { totalMc: 0, byCategory: {} };
 
   return {
     majors,

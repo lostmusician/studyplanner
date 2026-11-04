@@ -69,6 +69,21 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
     expect(decoded?.plan.nocDuration).toBe('1-year');
   });
 
+  it('round-trips specialProgramme options including SEP, GEx, regional-iex, and siip', () => {
+    for (const sp of ['sep', 'gex', 'regional-iex', 'siip', 'noc-6-month'] as const) {
+      const payload = {
+        ...basePayload,
+        plan: {
+          ...basePayload.plan,
+          specialProgramme: sp,
+        },
+      };
+      const encoded = encodeCompactPlan(payload);
+      const decoded = decodeCompactPlan(encoded);
+      expect(decoded?.plan.specialProgramme).toBe(sp);
+    }
+  });
+
   it('drops name/mcs for a module matching the catalog exactly, falling back to the code as name and 0 mcs on decode (lossy by design)', () => {
     // isCatalogEquivalent finds a catalog entry for CS1101S with the same
     // name/mcs, so compactModule emits the short 2-element tuple. expandModule
