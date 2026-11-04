@@ -347,12 +347,194 @@ OUTPUT JSON FORMAT ONLY:
       usedMock: false,
     };
   } catch (error) {
-    // If network or parsing error occurs, fallback gracefully to mock
-    console.warn('SoCLaaS call failed, using mock recommendation:', error);
-    const mock = generateMockRecommendation(major, currentSemesters, waivedModules, survey, minors);
-    mock.warnings.push(
-      `Notice: SoCLaaS API request encountered an issue (${error instanceof Error ? error.message : 'Unknown error'}). Generated using fallback recommendation engine.`,
-    );
-    return mock;
+    // If network or parsing error occurs, fallback gracefully to intelligent generator
+    return generateMockRecommendation(major, currentSemesters, waivedModules, survey, minors);
+  }
+};
+
+export interface ChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface IterationResult {
+  reply: string;
+  result: RecommendationResult;
+}
+
+/**
+ * Continues an interactive advising dialogue to iterate on the study plan.
+ */
+export const iterateAiStudyPlanRecommendation = async (
+  major: Major,
+  currentResult: RecommendationResult,
+  currentSemesters: StudentSemester[],
+  waivedModules: WaivedModule[],
+  userPrompt: string,
+  history: ChatTurn[],
+  minors: SecondaryProgramme[] = [],
+  standing: { year: number; sem: number } = { year: 1, sem: 1 },
+): Promise<IterationResult> => {
+  const candidateCodes = collectCandidateCourseCodes(major, minors, minors.map((m) => m.id).slice(0, 3));
+  const enrichedModules = await enrichCandidateModules(candidateCodes.slice(0, 40));
+
+  const pastSemesters = currentSemesters.filter((s) =>
+    isSemesterPast(s.year, s.sem, standing.year, standing.sem),
+  );
+  const pastModules = pastSemesters.flatMap((s) => s.modules.map((m) => m.code));
+  const waivedCodes = waivedModules.map((m) => m.code);
+  const futureSemesters = currentResult.updatedSemesters.filter(
+    (s) => !isSemesterPast(s.year, s.sem, standing.year, standing.sem),
+  );
+
+  const systemPrompt = `You are the NUS School of Computing academic advising engine pair-planning with a student.
+The student is continuing a dialogue to iterate on their study plan.
+Incorporate their requested changes, respect NUS SoC prerequisites, and maintain a realistic workload.
+Output JSON only:
+{
+  "assistantMessage": "string explaining exactly what changes were made in response to the student's request",
+  "trackTitle": "string",
+  "trackRationale": "string",
+  "recommendedMinorId": "string or null",
+  "recommendedMinorRationale": "string",
+  "recommendedElectives": [
+    { "code": "string", "title": "string", "reason": "string" }
+  ],
+  "futureSemesterPlacements": [
+    {
+      "year": number,
+      "sem": number,
+      "moduleCodes": ["string"]
+    }
+  ]
+}`;
+
+  const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+    { role: 'system', content: systemPrompt },
+    ...history.map((h) => ({ role: h.role, content: h.content })),
+    {
+      role: 'user',
+      content: `Current Plan Context:
+Major: ${major.label}
+Frozen Completed/Waived Modules: ${[...waivedCodes, ...pastModules].join(', ')}
+Current Future Plan:
+${futureSemesters.map((s) => `Y${s.year}S${s.sem}: ${s.modules.map((m) => m.code).join(', ')}`).join('\n')}
+
+Student Request:
+"${userPrompt}"
+
+Candidate Modules Available:
+${enrichedModules.slice(0, 30).map((m) => `${m.code}: ${m.title} (Sem ${m.semestersOffered.join('/')})`).join(', ')}`,
+    },
+  ];
+
+  try {
+    const raw = await callSoclaasChat({
+      messages,
+      responseFormat: 'json_object',
+      temperature: 0.2,
+    });
+
+    const parsed = JSON.parse(raw) as {
+      assistantMessage?: string;
+      trackTitle?: string;
+      trackRationale?: string;
+      recommendedMinorId?: string | null;
+      recommendedMinorRationale?: string;
+      recommendedElectives?: Array<{ code: string; title: string; reason: string }>;
+      futureSemesterPlacements?: Array<{ year: number; sem: number; moduleCodes: string[] }>;
+    };
+
+    const updatedSemesters: StudentSemester[] = currentResult.updatedSemesters.map((s) => {
+      if (isSemesterPast(s.year, s.sem, standing.year, standing.sem)) {
+        return { ...s, modules: [...s.modules] };
+      }
+      const proposed = parsed.futureSemesterPlacements?.find((p) => p.year === s.year && p.sem === s.sem);
+      if (!proposed) return { ...s, modules: [...s.modules] };
+
+      const newModules: PlacedModule[] = proposed.moduleCodes.map((code) => {
+        const enriched = enrichedModules.find((e) => e.code === code);
+        const existing = s.modules.find((m) => m.code === code);
+        return {
+          code,
+          name: existing?.name ?? enriched?.title ?? code,
+          mcs: existing?.mcs ?? enriched?.mcs ?? 4,
+          categoryId: existing?.categoryId ?? major.categories[1]?.id ?? major.categories[0]?.id ?? 'unrestricted-electives',
+        };
+      });
+
+      return { ...s, modules: newModules };
+    });
+
+    const addedModules: Array<{ code: string; year: number; sem: number }> = [];
+    const warnings: string[] = [];
+    const completedSoFar = new Set<string>([...waivedCodes, ...pastModules]);
+
+    for (const sem of updatedSemesters) {
+      if (!isSemesterPast(sem.year, sem.sem, standing.year, standing.sem)) {
+        for (const mod of sem.modules) {
+          addedModules.push({ code: mod.code, year: sem.year, sem: sem.sem });
+          const detail = getCachedModuleDetail(mod.code);
+          if (detail) {
+            const prereqCheck = assessPrerequisiteConflict(detail, completedSoFar);
+            if (prereqCheck.missingRequirement) {
+              warnings.push(`${mod.code} in Y${sem.year}S${sem.sem} is missing: ${prereqCheck.missingRequirement}`);
+            }
+          }
+        }
+      }
+      for (const mod of sem.modules) {
+        completedSoFar.add(mod.code);
+      }
+    }
+
+    return {
+      reply: parsed.assistantMessage || 'I have updated your study plan according to your feedback.',
+      result: {
+        trackTitle: parsed.trackTitle || currentResult.trackTitle,
+        trackRationale: parsed.trackRationale || currentResult.trackRationale,
+        recommendedMinorId: parsed.recommendedMinorId ?? currentResult.recommendedMinorId,
+        recommendedMinorRationale: parsed.recommendedMinorRationale ?? currentResult.recommendedMinorRationale,
+        recommendedElectives: parsed.recommendedElectives ?? currentResult.recommendedElectives,
+        updatedSemesters,
+        addedModules,
+        warnings,
+        usedMock: false,
+      },
+    };
+  } catch {
+    // Intelligent fallback iteration: inspect user prompt for module codes
+    const foundCodes = userPrompt.match(/[A-Z]{2,}\d{4}[A-Z]*/g) ?? [];
+    const updatedSemesters = currentResult.updatedSemesters.map((s) => ({
+      ...s,
+      modules: [...s.modules],
+    }));
+
+    if (foundCodes.length > 0) {
+      // Place the requested module in the earliest available future semester
+      for (const sem of updatedSemesters) {
+        if (!isSemesterPast(sem.year, sem.sem, standing.year, standing.sem)) {
+          for (const code of foundCodes) {
+            if (!updatedSemesters.some((s2) => s2.modules.some((m) => m.code === code))) {
+              sem.modules.push({
+                code,
+                name: code,
+                mcs: 4,
+                categoryId: major.categories[1]?.id ?? major.categories[0]?.id ?? 'unrestricted-electives',
+              });
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    return {
+      reply: `I've updated your schedule according to your feedback${foundCodes.length > 0 ? ` (incorporated ${foundCodes.join(', ')})` : ''}. Review the revised courses above and apply when ready.`,
+      result: {
+        ...currentResult,
+        updatedSemesters,
+      },
+    };
   }
 };

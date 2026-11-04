@@ -5,7 +5,6 @@ import { useOnboarding } from './hooks/useOnboarding';
 import { StudyPlan } from './components/StudyPlan';
 import { ImportModal } from './components/ImportModal';
 import { OnboardingModal } from './components/OnboardingModal';
-import { SparklesIcon } from './components/Icons';
 import {
   readImportFromHash,
   IMPORT_HASH_KEY,
@@ -175,12 +174,11 @@ const App = () => {
       )}
       {plan.hasAiUndo && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-2xl bg-ink px-4 py-3 text-sm text-canvas shadow-lg">
-          <SparklesIcon className="h-4 w-4 text-amber-400" />
-          <span>Study plan updated from AI recommendations</span>
+          <span>Study plan updated from advisor</span>
           <button
             type="button"
             onClick={plan.undoAiPlan}
-            className="ml-2 font-medium underline underline-offset-2 hover:text-amber-300"
+            className="ml-2 font-medium underline underline-offset-2 hover:opacity-80"
           >
             Undo
           </button>

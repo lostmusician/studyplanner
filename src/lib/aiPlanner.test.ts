@@ -3,6 +3,7 @@ import type { Major, StudentSemester, WaivedModule } from '@shared/types';
 import {
   generateMockRecommendation,
   generateAiStudyPlanRecommendation,
+  iterateAiStudyPlanRecommendation,
   type SurveyInput,
 } from './aiPlanner';
 import * as soclaas from './soclaas';
@@ -108,5 +109,31 @@ describe('aiPlanner', () => {
     expect(result.usedMock).toBe(true);
     expect(result.trackTitle).toBeDefined();
     expect(result.updatedSemesters[0].modules.map((m) => m.code)).toEqual(['CS1101S', 'CS1231S']);
+  });
+
+  it('iterates on the plan when the student communicates follow-up adjustments', async () => {
+    const initialResult = generateMockRecommendation(
+      dummyMajor,
+      initialSemesters,
+      waivedModules,
+      survey,
+      [],
+    );
+
+    const iteration = await iterateAiStudyPlanRecommendation(
+      dummyMajor,
+      initialResult,
+      initialSemesters,
+      waivedModules,
+      'Can you add CS4248 for NLP?',
+      [{ role: 'assistant', content: 'Initial plan prepared.' }],
+      [],
+      { year: survey.standingYear, sem: survey.standingSem },
+    );
+
+    expect(iteration.reply).toBeDefined();
+    expect(iteration.result.updatedSemesters[0].modules.map((m) => m.code)).toEqual(['CS1101S', 'CS1231S']);
+    const allCodes = iteration.result.updatedSemesters.flatMap((s) => s.modules.map((m) => m.code));
+    expect(allCodes).toContain('CS4248');
   });
 });

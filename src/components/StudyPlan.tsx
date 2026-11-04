@@ -12,8 +12,8 @@ import { Dropdown } from './Dropdown';
 import { SecondaryProgrammePanel } from './SecondaryProgrammePanel';
 import { PrintView } from './PrintView';
 import { CompetencyExplorer } from './competency/CompetencyExplorer';
-import { SparklesIcon } from './Icons';
 import { StudyPlanAdvisorSidebar } from './StudyPlanAdvisorSidebar';
+import { getSoclaasApiKey, setSoclaasApiKey, testSoclaasConnection } from '../lib/soclaas';
 
 interface Props {
   majors: Major[];
@@ -341,14 +341,13 @@ export const StudyPlan = ({
               <button
                 type="button"
                 onClick={() => setAdvisorOpen((open) => !open)}
-                className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1.5 rounded-xl ${
+                className={`text-xs transition-colors px-2.5 py-1.5 rounded-xl font-medium ${
                   advisorOpen
                     ? 'bg-paper text-ink font-semibold'
                     : 'text-muted hover:text-ink hover:bg-paper'
                 }`}
                 title={advisorOpen ? 'Hide Study Plan Advisor' : 'Show Study Plan Advisor'}
               >
-                <SparklesIcon className="w-3.5 h-3.5 text-amber-600" />
                 <span>{advisorOpen ? 'Hide Advisor' : 'Study Plan Advisor'}</span>
               </button>
               <button
@@ -532,6 +531,18 @@ export const StudyPlan = ({
               )}
             </div>
           </div>
+
+          {/* Right Sidebar (Study Plan Advisor) */}
+          <StudyPlanAdvisorSidebar
+            major={major}
+            minors={minors}
+            semesters={semesters}
+            waivedModules={waivedModules}
+            studentYear={studentYear}
+            isOpen={advisorOpen}
+            onClose={() => setAdvisorOpen(false)}
+            onApply={handleApplyAiRecommendation}
+          />
         </div>
 
         {pendingMajorId && (
@@ -661,29 +672,6 @@ export const StudyPlan = ({
               <p className="mt-2 text-xs font-medium text-red-700">Enter a name before sharing.</p>
             )}
           </AppDialog>
-        )}
-
-        {showAiSurvey && (
-          <RecommendationSurveyModal
-            major={major}
-            minors={minors}
-            initialStanding={{
-              year: studentYear.includes('2') ? 2 : studentYear.includes('3') ? 3 : studentYear.includes('4') ? 4 : 1,
-              sem: 1,
-            }}
-            isLoading={isGeneratingAi}
-            onClose={() => setShowAiSurvey(false)}
-            onSubmit={handleRunAiSurvey}
-          />
-        )}
-
-        {aiResult && (
-          <RecommendationResultModal
-            major={major}
-            result={aiResult}
-            onClose={() => setAiResult(null)}
-            onApply={handleApplyAiRecommendation}
-          />
         )}
       </div>
       <PrintView
@@ -1017,28 +1005,25 @@ const SoclaasSettingsSection = () => {
   return (
     <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
       <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-700">
-          <SparklesIcon className="h-3.5 w-3.5" />
-        </div>
         <div>
-          <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">SoCLaaS AI Advisor</h3>
+          <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">SoCLaaS API Key</h3>
           <p className="text-[10px] text-muted">NUS School of Computing LLM Gateway</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 mt-2">
         <label className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-wide text-muted font-medium">SoCLaaS API Key</span>
+          <span className="text-[10px] uppercase tracking-wide text-muted font-medium">API Key</span>
           <input
             type="password"
             value={apiKey}
             onChange={(e) => handleSave(e.target.value)}
             placeholder="sk-soclaas-..."
-            className="rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-amber-500 w-full"
+            className="rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-ink/30 w-full"
           />
         </label>
         <p className="text-[10px] text-muted leading-relaxed">
-          Stored locally in your browser. Leave blank to use the built-in intelligent advisor.
+          Stored locally in your browser. Leave blank to use the built-in recommendation engine.
         </p>
 
         <div className="flex items-center gap-2 mt-1">
