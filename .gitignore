@@ -3,6 +3,9 @@ dist
 .DS_Store
 *.tsbuildinfo
 coverage
+.env
+.env.*
+*.local
 
 # impeccable-ignore-start
 # Ephemeral output, runtime state, and per-dev overrides.
