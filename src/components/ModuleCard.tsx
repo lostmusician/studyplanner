@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { Major, PlacedModule } from '@shared/types';
-import { fetchNusModsModuleDetail, assessPrerequisiteConflict } from '@shared/nusmods';
+import {
+  fetchNusModsModuleDetail,
+  assessPrerequisiteConflict,
+  checkSemesterAvailability,
+} from '@shared/nusmods';
 import { XIcon, EditIcon, LockIcon, MoveIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
 import { AppDialog } from './AppDialog';
@@ -24,6 +29,11 @@ interface Props {
   isOverlay?: boolean;
   moveTargets?: { year: number; sem: number; label: string }[];
   onMove?: (year: number, sem: number) => void;
+  highlightMode?: 'self' | 'upstream' | 'downstream';
+  isSelected?: boolean;
+  onSelectModule?: (code: string) => void;
+  onHoverModule?: (code: string | null) => void;
+  allPlacedModules?: { code: string; year: number; sem: number }[];
 }
 
 export const ModuleCard = ({
@@ -37,6 +47,11 @@ export const ModuleCard = ({
   isOverlay = false,
   moveTargets = [],
   onMove,
+  highlightMode,
+  isSelected = false,
+  onSelectModule,
+  onHoverModule,
+  allPlacedModules = [],
 }: Props) => {
   const { setNodeRef: setDraggableNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
     id: module.code,
@@ -50,6 +65,7 @@ export const ModuleCard = ({
   });
 
   const [prereqWarning, setPrereqWarning] = useState<string | null>(null);
+  const [semesterWarning, setSemesterWarning] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipUp, setTooltipUp] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -92,13 +108,18 @@ export const ModuleCard = ({
         if (cancelled) return;
         const assessment = assessPrerequisiteConflict(detail, completedCodes);
         setPrereqWarning(assessment.missingRequirement);
+        const semAvail = checkSemesterAvailability(detail, fromSem);
+        setSemesterWarning(semAvail.warning);
       })
       .catch(() => {
-        if (!cancelled) setPrereqWarning(null);
+        if (!cancelled) {
+          setPrereqWarning(null);
+          setSemesterWarning(null);
+        }
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [module.code, completedStr, isOverlay]);
+  }, [module.code, completedStr, fromSem, isOverlay]);
 
   useEffect(() => {
     if (showDetail || editing || showDeleteConfirm || showMoveMenu || isDragging) {
@@ -146,14 +167,29 @@ export const ModuleCard = ({
     setEditError(null);
   };
 
+  let outlineStyle = 'none';
+  if (highlightMode === 'self' || highlightMode === 'upstream' || isSelected) {
+    outlineStyle = '2px solid rgb(20,20,19)';
+  } else if (highlightMode === 'downstream') {
+    outlineStyle = '2px dashed rgb(90,89,86)';
+  } else if (prereqWarning) {
+    outlineStyle = '2px solid rgb(245,158,11)';
+  } else if (semesterWarning) {
+    outlineStyle = '2px dashed rgb(217,119,6)';
+  }
+
+  const opacityStyle = isDragging ? 0.35 : 1;
+
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    opacity: isDragging ? 0.35 : 1,
+    opacity: opacityStyle,
     backgroundColor: category?.color ?? '#d4c9b8',
-    outline: prereqWarning ? '2px solid rgb(245,158,11)' : 'none',
+    outline: outlineStyle,
     outlineOffset: '-2px',
+    boxShadow: isSelected ? '0 0 0 1px rgb(20,20,19), 0 4px 12px rgba(20,20,19,0.14)' : undefined,
     // Allow vertical scrolling over the card on touch; press-hold still triggers drag.
     touchAction: 'pan-y',
+    transition: 'opacity 150ms ease, outline 150ms ease, box-shadow 150ms ease',
   };
 
   const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null);
@@ -174,6 +210,8 @@ export const ModuleCard = ({
       style={style}
       className="relative group rounded-xl p-2.5 select-none hover:z-50 focus-within:z-50"
       onMouseEnter={() => {
+        if (showDetail) return;
+        onHoverModule?.(module.code);
         const rect = cardRef.current?.getBoundingClientRect();
         if (rect) {
           const spaceBelow = window.innerHeight - rect.bottom;
@@ -186,7 +224,10 @@ export const ModuleCard = ({
           setShowTooltip(true);
         }
       }}
-      onMouseLeave={() => setShowTooltip(false)}
+      onMouseLeave={() => {
+        onHoverModule?.(null);
+        setShowTooltip(false);
+      }}
     >
       {showInsertBar && (
         <div className="pointer-events-none absolute -top-1.5 left-2 right-2 z-40 h-1 rounded-full bg-ink shadow-soft" />
@@ -198,16 +239,39 @@ export const ModuleCard = ({
         {...attributes}
         className={isLocked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}
         style={{ userSelect: 'none' }}
+        onClick={() => {
+          if (isDragging) return;
+          onSelectModule?.(module.code);
+        }}
       >
         <div className="flex items-start justify-between gap-1">
-          <span className="font-mono text-xs font-bold text-ink leading-tight">{module.code}</span>
-          {prereqWarning && (
-            <span
-              className="flex-shrink-0 w-2 h-2 rounded-full mt-0.5"
-              style={{ backgroundColor: 'rgb(245,158,11)' }}
-              title={`Missing prereqs: ${prereqWarning}`}
-            />
-          )}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="font-mono text-xs font-bold text-ink leading-tight">{module.code}</span>
+            {highlightMode === 'upstream' && (
+              <span className="rounded bg-ink text-canvas text-[8px] font-mono font-bold px-1.5 py-0.5 tracking-tight">PREREQ</span>
+            )}
+            {highlightMode === 'downstream' && (
+              <span className="rounded bg-canvas border border-ink/30 text-ink text-[8px] font-mono font-bold px-1.5 py-0.5 tracking-tight">UNLOCKS</span>
+            )}
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {semesterWarning && (
+              <span
+                className="flex-shrink-0 w-2 h-2 rounded-full mt-0.5"
+                style={{ backgroundColor: 'rgb(217,119,6)' }}
+                title={`Semester warning: ${semesterWarning}`}
+                aria-label={semesterWarning}
+              />
+            )}
+            {prereqWarning && (
+              <span
+                className="flex-shrink-0 w-2 h-2 rounded-full mt-0.5"
+                style={{ backgroundColor: 'rgb(245,158,11)' }}
+                title={`Missing prereqs: ${prereqWarning}`}
+                aria-label={`Missing prereqs: ${prereqWarning}`}
+              />
+            )}
+          </div>
         </div>
         <p className="text-[10px] sm:text-[11px] text-ink/75 leading-tight mt-0.5 line-clamp-2">{module.name}</p>
         <div className="flex items-center justify-between gap-1 mt-1 font-mono text-[9px] sm:text-[10px]">
@@ -328,7 +392,12 @@ export const ModuleCard = ({
       {!isOverlay && (
         <button
           className={`absolute z-40 top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-[11px] font-serif italic text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
-          onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowTooltip(false);
+            onHoverModule?.(null);
+            setShowDetail(true);
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Details for ${module.code}`}
           title="Course details"
@@ -337,26 +406,39 @@ export const ModuleCard = ({
         </button>
       )}
 
-      {/* Hover tooltip — fixed viewport positioning */}
-      {showTooltip && tooltipPos && !isDragging && !isOverlay && (
-        <div
-          style={{ position: 'fixed', left: `${tooltipPos.left}px`, top: `${tooltipPos.top}px` }}
-          className="z-[9999] w-48 rounded-xl bg-ink text-canvas p-2.5 text-[10px] shadow-xl pointer-events-none"
-        >
-          <div className="font-bold font-mono text-[11px] leading-none">{module.code}</div>
-          <div className="mt-1 text-canvas/85 leading-tight line-clamp-2">{module.name}</div>
-          <div className="mt-1 text-[9px] text-canvas/50">
-            {module.mcs} MC · {category?.label ?? module.categoryId}
-          </div>
-          {prereqWarning && (
-            <div className="mt-1 pt-1 border-t border-canvas/10" style={{ color: 'rgb(252,211,77)' }}>
-              <span className="uppercase text-[8px] tracking-wide block mb-0.5">Missing prereqs</span>
-              <span className="text-[9px] leading-tight block">{prereqWarning}</span>
+      {/* Hover tooltip — fixed viewport positioning portalled to body to render above all cards */}
+      {showTooltip &&
+        tooltipPos &&
+        !isDragging &&
+        !isOverlay &&
+        !showDetail &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            style={{ position: 'fixed', left: `${tooltipPos.left}px`, top: `${tooltipPos.top}px` }}
+            className="z-[9999] w-48 rounded-xl bg-ink/85 backdrop-blur-md border border-canvas/15 text-canvas p-2.5 text-[10px] shadow-2xl pointer-events-none"
+          >
+            <div className="font-bold font-mono text-[11px] leading-none">{module.code}</div>
+            <div className="mt-1 text-canvas/85 leading-tight line-clamp-2">{module.name}</div>
+            <div className="mt-1 text-[9px] text-canvas/50">
+              {module.mcs} MC · {category?.label ?? module.categoryId}
             </div>
-          )}
-          <div className="mt-1 pt-1 border-t border-canvas/10 text-[8px] text-canvas/40">Click ⓘ for full details</div>
-        </div>
-      )}
+            {semesterWarning && (
+              <div className="mt-1 pt-1 border-t border-canvas/10 text-amber-200">
+                <span className="uppercase text-[8px] tracking-wide block mb-0.5">Semester Availability</span>
+                <span className="text-[9px] leading-tight block">{semesterWarning}</span>
+              </div>
+            )}
+            {prereqWarning && (
+              <div className="mt-1 pt-1 border-t border-canvas/10" style={{ color: 'rgb(252,211,77)' }}>
+                <span className="uppercase text-[8px] tracking-wide block mb-0.5">Missing prereqs</span>
+                <span className="text-[9px] leading-tight block">{prereqWarning}</span>
+              </div>
+            )}
+            <div className="mt-1 pt-1 border-t border-canvas/10 text-[8px] text-canvas/40">Click ⓘ for full details</div>
+          </div>,
+          document.body,
+        )}
 
       {/* Course details */}
       {showDetail && (
@@ -364,6 +446,9 @@ export const ModuleCard = ({
           module={module}
           major={major}
           completedCodes={completedCodes}
+          currentSem={fromSem}
+          currentYear={fromYear}
+          allPlacedModules={allPlacedModules}
           onClose={() => setShowDetail(false)}
         />
       )}

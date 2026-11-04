@@ -3,6 +3,11 @@ import {
   fetchNusModsModuleDetail,
   formatPrerequisiteSummary,
   assessPrerequisiteConflict,
+  checkSemesterAvailability,
+  getNusModsTimetableUrl,
+  extractPrerequisiteCodes,
+  isPrerequisiteOf,
+  clearNusModsCachesForTesting,
   type NusModsModuleDetail,
 } from './nusmods';
 
@@ -80,6 +85,7 @@ describe('fetchNusModsModuleDetail', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    clearNusModsCachesForTesting();
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
   });
@@ -259,5 +265,89 @@ describe('assessPrerequisiteConflict', () => {
     };
     const result = assessPrerequisiteConflict(detail, ['ACC1701X']);
     expect(result.missingRequirement).toBeNull();
+  });
+});
+
+describe('checkSemesterAvailability', () => {
+  it('returns available when the semester is offered', () => {
+    const detail: NusModsModuleDetail = {
+      moduleCode: 'CS1101S',
+      title: 'Programming Methodology',
+      semesterData: [{ semester: 1 }, { semester: 2 }],
+    };
+    const res = checkSemesterAvailability(detail, 1);
+    expect(res.isAvailable).toBe(true);
+    expect(res.warning).toBeNull();
+  });
+
+  it('flags warning when placed in a semester where the course is not offered', () => {
+    const detail: NusModsModuleDetail = {
+      moduleCode: 'CS4234',
+      title: 'Optimisation Algorithms',
+      semesterData: [{ semester: 1 }],
+    };
+    const res = checkSemesterAvailability(detail, 2);
+    expect(res.isAvailable).toBe(false);
+    expect(res.warning).toBe('Not usually offered in Sem 2 (typically offered in Sem 1)');
+  });
+
+  it('handles empty or missing semesterData gracefully without false alarm', () => {
+    const detail: NusModsModuleDetail = {
+      moduleCode: 'CS3203',
+      title: 'Software Engineering Project',
+    };
+    const res = checkSemesterAvailability(detail, 2);
+    expect(res.isAvailable).toBe(true);
+    expect(res.hasSemesterData).toBe(false);
+    expect(res.warning).toBeNull();
+  });
+});
+
+describe('getNusModsTimetableUrl', () => {
+  it('generates a valid sem-1 timetable URL with encoded codes', () => {
+    const url = getNusModsTimetableUrl(1, ['CS1101S', 'MA1521']);
+    expect(url).toBe('https://nusmods.com/timetable/sem-1/share?CS1101S=&MA1521=');
+  });
+
+  it('generates a valid sem-2 timetable URL and filters placeholder codes', () => {
+    const url = getNusModsTimetableUrl(2, ['CS2030S', 'GEN2001', 'CS2040S']);
+    expect(url).toBe('https://nusmods.com/timetable/sem-2/share?CS2030S=&CS2040S=');
+  });
+
+  it('returns null when there are no valid academic course codes', () => {
+    const url = getNusModsTimetableUrl(1, ['GEN2001', 'INVALID']);
+    expect(url).toBeNull();
+  });
+
+  it('supports special terms 3 and 4', () => {
+    expect(getNusModsTimetableUrl(3, ['CS1010'])).toBe('https://nusmods.com/timetable/st-i/share?CS1010=');
+    expect(getNusModsTimetableUrl(4, ['CS1010'])).toBe('https://nusmods.com/timetable/st-ii/share?CS1010=');
+  });
+});
+
+describe('extractPrerequisiteCodes & isPrerequisiteOf', () => {
+  const detail: NusModsModuleDetail = {
+    moduleCode: 'CS2040S',
+    title: 'Data Structures and Algorithms',
+    prereqTree: {
+      and: [
+        { or: ['CS1010:D', 'CS1101S:D', 'CS1010S:D'] },
+        { or: ['CS1231S:D', 'CS1231:D', 'MA1100:D'] },
+      ],
+    },
+  };
+
+  it('extracts all distinct prerequisite codes stripping grade qualifiers', () => {
+    const codes = extractPrerequisiteCodes(detail.prereqTree);
+    expect(codes).toContain('CS1101S');
+    expect(codes).toContain('CS1231S');
+    expect(codes).toContain('MA1100');
+  });
+
+  it('correctly identifies whether a course is a prerequisite', () => {
+    expect(isPrerequisiteOf(detail, 'CS1101S')).toBe(true);
+    expect(isPrerequisiteOf(detail, 'CS1101')).toBe(true);
+    expect(isPrerequisiteOf(detail, 'CS1231S')).toBe(true);
+    expect(isPrerequisiteOf(detail, 'CS3230')).toBe(false);
   });
 });

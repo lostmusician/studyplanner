@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import type { Major, PlacedModule } from '@shared/types';
 import {
   fetchNusModsModuleDetail,
   assessPrerequisiteConflict,
   formatPrerequisiteSummary,
+  checkSemesterAvailability,
+  getCachedModuleDetail,
+  isPrerequisiteOf,
 } from '@shared/nusmods';
 import type { NusModsModuleDetail } from '@shared/nusmods';
 import { MUTED } from '../lib/colors';
@@ -13,12 +17,23 @@ interface Props {
   major: Major;
   completedCodes: string[];
   onClose: () => void;
+  currentSem?: number;
+  currentYear?: number;
+  allPlacedModules?: { code: string; year: number; sem: number }[];
 }
 
 const semesterName = (sem: number): string =>
   ({ 1: 'Semester 1', 2: 'Semester 2', 3: 'Special Term I', 4: 'Special Term II' }[sem] ?? `Semester ${sem}`);
 
-export const CourseDetailModal = ({ module, major, completedCodes, onClose }: Props) => {
+export const CourseDetailModal = ({
+  module,
+  major,
+  completedCodes,
+  onClose,
+  currentSem,
+  currentYear,
+  allPlacedModules = [],
+}: Props) => {
   const [detail, setDetail] = useState<NusModsModuleDetail | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const category = major.categories.find((c) => c.id === module.categoryId);
@@ -49,12 +64,33 @@ export const CourseDetailModal = ({ module, major, completedCodes, onClose }: Pr
   }, [module.code]);
 
   const missing = detail ? assessPrerequisiteConflict(detail, completedCodes).missingRequirement : null;
+  const semAvailability = detail && currentSem ? checkSemesterAvailability(detail, currentSem) : null;
   const semesters = detail?.semesterData?.map((s) => s.semester) ?? [];
 
-  return (
+  const dependents = useMemo(() => {
+    if (!allPlacedModules || allPlacedModules.length === 0) return [];
+    const results: { code: string; year: number; sem: number; isScheduledEarlier: boolean }[] = [];
+    for (const placed of allPlacedModules) {
+      if (placed.code === module.code) continue;
+      const placedDetail = getCachedModuleDetail(placed.code);
+      if (placedDetail && isPrerequisiteOf(placedDetail, module.code)) {
+        const isEarlier =
+          currentYear !== undefined && currentSem !== undefined
+            ? placed.year < currentYear || (placed.year === currentYear && placed.sem <= currentSem)
+            : false;
+        results.push({ ...placed, isScheduledEarlier: isEarlier });
+      }
+    }
+    return results;
+  }, [allPlacedModules, module.code, currentYear, currentSem]);
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/40 p-4 sm:p-8"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-ink/40 p-4 sm:p-8 backdrop-blur-[2px]"
       onClick={onClose}
+      onPointerDown={(e) => e.stopPropagation()}
+      onMouseEnter={(e) => e.stopPropagation()}
+      onMouseMove={(e) => e.stopPropagation()}
       role="dialog"
       aria-modal="true"
       aria-label={`${module.code} details`}
@@ -62,6 +98,7 @@ export const CourseDetailModal = ({ module, major, completedCodes, onClose }: Pr
       <div
         className="my-auto w-full max-w-2xl rounded-4xl bg-paper p-6 shadow-soft"
         onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -94,6 +131,25 @@ export const CourseDetailModal = ({ module, major, completedCodes, onClose }: Pr
 
         {status === 'ready' && detail && (
           <div className="flex flex-col gap-4">
+            {semAvailability && !semAvailability.isAvailable && (
+              <div
+                className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
+                style={{
+                  backgroundColor: 'rgb(254,243,199)',
+                  color: 'rgb(180,83,9)',
+                  border: '1px solid rgba(180,83,9,0.2)',
+                }}
+              >
+                <span className="font-semibold">Semester Misalignment: </span>
+                {semAvailability.warning}
+                {currentSem && (
+                  <span className="mt-0.5 block opacity-80">
+                    You currently have this scheduled in {semesterName(currentSem)}.
+                  </span>
+                )}
+              </div>
+            )}
+
             {missing && (
               <div
                 className="rounded-2xl px-3 py-2 text-xs leading-relaxed"
@@ -105,6 +161,34 @@ export const CourseDetailModal = ({ module, major, completedCodes, onClose }: Pr
                   Based on courses scheduled before this one in your plan.
                 </span>
               </div>
+            )}
+
+            {dependents.length > 0 && (
+              <Section label="Unlocked in Your Plan">
+                <div className="flex flex-wrap gap-1.5">
+                  {dependents.map((dep) => (
+                    <span
+                      key={dep.code}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-mono ${
+                        dep.isScheduledEarlier
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : 'bg-canvas text-ink border border-ink/10'
+                      }`}
+                    >
+                      <span className="font-bold">{dep.code}</span>
+                      <span className="text-[10px] opacity-75 font-sans">(Y{dep.year}S{dep.sem})</span>
+                      {dep.isScheduledEarlier && (
+                        <span className="text-[9px] font-bold text-amber-800">⚠️ Needs this</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+                {dependents.some((d) => d.isScheduledEarlier) && (
+                  <p className="text-[10px] text-amber-800 font-medium">
+                    ⚠️ One or more downstream courses requiring this module are scheduled in an earlier or same semester.
+                  </p>
+                )}
+              </Section>
             )}
 
             {detail.description && (
@@ -159,7 +243,8 @@ export const CourseDetailModal = ({ module, major, completedCodes, onClose }: Pr
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

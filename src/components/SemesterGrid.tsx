@@ -1,16 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { Dropdown } from './Dropdown';
 import type { Major, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
-import { searchNusModsModules, fetchNusModsModuleDetail } from '@shared/nusmods';
+import {
+  searchNusModsModules,
+  fetchNusModsModuleDetail,
+  getNusModsTimetableUrl,
+  extractPrerequisiteCodes,
+  normalizePrereqCode,
+} from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
 import { autoCategoryId, semesterLabel } from '../lib/studyPlan';
 import { ModuleCard } from './ModuleCard';
 import { WaivedCourses } from './WaivedCourses';
 import { AppDialog } from './AppDialog';
-import { PlusIcon, XIcon } from './Icons';
+import { PlusIcon, XIcon, ExternalLinkIcon } from './Icons';
 
 const UNDERLOAD_MCS = 18;
 const OVERLOAD_MCS = 20;
@@ -48,7 +54,79 @@ export const SemesterGrid = ({
 }: Props) => {
   const [activeDrag, setActiveDrag] = useState<PlacedModule | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const [hoveredModuleCode, setHoveredModuleCode] = useState<string | null>(null);
+  const [selectedModuleCode, setSelectedModuleCode] = useState<string | null>(null);
+  const [highlightDependenciesEnabled, setHighlightDependenciesEnabled] = useState(true);
+  const [modulePrereqMap, setModulePrereqMap] = useState<Record<string, string[]>>({});
   const isMobile = useIsMobile();
+
+  const activeDependencyCode = selectedModuleCode ?? hoveredModuleCode;
+
+  const handleSelectModule = (code: string) => {
+    setSelectedModuleCode((current) => (current === code ? null : code));
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedModuleCode) {
+        setSelectedModuleCode(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedModuleCode]);
+
+  const allPlacedModules = useMemo(() => {
+    return semesters.flatMap((s) =>
+      s.modules.map((m) => ({ code: m.code, year: s.year, sem: s.sem }))
+    );
+  }, [semesters]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const uniqueCodes = Array.from(new Set(allPlacedModules.map((m) => m.code)));
+    Promise.all(
+      uniqueCodes.map((code) =>
+        fetchNusModsModuleDetail(code)
+          .then(({ detail }) => ({ code, detail }))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      const map: Record<string, string[]> = {};
+      for (const r of results) {
+        if (r?.detail) {
+          map[r.code] = extractPrerequisiteCodes(r.detail.prereqTree);
+        }
+      }
+      setModulePrereqMap(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [allPlacedModules]);
+
+  const getHighlightMode = (moduleCode: string): 'self' | 'upstream' | 'downstream' | undefined => {
+    if (!highlightDependenciesEnabled || !activeDependencyCode) return undefined;
+    if (moduleCode === activeDependencyCode) return 'self';
+
+    const activeNorm = normalizePrereqCode(activeDependencyCode);
+    const moduleNorm = normalizePrereqCode(moduleCode);
+
+    // Upstream: is moduleCode a prerequisite of activeDependencyCode?
+    const activePrereqs = (modulePrereqMap[activeDependencyCode] ?? []).map(normalizePrereqCode);
+    if (activePrereqs.includes(moduleNorm)) {
+      return 'upstream';
+    }
+
+    // Downstream: does moduleCode require activeDependencyCode?
+    const modulePrereqs = (modulePrereqMap[moduleCode] ?? []).map(normalizePrereqCode);
+    if (modulePrereqs.includes(activeNorm)) {
+      return 'downstream';
+    }
+
+    return undefined;
+  };
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -122,9 +200,50 @@ export const SemesterGrid = ({
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col gap-3">
-        {/* Layout View Mode Toggle */}
-        <div className="flex items-center justify-between px-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-ink/50">Planner Layout</span>
+        {/* Layout View Mode & Dependency Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setHighlightDependenciesEnabled((prev) => !prev)}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[10px] sm:text-xs font-medium transition-colors ${
+                highlightDependenciesEnabled
+                  ? 'bg-paper text-ink border border-ink/20 shadow-xs'
+                  : 'bg-paper/40 text-muted hover:text-ink border border-ink/10'
+              }`}
+              title="Highlight prerequisites and downstream courses on hover"
+            >
+              <span>Dependencies</span>
+              <span className={`h-1.5 w-1.5 rounded-full ${highlightDependenciesEnabled ? 'bg-ink' : 'bg-muted/40'}`} />
+            </button>
+            {activeDependencyCode && highlightDependenciesEnabled && (
+              <div className="hidden sm:flex items-center gap-2 text-[10px] font-sans">
+                <span className="font-mono font-bold text-ink">
+                  {selectedModuleCode ? `Selected: ${selectedModuleCode}` : `${hoveredModuleCode}:`}
+                </span>
+                {selectedModuleCode && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedModuleCode(null)}
+                    className="flex h-4 w-4 items-center justify-center rounded-full bg-ink/10 hover:bg-ink/20 text-[9px] text-ink font-bold transition-colors"
+                    title="Clear selection (Esc)"
+                    aria-label="Clear selection"
+                  >
+                    ✕
+                  </button>
+                )}
+                <span className="inline-flex items-center gap-1 rounded bg-ink px-1.5 py-0.5 text-[8px] font-mono font-bold text-canvas">
+                  PREREQ
+                </span>
+                <span className="text-muted text-[10px]">Prerequisite</span>
+                <span className="text-muted/40">·</span>
+                <span className="inline-flex items-center gap-1 rounded bg-canvas border border-ink/30 px-1.5 py-0.5 text-[8px] font-mono font-bold text-ink">
+                  UNLOCKS
+                </span>
+                <span className="text-muted text-[10px]">Unlocks</span>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-0.5 bg-paper/80 p-0.5 rounded-xl border border-ink/10 shadow-xs">
             <button
               type="button"
@@ -150,7 +269,7 @@ export const SemesterGrid = ({
         </div>
 
         {viewMode === 'columns' ? (
-          <div className="flex gap-2.5 items-stretch overflow-x-auto pb-3 scroll-smooth snap-x snap-mandatory -mx-2 px-2 sm:mx-0 sm:px-0">
+          <div className="flex gap-2.5 items-stretch overflow-x-auto pt-1 pb-6 sm:pb-8 scroll-smooth snap-x snap-mandatory -mx-2 px-2 sm:mx-0 sm:px-0">
             <div id="sem-col-waived" className="snap-start flex-shrink-0 flex flex-col">
               <WaivedCourses
                 major={major}
@@ -173,6 +292,11 @@ export const SemesterGrid = ({
                   moveTargets={moveTargets}
                   onMoveModule={moveModule}
                   onDeleteSpecialTerm={deleteSpecialTerm}
+                  getHighlightMode={getHighlightMode}
+                  onHoverModule={setHoveredModuleCode}
+                  allPlacedModules={allPlacedModules}
+                  selectedModuleCode={selectedModuleCode}
+                  onSelectModule={handleSelectModule}
                 />
               </div>
             ))}
@@ -223,6 +347,11 @@ export const SemesterGrid = ({
                 moveTargets={moveTargets}
                 onMoveModule={moveModule}
                 onDeleteSpecialTerm={deleteSpecialTerm}
+                getHighlightMode={getHighlightMode}
+                onHoverModule={setHoveredModuleCode}
+                allPlacedModules={allPlacedModules}
+                selectedModuleCode={selectedModuleCode}
+                onSelectModule={handleSelectModule}
               />
             ))}
             {possibleSpecialTerms.length > 0 && (
@@ -302,9 +431,31 @@ interface ColumnProps {
   onMoveModule: (module: PlacedModule, year: number, sem: number, insertBeforeCode?: string) => void;
   onDeleteSpecialTerm?: (year: number, sem: number) => void;
   fullWidth?: boolean;
+  getHighlightMode?: (code: string) => 'self' | 'upstream' | 'downstream' | undefined;
+  onHoverModule?: (code: string | null) => void;
+  allPlacedModules?: { code: string; year: number; sem: number }[];
+  selectedModuleCode?: string | null;
+  onSelectModule?: (code: string) => void;
 }
 
-const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, onDeleteSpecialTerm, fullWidth = false }: ColumnProps) => {
+const SemesterColumn = ({
+  semester,
+  major,
+  addOrMoveModule,
+  deleteModule,
+  updateModule,
+  completedCodes,
+  isMobile,
+  moveTargets,
+  onMoveModule,
+  onDeleteSpecialTerm,
+  fullWidth = false,
+  getHighlightMode,
+  onHoverModule,
+  allPlacedModules,
+  selectedModuleCode,
+  onSelectModule,
+}: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
@@ -312,6 +463,10 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
 
   const totalMcs = getSemesterMcs(semester);
   const loadWarning = getLoadWarning(semester.year, semester.sem, totalMcs);
+  const timetableUrl = getNusModsTimetableUrl(
+    semester.sem,
+    semester.modules.map((m) => m.code),
+  );
 
   return (
     <div
@@ -329,6 +484,18 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
         <span className="text-xs font-semibold text-ink">{semesterLabel(semester.year, semester.sem)}</span>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-muted">{totalMcs} MC</span>
+          {timetableUrl && (
+            <a
+              href={timetableUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/20 text-ink/75 transition-colors hover:bg-canvas hover:text-ink"
+              title={`Open ${semesterLabel(semester.year, semester.sem)} in NUSMods Timetable`}
+              aria-label={`Open ${semesterLabel(semester.year, semester.sem)} in NUSMods Timetable`}
+            >
+              <ExternalLinkIcon className="h-3 w-3" />
+            </a>
+          )}
           {(semester.sem === 3 || semester.sem === 4) && onDeleteSpecialTerm && (
             <button
               type="button"
@@ -399,6 +566,11 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
             onEditModule={updateModule}
             moveTargets={moveTargets}
             onMove={(year, sem) => onMoveModule(module, year, sem)}
+            highlightMode={getHighlightMode?.(module.code)}
+            isSelected={selectedModuleCode === module.code}
+            onSelectModule={onSelectModule}
+            onHoverModule={onHoverModule}
+            allPlacedModules={allPlacedModules}
           />
         ))}
         {isOver && (
@@ -698,7 +870,23 @@ const getLoadWarning = (year: number, sem: number, totalMcs: number): LoadWarnin
 
 const AUTO_CATEGORY = '__auto__';
 
-const SemesterRow = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, onDeleteSpecialTerm }: ColumnProps) => {
+const SemesterRow = ({
+  semester,
+  major,
+  addOrMoveModule,
+  deleteModule,
+  updateModule,
+  completedCodes,
+  isMobile,
+  moveTargets,
+  onMoveModule,
+  onDeleteSpecialTerm,
+  getHighlightMode,
+  onHoverModule,
+  allPlacedModules,
+  selectedModuleCode,
+  onSelectModule,
+}: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const id = `${semester.year}-${semester.sem}`;
@@ -706,6 +894,10 @@ const SemesterRow = ({ semester, major, addOrMoveModule, deleteModule, updateMod
 
   const totalMcs = getSemesterMcs(semester);
   const loadWarning = getLoadWarning(semester.year, semester.sem, totalMcs);
+  const timetableUrl = getNusModsTimetableUrl(
+    semester.sem,
+    semester.modules.map((m) => m.code),
+  );
 
   return (
     <div
@@ -726,6 +918,19 @@ const SemesterRow = ({ semester, major, addOrMoveModule, deleteModule, updateMod
           )}
         </div>
         <div className="flex items-center gap-1.5">
+          {timetableUrl && (
+            <a
+              href={timetableUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-6 items-center gap-1 rounded-full border border-ink/20 px-2 text-[10px] font-medium text-ink/75 transition-colors hover:bg-canvas hover:text-ink"
+              title={`Open ${semesterLabel(semester.year, semester.sem)} in NUSMods Timetable`}
+              aria-label={`Open ${semesterLabel(semester.year, semester.sem)} in NUSMods Timetable`}
+            >
+              <ExternalLinkIcon className="h-3 w-3" />
+              <span className="hidden sm:inline">NUSMods</span>
+            </a>
+          )}
           {(semester.sem === 3 || semester.sem === 4) && onDeleteSpecialTerm && (
             <button
               type="button"
@@ -788,6 +993,11 @@ const SemesterRow = ({ semester, major, addOrMoveModule, deleteModule, updateMod
               onEditModule={updateModule}
               moveTargets={moveTargets}
               onMove={(targetYear, targetSem) => onMoveModule(module, targetYear, targetSem)}
+              highlightMode={getHighlightMode?.(module.code)}
+              isSelected={selectedModuleCode === module.code}
+              onSelectModule={onSelectModule}
+              onHoverModule={onHoverModule}
+              allPlacedModules={allPlacedModules}
             />
           </div>
         ))}
