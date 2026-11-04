@@ -99,8 +99,17 @@ export const PrintView = ({
               {nocDuration && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">NOC: {nocDuration}</span>
               )}
+              {specialProgramme === 'sep' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">SEP (Exchange)</span>
+              )}
               {specialProgramme === 'gex' && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">GEx</span>
+              )}
+              {specialProgramme === 'regional-iex' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">Regional IEx</span>
+              )}
+              {specialProgramme === 'siip' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">SIIP</span>
               )}
             </div>
           )}

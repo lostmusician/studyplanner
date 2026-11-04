@@ -37,8 +37,8 @@ export const StatsSummary = ({
   const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col gap-3 w-full">
+      <div className="flex flex-wrap gap-2.5 w-full items-stretch">
         <TotalStatCard
           value={stats.totalMc}
           target={major.totalMcTarget}
@@ -90,18 +90,22 @@ const TotalStatCard = ({
 
   return (
     <div
-      className="flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl bg-white px-4 py-3 text-left shadow-soft sm:grow-0 sm:basis-auto sm:min-w-[160px] sm:px-5 sm:py-4"
-      style={{ border: '1px solid rgba(20,20,19,0.08)' }}
+      className="flex flex-[1.5] min-w-[200px] flex-col justify-between rounded-2xl bg-white px-4 py-2.5 shadow-soft border border-ink/10 text-left"
     >
-      <span className="text-xs text-ink/80 font-medium tracking-wide uppercase">Total MCs</span>
-      <span className="text-2xl font-bold text-ink leading-none">
-        {value}
-        <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>
-      </span>
-      <span className="text-xs text-muted">Remaining degree MC: {remaining}</span>
-      <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-ink/60 font-bold tracking-wider uppercase">Total Degree MCs</span>
+        <span className="text-[10px] font-semibold text-muted">{remaining} MC remaining</span>
+      </div>
+      <div className="flex items-baseline justify-between mt-1">
+        <div className="text-2xl font-bold text-ink leading-none">
+          {value}
+          <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>
+        </div>
+        <span className="text-[10px] font-mono font-semibold text-ink/70">{Math.round(pct)}%</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-ink/10 overflow-hidden mt-1.5">
         <div
-          className="h-full rounded-full bg-ink/40 transition-all duration-300"
+          className="h-full rounded-full bg-ink transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -128,22 +132,22 @@ const StatCard = ({
 }) => {
   const pct = target ? Math.min(100, (value / target) * 100) : null;
   const className =
-    'flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl px-4 py-3 text-left transition sm:grow-0 sm:basis-auto sm:min-w-[140px] sm:px-5 sm:py-4';
+    'flex flex-1 min-w-[125px] flex-col justify-between rounded-2xl px-3.5 py-2.5 text-left transition hover:brightness-95 cursor-pointer select-none';
   const style = {
     backgroundColor: color,
-    boxShadow: isOpen ? `0 0 0 2px ${color}, 0 0 0 5px rgba(20,20,19,0.16)` : 'none',
+    boxShadow: isOpen ? `0 0 0 2px ${color}, 0 0 0 4px rgba(20,20,19,0.2)` : 'none',
   };
   const content = (
     <>
-      <span className="text-xs text-ink/80 font-medium tracking-wide uppercase">{label}</span>
-      <span className="text-2xl font-bold text-ink leading-none">
+      <span className="text-[10px] text-ink/75 font-bold tracking-wider uppercase truncate">{label}</span>
+      <div className="text-base font-bold text-ink leading-tight mt-0.5">
         {value}
-        {target && <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>}
-      </span>
+        {target && <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>}
+      </div>
       {pct !== null && (
-        <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
+        <div className="h-1 rounded-full bg-ink/10 overflow-hidden mt-1.5">
           <div
-            className="h-full rounded-full bg-ink/30 transition-all duration-300"
+            className="h-full rounded-full bg-ink/40 transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -162,11 +166,11 @@ const StatCard = ({
   return (
     <button
       type="button"
-      className={`${className} hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30`}
+      className={className}
       style={style}
-      onClick={onClick}
       aria-expanded={isOpen}
       aria-controls={controlsId}
+      onClick={onClick}
     >
       {content}
     </button>

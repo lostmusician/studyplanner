@@ -11,6 +11,7 @@ interface Props {
   onAdd: (module: WaivedModule) => void;
   onDelete: (code: string) => void;
   fullWidth?: boolean;
+  layoutMode?: 'columns' | 'rows';
 }
 
 interface FormState {
@@ -20,7 +21,7 @@ interface FormState {
   mcs: string;
 }
 
-export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth = false }: Props) => {
+export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth = false, layoutMode = 'columns' }: Props) => {
   const [isAdding, setIsAdding] = useState(false);
   const [form, setForm] = useState<FormState>({ query: '', code: '', name: '', mcs: '0' });
   const [suggestions, setSuggestions] = useState<NusModsModuleSummary[]>([]);
@@ -101,13 +102,93 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth
     setIsAdding(false);
   };
 
+  const renderModuleCard = (module: WaivedModule) => {
+    const category = major.categories.find((cat) => cat.id === module.categoryId);
+    return (
+      <div
+        key={module.code}
+        className="relative group rounded-xl p-2.5 flex-shrink-0 w-[155px]"
+        style={{ backgroundColor: category?.color ?? '#d4c9b8' }}
+      >
+        <div className="flex items-start justify-between gap-1">
+          <span className="font-mono text-xs font-bold text-ink leading-tight">{module.code}</span>
+        </div>
+        <p className="text-[10px] sm:text-[11px] text-ink/75 leading-tight mt-0.5 line-clamp-2">{module.name}</p>
+        <div className="flex items-center justify-between mt-1 font-mono text-[9px]">
+          <span className="text-ink/80 font-semibold">Waived</span>
+          {category && (
+            <span className="text-ink/70 font-sans truncate max-w-[65px] font-medium">{category.label}</span>
+          )}
+        </div>
+        <button
+          type="button"
+          className={`absolute z-40 top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${FOCUS_RING}`}
+          onClick={() => onDelete(module.code)}
+          aria-label={`Remove waived ${module.code}`}
+        >
+          <XIcon className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  };
+
+  if (layoutMode === 'rows') {
+    return (
+      <div className="flex flex-col rounded-2xl p-2.5 w-full bg-[#e1dacd]">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <span className="text-xs font-semibold text-ink">Waived Courses</span>
+          <button
+            type="button"
+            onClick={() => setIsAdding((open) => !open)}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink transition-colors hover:bg-ink/80"
+            aria-label={isAdding ? 'Close waived course search' : 'Add waived course'}
+          >
+            {isAdding ? <XIcon /> : <PlusIcon />}
+          </button>
+        </div>
+
+        {isAdding && (
+          <form onSubmit={handleSubmit} className="relative rounded-2xl bg-canvas/60 p-2 mb-2" ref={containerRef}>
+            <input
+              type="text"
+              value={form.query}
+              onChange={(event) => handleQueryChange(event.target.value)}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              placeholder="Course code"
+              className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+              autoComplete="off"
+            />
+            {form.name && (
+              <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>
+            )}
+            <button
+              type="submit"
+              className="mt-2 w-full rounded-xl bg-ink px-3 py-1.5 text-xs font-medium text-canvas disabled:opacity-40"
+              disabled={!form.code.trim()}
+            >
+              Add
+            </button>
+          </form>
+        )}
+
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none items-stretch min-h-[75px]">
+          {waivedModules.map(renderModuleCard)}
+          {waivedModules.length === 0 && !isAdding && (
+            <div className="flex items-center justify-center w-full py-3 text-center border border-dashed border-ink/15 rounded-xl">
+              <p className="text-[10px] text-muted">No waived courses. Tap + to add one.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="flex flex-col flex-shrink-0 rounded-3xl p-3"
+      className="flex flex-col flex-shrink-0 flex-1 rounded-2xl p-2.5 h-full min-h-full"
       style={{
-        minWidth: fullWidth ? undefined : '172px',
-        width: fullWidth ? '100%' : '172px',
-        minHeight: '280px',
+        minWidth: fullWidth ? undefined : '160px',
+        width: fullWidth ? '100%' : '160px',
         backgroundColor: 'rgb(225,218,205)',
       }}
     >
@@ -116,7 +197,7 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth
         <button
           type="button"
           onClick={() => setIsAdding((open) => !open)}
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-canvas transition-colors hover:bg-ink/80"
+          className="flex h-6 w-6 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink transition-colors hover:bg-ink/80"
           aria-label={isAdding ? 'Close waived course search' : 'Add waived course'}
           aria-expanded={isAdding}
         >
@@ -174,7 +255,7 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth
           return (
             <div
               key={module.code}
-              className="relative group rounded-2xl p-3"
+              className="relative group rounded-xl p-2.5"
               style={{ backgroundColor: category?.color ?? '#d4c9b8' }}
             >
               <div className="flex items-start justify-between gap-1">
@@ -189,7 +270,7 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth
               </div>
               <button
                 type="button"
-                className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${FOCUS_RING}`}
+                className={`absolute z-40 top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${FOCUS_RING}`}
                 onClick={() => onDelete(module.code)}
                 aria-label={`Remove waived ${module.code}`}
               >

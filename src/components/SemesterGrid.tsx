@@ -117,126 +117,140 @@ export const SemesterGrid = ({
       };
     }),
   ];
-  const selectedSemester = semesters.find((s) => `${s.year}-${s.sem}` === selectedKey) ?? null;
+  const [viewMode, setViewMode] = useState<'columns' | 'rows'>('columns');
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      {isMobile ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {chips.map((chip) => (
-              <button
-                key={chip.key}
-                type="button"
-                onClick={() => setSelectedKey(chip.key)}
-                className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                  selectedKey === chip.key ? 'bg-ink text-canvas' : 'bg-paper text-ink/70'
-                }`}
-              >
-                {chip.label}
-                {chip.warn && <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />}
-              </button>
+      <div className="flex flex-col gap-3">
+        {/* Layout View Mode Toggle */}
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink/50">Planner Layout</span>
+          <div className="flex items-center gap-0.5 bg-paper/80 p-0.5 rounded-xl border border-ink/10 shadow-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('columns')}
+              className={`flex items-center gap-1 px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-lg transition-colors ${
+                viewMode === 'columns' ? 'bg-ink text-canvas font-semibold shadow-xs' : 'text-ink/60 hover:text-ink'
+              }`}
+              title="Columns view: horizontal scroll across semesters"
+            >
+              <span className="text-[9px]">❚❚❚</span> Columns
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('rows')}
+              className={`flex items-center gap-1 px-2.5 py-1 text-[10px] sm:text-xs font-medium rounded-lg transition-colors ${
+                viewMode === 'rows' ? 'bg-ink text-canvas font-semibold shadow-xs' : 'text-ink/60 hover:text-ink'
+              }`}
+              title="Rows view: vertical stack of horizontal semester rows"
+            >
+              <span className="text-[9px]">☰</span> Rows
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'columns' ? (
+          <div className="flex gap-2.5 items-stretch overflow-x-auto pb-3 scroll-smooth snap-x snap-mandatory -mx-2 px-2 sm:mx-0 sm:px-0">
+            <div id="sem-col-waived" className="snap-start flex-shrink-0 flex flex-col">
+              <WaivedCourses
+                major={major}
+                waivedModules={waivedModules}
+                onAdd={addWaivedModule}
+                onDelete={deleteWaivedModule}
+                layoutMode="columns"
+              />
+            </div>
+            {semesters.map((semester) => (
+              <div id={`sem-col-${semester.year}-${semester.sem}`} key={`${semester.year}-${semester.sem}`} className="snap-start flex-shrink-0 flex flex-col">
+                <SemesterColumn
+                  semester={semester}
+                  major={major}
+                  addOrMoveModule={addOrMoveModule}
+                  deleteModule={deleteModule}
+                  updateModule={updateModule}
+                  completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
+                  isMobile={isMobile}
+                  moveTargets={moveTargets}
+                  onMoveModule={moveModule}
+                  onDeleteSpecialTerm={deleteSpecialTerm}
+                />
+              </div>
             ))}
             {possibleSpecialTerms.length > 0 && (
-              <div className="relative flex flex-shrink-0 items-center">
+              <div className="w-[160px] min-w-[160px] flex-shrink-0 flex flex-col gap-2 rounded-2xl border border-dashed border-ink/20 p-3 justify-center items-center text-center bg-paper/30 snap-start h-full min-h-full">
+                <span className="text-xs font-semibold text-ink/70">Special Term</span>
+                <p className="text-[10px] text-muted max-w-[140px]">Plan Orbital, internship, winter/summer school, etc.</p>
                 <select
                   onChange={(e) => {
                     if (e.target.value) {
                       const [y, s] = e.target.value.split('-').map(Number);
                       addSpecialTerm(y, s);
-                      setSelectedKey(`${y}-${s}`);
                       e.target.value = '';
                     }
                   }}
-                  className="appearance-none rounded-full bg-paper border border-ink/10 px-3 py-1.5 text-xs font-medium text-ink/70 pr-8 focus:outline-none focus:ring-2 focus:ring-ink/20"
+                  className="mt-1 w-full rounded-xl border border-ink/10 bg-paper px-2 py-1 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
                   defaultValue=""
                 >
-                  <option value="" disabled>+ Special Term</option>
+                  <option value="" disabled>+ Add Special Term</option>
                   {possibleSpecialTerms.map((term) => (
                     <option key={`${term.year}-${term.sem}`} value={`${term.year}-${term.sem}`}>
                       {term.label}
                     </option>
                   ))}
                 </select>
-                <span className="pointer-events-none absolute right-2.5 text-ink/40 text-[10px]" aria-hidden="true">▼</span>
               </div>
             )}
           </div>
-
-          {selectedKey === 'waived' ? (
+        ) : (
+          <div className="flex flex-col gap-3">
             <WaivedCourses
               major={major}
               waivedModules={waivedModules}
               onAdd={addWaivedModule}
               onDelete={deleteWaivedModule}
-              fullWidth
+              layoutMode="rows"
             />
-          ) : selectedSemester ? (
-            <SemesterColumn
-              key={selectedKey}
-              semester={selectedSemester}
-              major={major}
-              addOrMoveModule={addOrMoveModule}
-              deleteModule={deleteModule}
-              updateModule={updateModule}
-              completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(selectedSemester.year, selectedSemester.sem)]))}
-              isMobile={isMobile}
-              moveTargets={moveTargets}
-              onMoveModule={moveModule}
-              onDeleteSpecialTerm={deleteSpecialTerm}
-              fullWidth
-            />
-          ) : null}
-        </div>
-      ) : (
-        <div className="flex gap-3 overflow-x-auto pb-3">
-          <WaivedCourses
-            major={major}
-            waivedModules={waivedModules}
-            onAdd={addWaivedModule}
-            onDelete={deleteWaivedModule}
-          />
-          {semesters.map((semester) => (
-            <SemesterColumn
-              key={`${semester.year}-${semester.sem}`}
-              semester={semester}
-              major={major}
-              addOrMoveModule={addOrMoveModule}
-              deleteModule={deleteModule}
-              updateModule={updateModule}
-              completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
-              isMobile={isMobile}
-              moveTargets={moveTargets}
-              onMoveModule={moveModule}
-              onDeleteSpecialTerm={deleteSpecialTerm}
-            />
-          ))}
-          {possibleSpecialTerms.length > 0 && (
-            <div className="w-56 flex-shrink-0 flex flex-col gap-2 rounded-3xl border border-dashed border-ink/20 p-4 justify-center items-center text-center bg-paper/30">
-              <span className="text-xs font-semibold text-ink/70">Special Term</span>
-              <p className="text-[10px] text-muted max-w-[150px]">Plan Orbital, internship, winter/summer school, etc.</p>
-              <select
-                onChange={(e) => {
-                  if (e.target.value) {
-                    const [y, s] = e.target.value.split('-').map(Number);
-                    addSpecialTerm(y, s);
-                    e.target.value = '';
-                  }
-                }}
-                className="mt-1 w-full rounded-xl border border-ink/10 bg-paper px-2.5 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
-                defaultValue=""
-              >
-                <option value="" disabled>+ Add Special Term</option>
-                {possibleSpecialTerms.map((term) => (
-                  <option key={`${term.year}-${term.sem}`} value={`${term.year}-${term.sem}`}>
-                    {term.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-      )}
+            {semesters.map((semester) => (
+              <SemesterRow
+                key={`${semester.year}-${semester.sem}`}
+                semester={semester}
+                major={major}
+                addOrMoveModule={addOrMoveModule}
+                deleteModule={deleteModule}
+                updateModule={updateModule}
+                completedCodes={Array.from(new Set([...waivedCodes, ...getCompletedCodes(semester.year, semester.sem)]))}
+                isMobile={isMobile}
+                moveTargets={moveTargets}
+                onMoveModule={moveModule}
+                onDeleteSpecialTerm={deleteSpecialTerm}
+              />
+            ))}
+            {possibleSpecialTerms.length > 0 && (
+              <div className="w-full flex items-center justify-between rounded-2xl border border-dashed border-ink/20 p-3 bg-paper/30">
+                <span className="text-xs font-semibold text-ink/70">+ Add Special Term</span>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const [y, s] = e.target.value.split('-').map(Number);
+                      addSpecialTerm(y, s);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="rounded-xl border border-ink/10 bg-paper px-3 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select Special Term</option>
+                  {possibleSpecialTerms.map((term) => (
+                    <option key={`${term.year}-${term.sem}`} value={`${term.year}-${term.sem}`}>
+                      {term.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {moveError && (
         <AppDialog
@@ -302,17 +316,16 @@ const SemesterColumn = ({ semester, major, addOrMoveModule, deleteModule, update
   return (
     <div
       ref={setNodeRef}
-      className="relative flex flex-col flex-shrink-0 rounded-3xl p-3 transition-colors"
+      className="relative flex flex-col flex-shrink-0 flex-1 rounded-2xl p-2.5 transition-colors h-full min-h-full hover:z-30 focus-within:z-30"
       style={{
-        minWidth: fullWidth ? undefined : '172px',
-        width: fullWidth ? '100%' : '172px',
-        minHeight: '280px',
+        minWidth: fullWidth ? undefined : '160px',
+        width: fullWidth ? '100%' : '160px',
         backgroundColor: isOver ? 'rgb(210,203,190)' : 'rgb(225,218,205)',
         outline: 'none',
         outlineOffset: '-2px',
       }}
     >
-      <div className="flex items-center justify-between mb-2 px-1">
+      <div className="flex items-center justify-between mb-3 px-1">
         <span className="text-xs font-semibold text-ink">{semesterLabel(semester.year, semester.sem)}</span>
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-muted">{totalMcs} MC</span>
@@ -684,3 +697,106 @@ const getLoadWarning = (year: number, sem: number, totalMcs: number): LoadWarnin
 };
 
 const AUTO_CATEGORY = '__auto__';
+
+const SemesterRow = ({ semester, major, addOrMoveModule, deleteModule, updateModule, completedCodes, isMobile, moveTargets, onMoveModule, onDeleteSpecialTerm }: ColumnProps) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const id = `${semester.year}-${semester.sem}`;
+  const { setNodeRef, isOver } = useDroppable({ id });
+
+  const totalMcs = getSemesterMcs(semester);
+  const loadWarning = getLoadWarning(semester.year, semester.sem, totalMcs);
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="relative flex flex-col rounded-2xl p-2.5 transition-colors w-full"
+      style={{
+        backgroundColor: isOver ? 'rgb(210,203,190)' : 'rgb(225,218,205)',
+      }}
+    >
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-ink">{semesterLabel(semester.year, semester.sem)}</span>
+          <span className="text-[10px] text-muted font-mono">{totalMcs} MC</span>
+          {loadWarning && (
+            <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${loadWarning.className}`}>
+              {loadWarning.label}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {(semester.sem === 3 || semester.sem === 4) && onDeleteSpecialTerm && (
+            <button
+              type="button"
+              onClick={() => {
+                if (semester.modules.length === 0 || window.confirm(`Delete ${semesterLabel(semester.year, semester.sem)} and all its modules?`)) {
+                  onDeleteSpecialTerm(semester.year, semester.sem);
+                }
+              }}
+              className="flex h-6 w-6 items-center justify-center rounded-full border border-ink/20 text-ink/75 transition-colors hover:bg-red-50 hover:text-red-700"
+              aria-label={`Delete ${semesterLabel(semester.year, semester.sem)}`}
+            >
+              <XIcon />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setAddError(null);
+              setIsAdding((open) => !open);
+            }}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-canvas transition-colors hover:bg-ink/80"
+            aria-label={isAdding ? `Close add module for ${semesterLabel(semester.year, semester.sem)}` : `Add module to ${semesterLabel(semester.year, semester.sem)}`}
+          >
+            {isAdding ? <XIcon /> : <PlusIcon />}
+          </button>
+        </div>
+      </div>
+
+      {isAdding && (
+        <div className="mb-2">
+          <SemesterAddModuleForm
+            major={major}
+            year={semester.year}
+            sem={semester.sem}
+            error={addError}
+            onAdd={(year, sem, module) => {
+              if (!canPlaceModule(semester, module)) {
+                setAddError('Y1S1 max is 26 MC.');
+                return;
+              }
+              addOrMoveModule(year, sem, module);
+              setAddError(null);
+              setIsAdding(false);
+            }}
+          />
+        </div>
+      )}
+
+      {/* Modules horizontal row */}
+      <div className="flex gap-2 overflow-x-auto py-1.5 px-0.5 scrollbar-none items-stretch min-h-[75px]">
+        {semester.modules.map((module) => (
+          <div key={module.code} className="w-[155px] min-w-[155px] flex-shrink-0">
+            <ModuleCard
+              module={module}
+              major={major}
+              completedCodes={completedCodes}
+              fromYear={semester.year}
+              fromSem={semester.sem}
+              onDelete={(code) => deleteModule(code, semester.year, semester.sem)}
+              onEditModule={updateModule}
+              moveTargets={moveTargets}
+              onMove={(targetYear, targetSem) => onMoveModule(module, targetYear, targetSem)}
+            />
+          </div>
+        ))}
+        {semester.modules.length === 0 && !isAdding && (
+          <div className="flex items-center justify-center w-full py-3 text-center border border-dashed border-ink/15 rounded-xl">
+            <p className="text-[10px] text-muted">No modules yet. Tap + to add one.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

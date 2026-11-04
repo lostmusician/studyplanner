@@ -100,6 +100,12 @@ export const ModuleCard = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [module.code, completedStr, isOverlay]);
 
+  useEffect(() => {
+    if (showDetail || editing || showDeleteConfirm || showMoveMenu || isDragging) {
+      setShowTooltip(false);
+    }
+  }, [showDetail, editing, showDeleteConfirm, showMoveMenu, isDragging]);
+
   const category = major.categories.find((c) => c.id === module.categoryId);
 
   const openEditor = () => {
@@ -150,12 +156,12 @@ export const ModuleCard = ({
     touchAction: 'pan-y',
   };
 
-  // On touch there is no hover, so reveal the card controls unconditionally.
+  const [tooltipPos, setTooltipPos] = useState<{ left: number; top: number } | null>(null);
+
   // group-focus-within keeps controls reachable by keyboard (tabbing into the card),
   // not just mouse hover.
-  const controlVisibility = isMobile
-    ? 'opacity-100'
-    : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100';
+  const controlVisibility =
+    'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150';
   const showInsertBar = isDropTarget && !isDragging && !isOverlay;
 
   return (
@@ -166,12 +172,19 @@ export const ModuleCard = ({
         (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       style={style}
-      className="relative group rounded-2xl p-3 select-none"
+      className="relative group rounded-xl p-2.5 select-none hover:z-50 focus-within:z-50"
       onMouseEnter={() => {
         const rect = cardRef.current?.getBoundingClientRect();
-        // Flip the tooltip above the card when there isn't room for it below.
-        if (rect) setTooltipUp(window.innerHeight - rect.bottom < 220);
-        setShowTooltip(true);
+        if (rect) {
+          const spaceBelow = window.innerHeight - rect.bottom;
+          const placeAbove = spaceBelow < 120 && rect.top > 120;
+          const top = placeAbove
+            ? Math.max(8, rect.top - 110)
+            : Math.min(window.innerHeight - 115, rect.bottom + 4);
+          const left = Math.max(12, Math.min(rect.left, window.innerWidth - 204));
+          setTooltipPos({ left, top });
+          setShowTooltip(true);
+        }
       }}
       onMouseLeave={() => setShowTooltip(false)}
     >
@@ -196,12 +209,12 @@ export const ModuleCard = ({
             />
           )}
         </div>
-        <p className="text-[11px] text-ink/70 leading-snug mt-0.5 line-clamp-2">{module.name}</p>
-        <div className="flex items-center justify-between gap-1 mt-2">
-          <span className="text-[10px] text-ink/80">{module.mcs} MC</span>
+        <p className="text-[10px] sm:text-[11px] text-ink/75 leading-tight mt-0.5 line-clamp-2">{module.name}</p>
+        <div className="flex items-center justify-between gap-1 mt-1 font-mono text-[9px] sm:text-[10px]">
+          <span className="text-ink/80 font-semibold">{module.mcs} MC</span>
           <div className="flex min-w-0 items-center gap-1">
             {category && (
-              <span className="truncate max-w-[72px] text-[10px] text-ink/80">{category.label}</span>
+              <span className="truncate max-w-[68px] text-[9px] text-ink/70 font-sans font-medium">{category.label}</span>
             )}
             {isLocked && (
               <span className="flex-shrink-0 text-ink/60" title="Compulsory NEP module" aria-label="Compulsory NEP module">
@@ -288,7 +301,7 @@ export const ModuleCard = ({
       {/* Delete button */}
       {!isOverlay && (
         <button
-          className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity ${FOCUS_RING}`}
+          className={`absolute z-40 top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
           onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
@@ -314,7 +327,7 @@ export const ModuleCard = ({
       {/* Details button */}
       {!isOverlay && (
         <button
-          className={`absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] font-serif italic text-canvas ${controlVisibility} transition-opacity ${FOCUS_RING}`}
+          className={`absolute z-40 top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-[11px] font-serif italic text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
           onClick={(e) => { e.stopPropagation(); setShowDetail(true); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Details for ${module.code}`}
@@ -324,25 +337,24 @@ export const ModuleCard = ({
         </button>
       )}
 
-      {/* Hover tooltip */}
-      {showTooltip && !isDragging && !isOverlay && (
+      {/* Hover tooltip — fixed viewport positioning */}
+      {showTooltip && tooltipPos && !isDragging && !isOverlay && (
         <div
-          className={`absolute z-50 left-0 w-64 rounded-2xl bg-ink text-canvas p-4 text-xs shadow-soft pointer-events-none ${
-            tooltipUp ? 'bottom-full mb-2' : 'top-full mt-2'
-          }`}
+          style={{ position: 'fixed', left: `${tooltipPos.left}px`, top: `${tooltipPos.top}px` }}
+          className="z-[9999] w-48 rounded-xl bg-ink text-canvas p-2.5 text-[10px] shadow-xl pointer-events-none"
         >
-          <div className="font-bold font-mono">{module.code}</div>
-          <div className="mt-0.5 text-canvas/80 leading-snug">{module.name}</div>
-          <div className="mt-2 text-canvas/50">
+          <div className="font-bold font-mono text-[11px] leading-none">{module.code}</div>
+          <div className="mt-1 text-canvas/85 leading-tight line-clamp-2">{module.name}</div>
+          <div className="mt-1 text-[9px] text-canvas/50">
             {module.mcs} MC · {category?.label ?? module.categoryId}
           </div>
           {prereqWarning && (
-            <div className="mt-2 pt-2 border-t border-canvas/10" style={{ color: 'rgb(252,211,77)' }}>
-              <span className="uppercase text-[10px] tracking-wide block mb-1">Missing prereqs</span>
-              {prereqWarning}
+            <div className="mt-1 pt-1 border-t border-canvas/10" style={{ color: 'rgb(252,211,77)' }}>
+              <span className="uppercase text-[8px] tracking-wide block mb-0.5">Missing prereqs</span>
+              <span className="text-[9px] leading-tight block">{prereqWarning}</span>
             </div>
           )}
-          <div className="mt-2 pt-2 border-t border-canvas/10 text-canvas/40">Click ⓘ for full details</div>
+          <div className="mt-1 pt-1 border-t border-canvas/10 text-[8px] text-canvas/40">Click ⓘ for full details</div>
         </div>
       )}
 
@@ -356,17 +368,14 @@ export const ModuleCard = ({
         />
       )}
 
-      {/* Move button — keyboard/touch-reachable alternative to dragging.
-          Available on desktop too (not just mobile): dragging has no
-          keyboard equivalent, so this is the only way a keyboard or
-          switch-access user can relocate a module. */}
+      {/* Move button — keyboard/touch-reachable alternative to dragging */}
       {!isOverlay && !isLocked && onMove && moveTargets.length > 0 && (
-        <div className="absolute -bottom-1.5 -right-1.5">
+        <div className="absolute z-40 bottom-1 right-1">
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setShowMoveMenu((open) => !open); }}
             onPointerDown={(e) => e.stopPropagation()}
-            className={`flex h-5 w-5 items-center justify-center rounded-full bg-ink text-canvas ${controlVisibility} transition-opacity ${FOCUS_RING}`}
+            className={`flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
             aria-haspopup="listbox"
             aria-expanded={showMoveMenu}
             aria-label={`Move ${module.code} to another semester`}
