@@ -321,21 +321,20 @@ export const StudyPlan = ({
                       : 'text-muted hover:text-ink'
                   }`}
                 >
-                  <span aria-hidden="true">⊞</span> Grid
+                  Grid
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveView('competency')}
                   aria-pressed={activeView === 'competency'}
                   title="Visualise competencies and pathways"
-                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium transition-colors ${
+                  className={`rounded-lg px-2.5 py-1 font-medium transition-colors ${
                     activeView === 'competency'
                       ? 'bg-canvas font-semibold text-ink shadow-2xs'
                       : 'text-muted hover:text-ink'
                   }`}
                 >
-                  <span className="text-amber-700" aria-hidden="true">✦</span>
-                  <span>Visualise</span>
+                  Visualise
                 </button>
               </div>
               <button

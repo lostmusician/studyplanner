@@ -209,10 +209,7 @@ export const RiverView = ({ data }: Props) => {
     <div ref={containerRef} className="relative flex h-full min-h-0 flex-col gap-2">
       <div className="flex flex-wrap items-end justify-between gap-2 px-0.5">
         <div>
-          <h3 className="text-sm font-semibold text-ink">River of Knowledge</h3>
-          <p className="mt-0.5 text-[11px] leading-snug text-muted">
-            Every ribbon is a discipline; each pebble is a module carried downstream through the degree.
-          </p>
+          <h3 className="text-sm font-semibold text-ink">River</h3>
         </div>
         <div className="flex items-center gap-0.5 rounded-xl border border-ink/10 bg-[#f8f5ee]/80 p-0.5 text-[11px]">
           <button
@@ -238,7 +235,7 @@ export const RiverView = ({ data }: Props) => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
         {DISCIPLINE_ORDER.map((discipline) => {
           const info = DISCIPLINES[discipline];
           const total = data.cumulativeTotals[discipline];
@@ -267,7 +264,7 @@ export const RiverView = ({ data }: Props) => {
           className="h-full w-full"
           preserveAspectRatio="xMidYMid meet"
           role="img"
-          aria-label={`River of knowledge across ${data.columns.length} semesters, carrying ${data.totalMcs} MCs across seven disciplines.`}
+          aria-label={`River across ${data.columns.length} semesters, carrying ${data.totalMcs} MCs across seven disciplines.`}
         >
           <defs>
             {DISCIPLINE_ORDER.map((discipline) => {

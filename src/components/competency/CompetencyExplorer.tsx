@@ -69,21 +69,10 @@ export const CompetencyExplorer = ({
 
   return (
     <section className="flex min-h-[620px] flex-col gap-3 rounded-3xl border border-ink/10 bg-paper/35 p-3 sm:p-4 print:hidden lg:h-[calc(100vh-190px)] lg:min-h-[650px]">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-lg leading-none text-amber-700" aria-hidden="true">
-              ✦
-            </span>
-            <h1 className="text-base font-bold leading-tight text-ink sm:text-lg">
-              Academic Constellation <span className="text-amber-700">&amp;</span> Knowledge River
-            </h1>
-          </div>
-          <p className="mt-1 max-w-2xl text-[11px] leading-relaxed text-muted sm:text-xs">
-            Trace the ancestry of every module you have placed, then watch your knowledge pool deepen
-            across the semesters. The constellation reveals dependencies; the river reveals momentum.
-          </p>
-        </div>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-base font-bold leading-tight text-ink sm:text-lg">
+          Competency Visualiser
+        </h1>
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-0.5 rounded-xl border border-ink/10 bg-[#f8f5ee]/80 p-0.5 text-[11px]">
@@ -91,27 +80,25 @@ export const CompetencyExplorer = ({
               type="button"
               onClick={() => setActiveView('graph')}
               aria-pressed={activeView === 'graph'}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium transition-colors ${
+              className={`rounded-lg px-2.5 py-1 font-medium transition-colors ${
                 activeView === 'graph'
                   ? 'bg-ink text-canvas shadow-xs'
                   : 'text-muted hover:bg-white/50 hover:text-ink'
               }`}
             >
-              <span aria-hidden="true">🕸️</span>
-              <span>Constellation Graph</span>
+              Graph
             </button>
             <button
               type="button"
               onClick={() => setActiveView('river')}
               aria-pressed={activeView === 'river'}
-              className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium transition-colors ${
+              className={`rounded-lg px-2.5 py-1 font-medium transition-colors ${
                 activeView === 'river'
                   ? 'bg-ink text-canvas shadow-xs'
                   : 'text-muted hover:bg-white/50 hover:text-ink'
               }`}
             >
-              <span aria-hidden="true">🌊</span>
-              <span>River of Knowledge</span>
+              River
             </button>
           </div>
 
@@ -121,7 +108,7 @@ export const CompetencyExplorer = ({
             className="flex items-center gap-1.5 rounded-xl border border-ink/15 bg-canvas px-3 py-1.5 text-[11px] font-medium text-ink transition-colors hover:bg-paper"
           >
             <span aria-hidden="true">←</span>
-            <span>Back to Semester Grid</span>
+            <span>Back to Grid</span>
           </button>
         </div>
       </header>
@@ -180,14 +167,10 @@ export const CompetencyExplorer = ({
       <div className="h-[480px] shrink-0 lg:h-auto lg:min-h-0 lg:flex-1">
         {graph.nodes.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-ink/20 bg-[#f8f5ee]/55 px-6 text-center">
-            <span className="text-2xl" aria-hidden="true">
-              ✦
-            </span>
             <div>
-              <h2 className="text-sm font-semibold text-ink">Your constellation is still dark</h2>
+              <h2 className="text-sm font-semibold text-ink">No modules placed yet</h2>
               <p className="mt-1 max-w-md text-xs leading-relaxed text-muted">
-                Place a few modules in the semester grid and return here. Every prerequisite becomes a
-                thread of starlight, and every semester adds a current to the river.
+                Add modules to your semester plan to view the graph and river.
               </p>
             </div>
             <button
@@ -223,7 +206,7 @@ export const CompetencyExplorer = ({
         <span className="hidden sm:inline">
           {activeView === 'graph'
             ? 'Hover for lineage · drag nodes · scroll to zoom · scrub the timeline'
-            : 'Hover a current for its semester summary · hover a pebble for module detail'}
+            : 'Hover a discipline for semester summary · hover a module for details'}
         </span>
       </div>
     </section>

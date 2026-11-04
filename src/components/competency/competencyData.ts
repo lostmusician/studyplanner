@@ -335,7 +335,7 @@ export const getDiscipline = (code: string, categoryId?: string): DisciplineInfo
 
 /** A pragmatic, embedded prerequisite dictionary. It is intentionally not a
  * complete NUSMods mirror: it captures the spine of the SoC/NUSC curriculum so
- * the constellation has recognisable ancestry, while affinity links add the
+ * the graph has recognisable ancestry, while affinity links add the
  * softer discipline clustering. */
 export const KNOWN_PREREQUISITES: Record<string, string[]> = {
   CS1101S: ['CS2030S', 'CS2040S', 'CS2100'],
@@ -509,7 +509,7 @@ const addModuleIfMissing = (
   });
 };
 
-/** Build the constellation graph from the planner's current state. */
+/** Build the competency graph from the planner's current state. */
 export const extractGraphNodesAndLinks = (
   major: Major,
   semesters: StudentSemester[],
