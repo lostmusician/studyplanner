@@ -8,6 +8,7 @@ import type {
   RequirementRule,
   NocDuration,
   SpecialProgramme,
+  DefaultPlanEntry,
 } from '@shared/types';
 
 export const semesterLabel = (year: number, sem: number): string => {
@@ -21,12 +22,70 @@ export const semesterLabel = (year: number, sem: number): string => {
 export const createEmptySemesters = (): StudentSemester[] =>
   [1, 2, 3, 4].flatMap((year) => [1, 2].map((sem) => ({ year, sem, modules: [] })));
 
+export type PlanTemplate = 'standard' | 'poly-accelerated' | 'poly-balanced';
+
+export const getPlanTemplateEntries = (
+  major: Major,
+  template: PlanTemplate = 'standard',
+): DefaultPlanEntry[] => {
+  if (template === 'standard') {
+    return major.defaultPlan;
+  }
+
+  // Both polytechnic plans drop generic unrestricted electives (pre-satisfied by 20 MC Poly APCs)
+  const nonGenericEntries = major.defaultPlan.filter(
+    (entry) => entry.categoryId !== 'unrestricted-electives' && !entry.moduleCode.startsWith('GEN'),
+  );
+
+  if (template === 'poly-balanced') {
+    return nonGenericEntries;
+  }
+
+  // poly-accelerated (3.5 years / 7 semesters)
+  // Shift courses scheduled in Year 4 Semester 2 to Year 4 Semester 1 or appropriate earlier slot
+  const y4s2Entries = nonGenericEntries.filter((e) => e.year === 4 && e.sem === 2);
+  const otherEntries = nonGenericEntries.filter((e) => !(e.year === 4 && e.sem === 2));
+
+  if (major.id === 'computer-science-nusc') {
+    // Y4S2 has NHS2030 and NST2015 -> both move to Y4S1 (making Y4S1 20 MC)
+    return [
+      ...otherEntries,
+      ...y4s2Entries.map((e) => ({ ...e, year: 4, sem: 1 })),
+    ];
+  }
+
+  if (major.id === 'artificial-intelligence-nusc') {
+    // Y4S2 has NHS2030 and NST2015.
+    // Move NST2015 to Y3S1 (which has space since GEN2001 was removed), and NHS2030 to Y4S1 (making Y4S1 20 MC)
+    return [
+      ...otherEntries,
+      ...y4s2Entries.map((e) => {
+        if (e.moduleCode === 'NST2015') return { ...e, year: 3, sem: 1 };
+        return { ...e, year: 4, sem: 1 };
+      }),
+    ];
+  }
+
+  // For business-ai-systems-nusc, business-analytics-nusc, information-security-nusc:
+  // NST2015 moves to Y2S2 (which had GEN2001/GEN2002 removed), and remaining Y4S2 courses move to Y4S1 (making Y4S1 20 MC)
+  return [
+    ...otherEntries,
+    ...y4s2Entries.map((e) => {
+      if (e.moduleCode === 'NST2015') return { ...e, year: 2, sem: 2 };
+      return { ...e, year: 4, sem: 1 };
+    }),
+  ];
+};
+
 export const defaultPlanToSemesters = (
   major: Major,
-  options: { lockedOnly?: boolean } = {},
+  options: { lockedOnly?: boolean; template?: PlanTemplate } = {},
 ): StudentSemester[] => {
   const semesters = createEmptySemesters();
-  for (const entry of major.defaultPlan) {
+  const planEntries = options.template
+    ? getPlanTemplateEntries(major, options.template)
+    : major.defaultPlan;
+  for (const entry of planEntries) {
     if (options.lockedOnly && !entry.locked) continue;
     const sem = semesters.find((s) => s.year === entry.year && s.sem === entry.sem);
     if (!sem) continue;
@@ -750,7 +809,7 @@ export interface Stats {
 export const computeStats = (
   major: Major,
   semesters: StudentSemester[],
-  waivedModules: WaivedModule[] = [],
+  _waivedModules: WaivedModule[] = [],
 ): Stats => {
   const byCategory: Record<string, number> = {};
   let totalMc = 0;
@@ -759,10 +818,6 @@ export const computeStats = (
       totalMc += mod.mcs;
       byCategory[mod.categoryId] = (byCategory[mod.categoryId] ?? 0) + mod.mcs;
     }
-  }
-  for (const mod of waivedModules) {
-    totalMc += mod.mcs;
-    byCategory[mod.categoryId] = (byCategory[mod.categoryId] ?? 0) + mod.mcs;
   }
   return { totalMc, byCategory };
 };

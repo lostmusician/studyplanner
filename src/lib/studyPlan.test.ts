@@ -14,6 +14,7 @@ import {
   autoCategoryId,
   createEmptySemesters,
   defaultPlanToSemesters,
+  getPlanTemplateEntries,
   upsertModule,
   removeModule,
   isModuleLocked,
@@ -87,15 +88,15 @@ describe('computeStats', () => {
     expect(stats.byCategory['math-sciences']).toBe(4);
   });
 
-  it('includes waived modules in total MCs and category totals', () => {
+  it('does not include waived modules in total MCs or category totals', () => {
     const major = { totalMcTarget: 160 } as Major;
     const sems = semesters([
       { code: 'CS1101S', name: 'Programming Methodology', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 },
     ]);
     const waived = [{ code: 'CS1010X', name: 'Programming Methodology', mcs: 4, categoryId: 'cs-foundation' }];
     const stats = computeStats(major, sems, waived);
-    expect(stats.totalMc).toBe(8);
-    expect(stats.byCategory['cs-foundation']).toBe(8);
+    expect(stats.totalMc).toBe(4);
+    expect(stats.byCategory['cs-foundation']).toBe(4);
   });
 });
 
@@ -652,6 +653,47 @@ describe('defaultPlanToSemesters', () => {
     const result = defaultPlanToSemesters(major, { lockedOnly: true });
     const allCodes = result.flatMap((s) => s.modules.map((m) => m.code));
     expect(allCodes).toEqual(['NEP2001A']);
+  });
+
+  it('generates poly-balanced plan omitting generic UE modules', () => {
+    const major: Major = {
+      id: 'computer-science-nusc', label: 'CS NUSC', school: 'SoC', batches: [], totalMcTarget: 160,
+      categories: [{ id: 'cs-foundation', label: 'CS Foundation', color: '#000' }, { id: 'unrestricted-electives', label: 'UE', color: '#fff' }],
+      requirements: [],
+      moduleCatalog: {
+        CS1101S: { code: 'CS1101S', name: 'Programming', mcs: 4 },
+        GEN2001: { code: 'GEN2001', name: 'UE I', mcs: 4 },
+      },
+      defaultPlan: [
+        { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'cs-foundation' },
+        { year: 3, sem: 2, moduleCode: 'GEN2001', categoryId: 'unrestricted-electives' },
+      ],
+    };
+    const entries = getPlanTemplateEntries(major, 'poly-balanced');
+    expect(entries.some((e) => e.moduleCode === 'GEN2001')).toBe(false);
+    expect(entries.some((e) => e.moduleCode === 'CS1101S')).toBe(true);
+  });
+
+  it('generates poly-accelerated plan leaving Year 4 Semester 2 free', () => {
+    const major: Major = {
+      id: 'computer-science-nusc', label: 'CS NUSC', school: 'SoC', batches: [], totalMcTarget: 160,
+      categories: [], requirements: [],
+      moduleCatalog: {
+        CS1101S: { code: 'CS1101S', name: 'Programming', mcs: 4 },
+        NHS2030: { code: 'NHS2030', name: 'NHS Course', mcs: 4 },
+        NST2015: { code: 'NST2015', name: 'NST Course', mcs: 4 },
+      },
+      defaultPlan: [
+        { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'cs-foundation' },
+        { year: 4, sem: 2, moduleCode: 'NHS2030', categoryId: 'nus-college' },
+        { year: 4, sem: 2, moduleCode: 'NST2015', categoryId: 'nus-college' },
+      ],
+    };
+    const sems = defaultPlanToSemesters(major, { template: 'poly-accelerated' });
+    const y4s2 = sems.find((s) => s.year === 4 && s.sem === 2)!;
+    const y4s1 = sems.find((s) => s.year === 4 && s.sem === 1)!;
+    expect(y4s2.modules).toHaveLength(0);
+    expect(y4s1.modules.map((m) => m.code)).toEqual(['NHS2030', 'NST2015']);
   });
 });
 

@@ -870,7 +870,7 @@ export const ForceGraphView = ({ graph, timeline }: Props) => {
                 }}
                 placeholder="Find a module…"
                 aria-label="Search modules in the constellation"
-                className="w-36 rounded-xl border border-ink/15 bg-white/60 py-1 pl-7 pr-2 text-[11px] text-ink placeholder:text-muted/80 focus:outline-none focus:ring-1 focus:ring-accent sm:w-44"
+                className="w-36 rounded-xl border border-ink/15 bg-white/60 py-1 pl-7 pr-2 text-[11px] text-ink placeholder:text-muted/80 focus:outline-none focus:ring-1 focus:ring-ink/30 sm:w-44"
               />
             </label>
             {searchMatches.size > 0 && (

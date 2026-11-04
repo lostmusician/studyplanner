@@ -128,6 +128,19 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
     ]);
   });
 
+  it('round-trips polytechnic APC units', () => {
+    const payload = {
+      ...basePayload,
+      plan: {
+        ...basePayload.plan,
+        polytechnicApcUnits: 20,
+      },
+    };
+    const encoded = encodeCompactPlan(payload);
+    const decoded = decodeCompactPlan(encoded);
+    expect(decoded?.plan.polytechnicApcUnits).toBe(20);
+  });
+
   it('drops a semester with zero modules entirely from the encoded output rather than keeping it as an empty entry', () => {
     const payload = {
       ...basePayload,
@@ -150,6 +163,19 @@ describe('encodePlan / decodePlan (legacy v1 codec)', () => {
     expect(decoded?.profile).toEqual(basePayload.profile);
     expect(decoded?.plan.majorId).toBe(basePayload.plan.majorId);
     expect(decoded?.plan.semesters).toEqual(basePayload.plan.semesters);
+  });
+
+  it('round-trips polytechnic APC units in v1 payload', () => {
+    const payload = {
+      ...basePayload,
+      plan: {
+        ...basePayload.plan,
+        polytechnicApcUnits: 20,
+      },
+    };
+    const encoded = encodePlan(payload);
+    const decoded = decodePlan(encoded);
+    expect(decoded?.plan.polytechnicApcUnits).toBe(20);
   });
 
   it('does not carry secondMajorId/minorIds/requirementMappings/nocDuration on round trip — this gap is why share links moved to the v2 compact codec for those fields, not a v1 bug', () => {

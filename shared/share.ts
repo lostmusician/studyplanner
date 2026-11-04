@@ -17,6 +17,7 @@ export interface SharePlan {
   requirementMappings?: Record<string, string[]>;
   nocDuration?: NocDuration | null;
   specialProgramme?: SpecialProgramme | null;
+  polytechnicApcUnits?: number;
 }
 
 /** Self-contained payload encoded into a share URL. */
@@ -53,6 +54,8 @@ interface CompactSharePayload {
   noc?: NocDuration;
   /** Declared special programme. Omitted entirely when none is declared. */
   sp?: SpecialProgramme;
+  /** Polytechnic APC units granted. Omitted entirely when 0 / standard. */
+  apc?: number;
 }
 
 const toBase64Url = (json: string): string => {
@@ -208,6 +211,9 @@ const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalo
   if (payload.plan.specialProgramme) {
     compact.sp = (SP_MAP[payload.plan.specialProgramme] ?? payload.plan.specialProgramme) as SpecialProgramme;
   }
+  if (payload.plan.polytechnicApcUnits && payload.plan.polytechnicApcUnits > 0) {
+    compact.apc = payload.plan.polytechnicApcUnits;
+  }
   return compact;
 };
 
@@ -234,6 +240,7 @@ export const decodePlan = (encoded: string): SharePayload | null => {
         majorId: plan.majorId,
         semesters: plan.semesters,
         waivedModules: Array.isArray(plan.waivedModules) ? plan.waivedModules : [],
+        polytechnicApcUnits: typeof plan.polytechnicApcUnits === 'number' && plan.polytechnicApcUnits > 0 ? plan.polytechnicApcUnits : 0,
       },
     };
   } catch {
@@ -291,6 +298,7 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
         requirementMappings: isRequirementMappings(parsed.rm) ? parsed.rm : {},
         nocDuration: expandedNoc === '3-month' || expandedNoc === '6-month' || expandedNoc === '1-year' ? expandedNoc : null,
         specialProgramme: isSpecialProgramme(expandedSp) ? expandedSp : null,
+        polytechnicApcUnits: typeof parsed.apc === 'number' && parsed.apc > 0 ? parsed.apc : 0,
       },
     };
   } catch {

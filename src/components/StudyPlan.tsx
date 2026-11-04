@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme, NocDuration, SpecialProgramme } from '@shared/types';
-import type { RequirementStatus, Stats } from '../lib/studyPlan';
+import type { RequirementStatus, Stats, PlanTemplate } from '../lib/studyPlan';
 import { computeTripleCountedCodes } from '../lib/studyPlan';
 import { MUTED } from '../lib/colors';
 import { buildShareLink } from '@shared/share';
@@ -11,6 +11,9 @@ import { AppDialog } from './AppDialog';
 import { Dropdown } from './Dropdown';
 import { SecondaryProgrammePanel } from './SecondaryProgrammePanel';
 import { PrintView } from './PrintView';
+import { CompetencyExplorer } from './competency/CompetencyExplorer';
+import { SparklesIcon } from './Icons';
+import { StudyPlanAdvisorSidebar } from './StudyPlanAdvisorSidebar';
 
 interface Props {
   majors: Major[];
@@ -25,6 +28,8 @@ interface Props {
   nocDuration: NocDuration | null;
   specialProgramme: SpecialProgramme | null;
   setSpecialProgramme: (programme: SpecialProgramme | null) => void;
+  polytechnicApcUnits?: number;
+  setPolytechnicApcUnits?: (units: number) => void;
   requirementMappings: Record<string, string[]>;
   addRequirementMapping: (requirementName: string, moduleCode: string) => void;
   removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
@@ -41,7 +46,7 @@ interface Props {
   ) => { ok: true } | { ok: false; error: string };
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
-  resetPlan: () => void;
+  resetPlan: (template?: PlanTemplate | 'scratch') => void;
   getCompletedCodes: (year: number, sem: number) => string[];
   addSpecialTerm: (year: number, sem: number) => void;
   deleteSpecialTerm: (year: number, sem: number) => void;
@@ -54,6 +59,11 @@ interface Props {
   isReviewMode?: boolean;
   reviewOwnerName?: string;
   onExitReviewMode?: () => void;
+  applyAiPlan?: (
+    semesters: StudentSemester[],
+    minorId?: string | null,
+    specialProgramme?: SpecialProgramme | null,
+  ) => void;
 }
 
 export const StudyPlan = ({
@@ -86,6 +96,8 @@ export const StudyPlan = ({
   getCompletedCodes,
   addSpecialTerm,
   deleteSpecialTerm,
+  polytechnicApcUnits = 0,
+  setPolytechnicApcUnits,
   studentName,
   setStudentName,
   matricNumber,
@@ -95,9 +107,11 @@ export const StudyPlan = ({
   isReviewMode = false,
   reviewOwnerName,
   onExitReviewMode,
+  applyAiPlan,
 }: Props) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeView, setActiveView] = useState<'grid' | 'competency'>('grid');
   const [shareState, setShareState] = useState<'idle' | 'copied' | 'error'>('idle');
   const [shareDialogLink, setShareDialogLink] = useState<string | null>(null);
 
@@ -113,13 +127,30 @@ export const StudyPlan = ({
   const [shareNameError, setShareNameError] = useState(false);
   const [pendingMajorId, setPendingMajorId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [selectedResetTemplate, setSelectedResetTemplate] = useState<PlanTemplate | 'scratch'>('standard');
   const [secondaryPanelsOpen, setSecondaryPanelsOpen] = useState(false);
+  const [advisorOpen, setAdvisorOpen] = useState(false);
   const reviewLabel = reviewOwnerName?.trim() || 'Shared plan';
+
+  const handleApplyAiRecommendation = (newSemesters: StudentSemester[], minorId?: string | null) => {
+    if (!applyAiPlan) return;
+    applyAiPlan(newSemesters, minorId);
+  };
 
   const copyShareLink = async (name: string) => {
     const link = buildShareLink({
       profile: { name, matricNumber, year: studentYear },
-      plan: { majorId, semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme },
+      plan: {
+        majorId,
+        semesters,
+        waivedModules,
+        secondMajorId,
+        minorIds,
+        requirementMappings,
+        nocDuration,
+        specialProgramme,
+        polytechnicApcUnits: polytechnicApcUnits > 0 ? polytechnicApcUnits : undefined,
+      },
     }, major.moduleCatalog);
     try {
       await navigator.clipboard.writeText(link);
@@ -179,11 +210,12 @@ export const StudyPlan = ({
   };
 
   const handleResetPlan = () => {
+    setSelectedResetTemplate((polytechnicApcUnits ?? 0) > 0 ? 'poly-accelerated' : 'standard');
     setShowResetConfirm(true);
   };
 
   const confirmResetPlan = () => {
-    resetPlan();
+    resetPlan(selectedResetTemplate);
     setShowResetConfirm(false);
   };
 
@@ -264,6 +296,12 @@ export const StudyPlan = ({
                 <span className="font-semibold text-ink truncate">{studentName || 'Student Name'}</span>
                 <span className="text-muted/60 font-mono">&middot;</span>
                 <span className="text-muted truncate">{studentYear}</span>
+                {polytechnicApcUnits > 0 && (
+                  <>
+                    <span className="text-muted/60 font-mono">&middot;</span>
+                    <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100/80 px-1 py-0.2 rounded font-medium">Poly APC</span>
+                  </>
+                )}
                 <span className="text-muted/60 font-mono hidden sm:inline">&middot;</span>
                 <span className="font-semibold text-ink/80 truncate hidden sm:inline">{major.label}</span>
               </div>
@@ -271,6 +309,48 @@ export const StudyPlan = ({
 
             {/* Right Slot: Actions */}
             <div className="flex items-center justify-end min-w-[120px] gap-1 sm:gap-2">
+              <div className="flex items-center gap-1 rounded-xl border border-ink/10 bg-paper/80 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveView('grid')}
+                  aria-pressed={activeView === 'grid'}
+                  title="Semester plan grid"
+                  className={`rounded-lg px-2.5 py-1 font-medium transition-colors ${
+                    activeView === 'grid'
+                      ? 'bg-canvas font-semibold text-ink shadow-2xs'
+                      : 'text-muted hover:text-ink'
+                  }`}
+                >
+                  <span aria-hidden="true">⊞</span> Grid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveView('competency')}
+                  aria-pressed={activeView === 'competency'}
+                  title="Visualise competencies and pathways"
+                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-medium transition-colors ${
+                    activeView === 'competency'
+                      ? 'bg-canvas font-semibold text-ink shadow-2xs'
+                      : 'text-muted hover:text-ink'
+                  }`}
+                >
+                  <span className="text-amber-700" aria-hidden="true">✦</span>
+                  <span>Visualise</span>
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdvisorOpen((open) => !open)}
+                className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1.5 rounded-xl ${
+                  advisorOpen
+                    ? 'bg-paper text-ink font-semibold'
+                    : 'text-muted hover:text-ink hover:bg-paper'
+                }`}
+                title={advisorOpen ? 'Hide Study Plan Advisor' : 'Show Study Plan Advisor'}
+              >
+                <SparklesIcon className="w-3.5 h-3.5 text-amber-600" />
+                <span>{advisorOpen ? 'Hide Advisor' : 'Study Plan Advisor'}</span>
+              </button>
               <button
                 onClick={() => window.print()}
                 className="text-xs text-muted hover:text-ink transition-colors px-2.5 py-1.5 rounded-xl hover:bg-paper"
@@ -339,6 +419,8 @@ export const StudyPlan = ({
                 nocDuration={nocDuration}
                 specialProgramme={specialProgramme}
                 setSpecialProgramme={setSpecialProgramme}
+                polytechnicApcUnits={polytechnicApcUnits}
+                setPolytechnicApcUnits={setPolytechnicApcUnits}
                 studentName={studentName}
                 setStudentName={setStudentName}
                 matricNumber={matricNumber}
@@ -364,6 +446,7 @@ export const StudyPlan = ({
                   requirementMappings={requirementMappings}
                   addRequirementMapping={addRequirementMapping}
                   removeRequirementMapping={removeRequirementMapping}
+                  polytechnicApcUnits={polytechnicApcUnits}
                 />
               </div>
             </div>
@@ -421,21 +504,32 @@ export const StudyPlan = ({
             )}
 
             <div className="max-w-screen-2xl mx-auto px-6 py-6 w-full">
-              <div className="flex min-w-0 flex-col gap-5">
-                <SemesterGrid
-                  semesters={semesters}
+              {activeView === 'competency' ? (
+                <CompetencyExplorer
                   major={major}
+                  semesters={semesters}
                   waivedModules={waivedModules}
-                  addOrMoveModule={addOrMoveModule}
-                  deleteModule={deleteModule}
-                  updateModule={updateModule}
-                  addWaivedModule={addWaivedModule}
-                  deleteWaivedModule={deleteWaivedModule}
-                  getCompletedCodes={getCompletedCodes}
-                  addSpecialTerm={addSpecialTerm}
-                  deleteSpecialTerm={deleteSpecialTerm}
+                  requirements={requirements}
+                  studentYear={studentYear}
+                  onClose={() => setActiveView('grid')}
                 />
-              </div>
+              ) : (
+                <div className="flex min-w-0 flex-col gap-5">
+                  <SemesterGrid
+                    semesters={semesters}
+                    major={major}
+                    waivedModules={waivedModules}
+                    addOrMoveModule={addOrMoveModule}
+                    deleteModule={deleteModule}
+                    updateModule={updateModule}
+                    addWaivedModule={addWaivedModule}
+                    deleteWaivedModule={deleteWaivedModule}
+                    getCompletedCodes={getCompletedCodes}
+                    addSpecialTerm={addSpecialTerm}
+                    deleteSpecialTerm={deleteSpecialTerm}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -455,14 +549,64 @@ export const StudyPlan = ({
 
         {showResetConfirm && (
           <AppDialog
-            title="Reset plan?"
+            title="Load Sample Plan"
             onClose={() => setShowResetConfirm(false)}
             actions={[
-              { label: 'Keep plan', onClick: () => setShowResetConfirm(false), variant: 'primary' },
-              { label: 'Reset default', onClick: confirmResetPlan, variant: 'danger' },
+              { label: 'Cancel', onClick: () => setShowResetConfirm(false), variant: 'secondary' },
+              { label: 'Load Plan', onClick: confirmResetPlan, variant: 'primary' },
             ]}
           >
-            This will restore the default plan for your current major.
+            <div className="flex flex-col gap-2.5">
+              <p className="text-xs text-muted">
+                Select a sample plan for <span className="font-semibold text-ink">{major.label}</span>.
+              </p>
+
+              <div className="flex flex-col gap-2">
+                {[
+                  {
+                    id: 'poly-accelerated' as const,
+                    title: 'Polytechnic (3.5 Years)',
+                    desc: 'Accelerated 7-semester plan.',
+                  },
+                  {
+                    id: 'poly-balanced' as const,
+                    title: 'Polytechnic (4 Years)',
+                    desc: 'Balanced 8-semester plan.',
+                  },
+                  {
+                    id: 'standard' as const,
+                    title: 'Standard (4 Years)',
+                    desc: 'Standard 8-semester direct entry plan.',
+                  },
+                  {
+                    id: 'scratch' as const,
+                    title: 'Blank Slate',
+                    desc: 'Clear all non-compulsory modules.',
+                  },
+                ].map((option) => {
+                  const isSelected = selectedResetTemplate === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelectedResetTemplate(option.id)}
+                      className={`flex flex-col gap-0.5 rounded-xl p-3 text-left transition-all border ${
+                        isSelected
+                          ? 'border-ink bg-paper shadow-xs ring-1 ring-ink/20 font-medium'
+                          : 'border-line/40 bg-canvas/40 hover:bg-paper hover:border-line'
+                      }`}
+                    >
+                      <span className="text-xs font-semibold text-ink">
+                        {option.title}
+                      </span>
+                      <p className="text-[11px] text-muted">
+                        {option.desc}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </AppDialog>
         )}
 
@@ -518,6 +662,29 @@ export const StudyPlan = ({
             )}
           </AppDialog>
         )}
+
+        {showAiSurvey && (
+          <RecommendationSurveyModal
+            major={major}
+            minors={minors}
+            initialStanding={{
+              year: studentYear.includes('2') ? 2 : studentYear.includes('3') ? 3 : studentYear.includes('4') ? 4 : 1,
+              sem: 1,
+            }}
+            isLoading={isGeneratingAi}
+            onClose={() => setShowAiSurvey(false)}
+            onSubmit={handleRunAiSurvey}
+          />
+        )}
+
+        {aiResult && (
+          <RecommendationResultModal
+            major={major}
+            result={aiResult}
+            onClose={() => setAiResult(null)}
+            onApply={handleApplyAiRecommendation}
+          />
+        )}
       </div>
       <PrintView
         studentName={studentName}
@@ -534,6 +701,7 @@ export const StudyPlan = ({
         minorIds={minorIds}
         nocDuration={nocDuration}
         specialProgramme={specialProgramme}
+        polytechnicApcUnits={polytechnicApcUnits}
       />
     </>
   );
@@ -606,6 +774,8 @@ const SettingsSidebar = ({
   nocDuration,
   specialProgramme,
   setSpecialProgramme,
+  polytechnicApcUnits = 0,
+  setPolytechnicApcUnits,
   studentName,
   setStudentName,
   matricNumber,
@@ -626,6 +796,8 @@ const SettingsSidebar = ({
   nocDuration: NocDuration | null;
   specialProgramme: SpecialProgramme | null;
   setSpecialProgramme: (programme: SpecialProgramme | null) => void;
+  polytechnicApcUnits?: number;
+  setPolytechnicApcUnits?: (units: number) => void;
   studentName: string;
   setStudentName: (name: string) => void;
   matricNumber: string;
@@ -698,6 +870,47 @@ const SettingsSidebar = ({
           )}
 
           <label className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wide text-muted font-medium flex items-center justify-between">
+              <span>Admission Pathway</span>
+              {polytechnicApcUnits > 0 && (
+                <span className="text-[9px] font-mono font-medium text-emerald-800 bg-emerald-100/80 px-1.5 py-0.2 rounded">
+                  {polytechnicApcUnits} MC APC
+                </span>
+              )}
+            </span>
+            <Dropdown
+              variant="field"
+              ariaLabel="Admission Pathway"
+              value={String(polytechnicApcUnits)}
+              onChange={(v) => setPolytechnicApcUnits?.(parseInt(v, 10) || 0)}
+              className={field}
+              options={[
+                { value: '0', label: 'JC / High School (160 MC at NUS)' },
+                { value: '20', label: 'Polytechnic (20 MC UE Advanced Standing)' },
+                { value: '24', label: 'Polytechnic (24 MC APCs)' },
+                { value: '28', label: 'Polytechnic (28 MC APCs)' },
+                { value: '32', label: 'Polytechnic (32 MC APCs)' },
+                { value: '36', label: 'Polytechnic (36 MC APCs)' },
+                { value: '40', label: 'Polytechnic (40 MC Max APCs)' },
+              ]}
+            />
+            {polytechnicApcUnits > 0 && (
+              <div className="mt-1 flex flex-col gap-1.5">
+                <p className="text-[10px] text-muted leading-relaxed">
+                  Polytechnic diploma holders receive 20 MCs (up to 40 MCs) of Advanced Placement Credits toward graduation, pre-fulfilling Unrestricted Electives.
+                </p>
+                <button
+                  type="button"
+                  onClick={onResetPlan}
+                  className="self-start text-[11px] font-medium text-emerald-800 hover:text-emerald-950 underline underline-offset-2 transition-colors"
+                >
+                  Load Poly sample plan...
+                </button>
+              </div>
+            )}
+          </label>
+
+          <label className="flex flex-col gap-1">
             <span className="text-[10px] uppercase tracking-wide text-muted font-medium">Second Major</span>
             <Dropdown
               variant="field"
@@ -764,18 +977,102 @@ const SettingsSidebar = ({
         </div>
       </section>
 
+      <SoclaasSettingsSection />
+
       <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">Reset Plan</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">Load Sample Plan</h3>
           <button
             type="button"
             onClick={onResetPlan}
-            className="rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-paper hover:border-line"
+            className="rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:bg-paper hover:border-line shrink-0"
           >
-            Reset
+            Load
           </button>
         </div>
       </section>
     </div>
+  );
+};
+
+const SoclaasSettingsSection = () => {
+  const [apiKey, setApiKey] = useState(() => getSoclaasApiKey());
+  const [testStatus, setTestStatus] = useState<{ loading: boolean; message: string | null; ok?: boolean }>({
+    loading: false,
+    message: null,
+  });
+
+  const handleSave = (val: string) => {
+    setApiKey(val);
+    setSoclaasApiKey(val);
+    setTestStatus({ loading: false, message: null });
+  };
+
+  const handleTest = async () => {
+    setTestStatus({ loading: true, message: 'Testing connection...' });
+    const res = await testSoclaasConnection();
+    setTestStatus({ loading: false, message: res.message, ok: res.ok });
+  };
+
+  return (
+    <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-700">
+          <SparklesIcon className="h-3.5 w-3.5" />
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">SoCLaaS AI Advisor</h3>
+          <p className="text-[10px] text-muted">NUS School of Computing LLM Gateway</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 mt-2">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] uppercase tracking-wide text-muted font-medium">SoCLaaS API Key</span>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => handleSave(e.target.value)}
+            placeholder="sk-soclaas-..."
+            className="rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-amber-500 w-full"
+          />
+        </label>
+        <p className="text-[10px] text-muted leading-relaxed">
+          Stored locally in your browser. Leave blank to use the built-in intelligent advisor.
+        </p>
+
+        <div className="flex items-center gap-2 mt-1">
+          <button
+            type="button"
+            disabled={testStatus.loading || !apiKey}
+            onClick={handleTest}
+            className="rounded-lg bg-canvas border border-line/30 px-2.5 py-1 text-[11px] font-medium text-ink hover:bg-paper transition-colors disabled:opacity-40"
+          >
+            {testStatus.loading ? 'Testing...' : 'Test Connection'}
+          </button>
+          {apiKey && (
+            <button
+              type="button"
+              onClick={() => handleSave('')}
+              className="text-[11px] text-muted hover:text-ink transition-colors"
+            >
+              Clear Key
+            </button>
+          )}
+        </div>
+
+        {testStatus.message && (
+          <div
+            className={`mt-1.5 rounded-xl px-2.5 py-1.5 text-[10px] leading-tight font-medium ${
+              testStatus.ok
+                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                : 'bg-amber-100 text-amber-900 border border-amber-300'
+            }`}
+          >
+            {testStatus.message}
+          </div>
+        )}
+      </div>
+    </section>
   );
 };
