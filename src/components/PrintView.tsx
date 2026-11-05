@@ -1,3 +1,4 @@
+import { DoubleDegreePanel } from './DoubleDegreePanel';
 import type {
   Major,
   StudentSemester,
@@ -7,7 +8,7 @@ import type {
   SpecialProgramme,
 } from '@shared/types';
 import type { RequirementStatus, Stats } from '../lib/studyPlan';
-import { computeRequirements, computeBreadthDepth, computeProgrammeElectives } from '../lib/studyPlan';
+import { computeRequirements, computeBreadthDepth, computeProgrammeElectives, computeUeTarget } from '../lib/studyPlan';
 
 interface Props {
   studentName: string;
@@ -20,10 +21,11 @@ interface Props {
   waivedModules: WaivedModule[];
   secondMajors: SecondaryProgramme[];
   minors: SecondaryProgramme[];
+  doubleDegreeId: string | null;
   secondMajorId: string | null;
   minorIds: string[];
   nocDuration: NocDuration | null;
-  specialProgramme: SpecialProgramme | null;
+  specialProgrammes: SpecialProgramme[];
   polytechnicApcUnits?: number;
 }
 
@@ -38,10 +40,11 @@ export const PrintView = ({
   waivedModules,
   secondMajors,
   minors,
+  doubleDegreeId,
   secondMajorId,
   minorIds,
   nocDuration,
-  specialProgramme,
+  specialProgrammes,
   polytechnicApcUnits,
 }: Props) => {
   const declaredSecondMajor = secondMajorId
@@ -50,10 +53,7 @@ export const PrintView = ({
   const declaredMinors = minors.filter((m) => minorIds.includes(m.id));
   const declaredSecondaries = declaredSecondMajor ? [declaredSecondMajor, ...declaredMinors] : declaredMinors;
 
-  const otherCategoriesTargetSum = major.categories
-    .filter((cat) => cat.id !== 'unrestricted-electives')
-    .reduce((sum, cat) => sum + (cat.mcTarget ?? 0), 0);
-  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
+  const dynamicUeTarget = computeUeTarget(major);
 
   const depthConfig = major.breadthDepth
     ? computeBreadthDepth(major, semesters, waivedModules)
@@ -86,7 +86,7 @@ export const PrintView = ({
               · {major.school} · {major.batches.join(', ')}
             </span>
           </div>
-          {(declaredSecondMajor || declaredMinors.length > 0 || nocDuration || specialProgramme || (polytechnicApcUnits ?? 0) > 0) && (
+          {(declaredSecondMajor || declaredMinors.length > 0 || nocDuration || specialProgrammes.length > 0 || (polytechnicApcUnits ?? 0) > 0) && (
             <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
               {(polytechnicApcUnits ?? 0) > 0 && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">
@@ -106,16 +106,16 @@ export const PrintView = ({
               {nocDuration && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">NOC: {nocDuration}</span>
               )}
-              {specialProgramme === 'sep' && (
+              {specialProgrammes.includes('sep') && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">SEP (Exchange)</span>
               )}
-              {specialProgramme === 'gex' && (
+              {specialProgrammes.includes('gex') && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">GEx</span>
               )}
-              {specialProgramme === 'regional-iex' && (
+              {specialProgrammes.includes('regional-iex') && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">Regional IEx</span>
               )}
-              {specialProgramme === 'siip' && (
+              {specialProgrammes.includes('siip') && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">SIIP</span>
               )}
             </div>
@@ -189,6 +189,7 @@ export const PrintView = ({
         </section>
       )}
 
+      {doubleDegreeId && <DoubleDegreePanel id={doubleDegreeId} majorId={major.id} totalUnits={stats.totalMc} />}
       {declaredSecondaries.length > 0 && (
         <section className="mb-5">
           <h2 className="mb-2 text-sm font-semibold">Second Major &amp; Minor Progress</h2>
@@ -199,6 +200,7 @@ export const PrintView = ({
                 <h3 className="mb-1 text-xs font-semibold text-muted">
                   {programme.label} ({programme.kind === 'second-major' ? 'Second Major' : 'Minor'})
                 </h3>
+                {programme.requirementStatus !== 'verified' && <p className="mb-2 text-xs">{programme.requirements.length ? 'Partial course checks; manual review required.' : 'Requirements require manual review.'} {programme.sourceUrl && <a href={programme.sourceUrl}>NUS requirements</a>}</p>}
                 <ul className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs">
                   {progReqs.map((r) => (
                     <li key={r.name} className="flex items-baseline gap-1.5">
