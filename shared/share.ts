@@ -1,3 +1,4 @@
+import { normalizeSpecialProgrammes, isSpecialProgramme } from './pathways';
 import type { Module, PlacedModule, StudentSemester, WaivedModule, NocDuration, SpecialProgramme } from './types';
 
 /** Personal identity carried in a share link. */
@@ -10,12 +11,15 @@ export interface ShareProfile {
 /** The current major's plan carried in a share link. */
 export interface SharePlan {
   majorId: string;
+  doubleDegreeId?: string | null;
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
   secondMajorId?: string | null;
   minorIds?: string[];
   requirementMappings?: Record<string, string[]>;
   nocDuration?: NocDuration | null;
+  specialProgrammes?: SpecialProgramme[];
+  /** @deprecated Legacy links only. */
   specialProgramme?: SpecialProgramme | null;
   polytechnicApcUnits?: number;
 }
@@ -44,6 +48,8 @@ interface CompactSharePayload {
   m: string;
   s: CompactSemester[];
   w: CompactModule[];
+  /** Selected double-degree planning combination. */
+  dd?: string;
   /** Declared second major id. Omitted entirely when none is declared. */
   sm?: string;
   /** Declared minor ids. Omitted entirely when empty. */
@@ -54,6 +60,7 @@ interface CompactSharePayload {
   noc?: NocDuration;
   /** Declared special programme. Omitted entirely when none is declared. */
   sp?: SpecialProgramme;
+  spp?: string[];
   /** Polytechnic APC units granted. Omitted entirely when 0 / standard. */
   apc?: number;
 }
@@ -142,15 +149,6 @@ const REVERSE_SP_MAP = Object.fromEntries(
   Object.entries(SP_MAP).map(([k, v]) => [v, k])
 );
 
-const isSpecialProgramme = (val: unknown): val is SpecialProgramme =>
-  val === 'noc-3-month' ||
-  val === 'noc-6-month' ||
-  val === 'noc-1-year' ||
-  val === 'sep' ||
-  val === 'gex' ||
-  val === 'regional-iex' ||
-  val === 'siip';
-
 const isCatalogEquivalent = (module: PlacedModule, catalog?: ModuleCatalog): boolean => {
   const catalogModule = catalog?.[module.code];
   return Boolean(catalogModule && catalogModule.name === module.name && catalogModule.mcs === module.mcs);
@@ -199,6 +197,7 @@ const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalo
   if (payload.plan.secondMajorId) {
     compact.sm = PROGRAMME_MAP[payload.plan.secondMajorId] ?? payload.plan.secondMajorId;
   }
+  if (payload.plan.doubleDegreeId) compact.dd = payload.plan.doubleDegreeId;
   if (payload.plan.minorIds && payload.plan.minorIds.length > 0) {
     compact.mn = payload.plan.minorIds.map((id) => PROGRAMME_MAP[id] ?? id);
   }
@@ -208,7 +207,9 @@ const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalo
   if (payload.plan.nocDuration) {
     compact.noc = (NOC_MAP[payload.plan.nocDuration] ?? payload.plan.nocDuration) as NocDuration;
   }
-  if (payload.plan.specialProgramme) {
+  if (Array.isArray(payload.plan.specialProgrammes)) {
+    compact.spp = normalizeSpecialProgrammes(payload.plan.specialProgrammes).map(p => SP_MAP[p] ?? p);
+  } else if (payload.plan.specialProgramme) {
     compact.sp = (SP_MAP[payload.plan.specialProgramme] ?? payload.plan.specialProgramme) as SpecialProgramme;
   }
   if (payload.plan.polytechnicApcUnits && payload.plan.polytechnicApcUnits > 0) {
@@ -238,6 +239,11 @@ export const decodePlan = (encoded: string): SharePayload | null => {
       },
       plan: {
         majorId: plan.majorId,
+        specialProgrammes: normalizeSpecialProgrammes(plan.specialProgrammes, plan.specialProgramme, plan.nocDuration),
+        secondMajorId: typeof plan.secondMajorId === 'string' ? plan.secondMajorId : null,
+        minorIds: Array.isArray(plan.minorIds) ? plan.minorIds.filter(id => typeof id === 'string').slice(0, 3) : [],
+        requirementMappings: isRequirementMappings(plan.requirementMappings) ? plan.requirementMappings : {},
+        doubleDegreeId: typeof plan.doubleDegreeId === 'string' ? plan.doubleDegreeId : null,
         semesters: plan.semesters,
         waivedModules: Array.isArray(plan.waivedModules) ? plan.waivedModules : [],
         polytechnicApcUnits: typeof plan.polytechnicApcUnits === 'number' && plan.polytechnicApcUnits > 0 ? plan.polytechnicApcUnits : 0,
@@ -294,9 +300,11 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
           .filter((semester) => Number.isFinite(semester.year) && Number.isFinite(semester.sem)),
         waivedModules: expandModules(parsed.w),
         secondMajorId: expandedSecondMajorId,
+        doubleDegreeId: typeof parsed.dd === 'string' ? parsed.dd : null,
         minorIds: expandedMinorIds.filter((id): id is string => typeof id === 'string'),
         requirementMappings: isRequirementMappings(parsed.rm) ? parsed.rm : {},
         nocDuration: expandedNoc === '3-month' || expandedNoc === '6-month' || expandedNoc === '1-year' ? expandedNoc : null,
+        specialProgrammes: normalizeSpecialProgrammes(Array.isArray(parsed.spp) ? parsed.spp.map(p => REVERSE_SP_MAP[p] ?? p) : undefined, expandedSp, expandedNoc),
         specialProgramme: isSpecialProgramme(expandedSp) ? expandedSp : null,
         polytechnicApcUnits: typeof parsed.apc === 'number' && parsed.apc > 0 ? parsed.apc : 0,
       },

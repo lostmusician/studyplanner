@@ -178,7 +178,7 @@ describe('encodePlan / decodePlan (legacy v1 codec)', () => {
     expect(decoded?.plan.polytechnicApcUnits).toBe(20);
   });
 
-  it('does not carry secondMajorId/minorIds/requirementMappings/nocDuration on round trip — this gap is why share links moved to the v2 compact codec for those fields, not a v1 bug', () => {
+  it('preserves programme selections and mappings when opening legacy v1 links', () => {
     const payload = {
       ...basePayload,
       plan: {
@@ -192,9 +192,9 @@ describe('encodePlan / decodePlan (legacy v1 codec)', () => {
     const encoded = encodePlan(payload);
     const decoded = decodePlan(encoded);
     expect(decoded?.plan.majorId).toBe(payload.plan.majorId);
-    expect(decoded?.plan.secondMajorId).toBeUndefined();
-    expect(decoded?.plan.minorIds).toBeUndefined();
-    expect(decoded?.plan.requirementMappings).toBeUndefined();
+    expect(decoded?.plan.secondMajorId).toBe(payload.plan.secondMajorId);
+    expect(decoded?.plan.minorIds).toEqual(payload.plan.minorIds);
+    expect(decoded?.plan.requirementMappings).toEqual(payload.plan.requirementMappings);
     expect(decoded?.plan.nocDuration).toBeUndefined();
   });
 
