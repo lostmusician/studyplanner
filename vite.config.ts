@@ -19,11 +19,16 @@ export default defineConfig(({ mode }) => {
           target: 'https://soclaas-api.comp.nus.edu.sg/v1',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/soclaas/, ''),
-          headers: serverApiKey
-            ? {
-                Authorization: `Bearer ${serverApiKey}`,
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq) => {
+              // Dynamically reload from process.cwd() on every request
+              const env = loadEnv('development', process.cwd(), '');
+              const key = env.SOCLAAS_API_KEY || process.env.SOCLAAS_API_KEY;
+              if (key) {
+                proxyReq.setHeader('authorization', `Bearer ${key.trim()}`);
               }
-            : undefined,
+            });
+          },
         },
       },
     },

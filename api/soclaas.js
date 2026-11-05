@@ -13,14 +13,13 @@ export default async function handler(req, res) {
   }
 
   const serverKey = process.env.SOCLAAS_API_KEY;
-  const clientAuth = req.headers.authorization;
-  const authHeader = clientAuth || (serverKey ? `Bearer ${serverKey}` : null);
-
-  if (!authHeader) {
-    return res.status(401).json({
-      error: 'Unauthorized: SOCLAAS_API_KEY is not configured on the server and no key was sent.',
+  if (!serverKey) {
+    return res.status(500).json({
+      error: 'SOCLAAS_API_KEY is not configured in Vercel environment variables.',
     });
   }
+
+  const authHeader = `Bearer ${serverKey.trim()}`;
 
   const url = new URL(req.url, 'http://localhost');
   const pathSuffix = url.pathname.replace(/^\/api\/soclaas/, '');
