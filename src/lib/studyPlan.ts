@@ -1,3 +1,4 @@
+import { normalizeSpecialProgrammes, getNocDuration, getMceWaiverCount } from '@shared/pathways';
 import type {
   Major,
   StudentSemester,
@@ -199,7 +200,11 @@ export const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean
   fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
 
 const matchesAnyRequirement = (requirements: RequirementRule[], code: string): boolean =>
-  requirements.some((req) => req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)));
+  requirements.some((req) =>
+    !(req.excludedCodes ?? []).some(pattern => matchesFulfiller(code, pattern)) &&
+    (req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)) ||
+      req.altGroups?.some(group => group.includes(code))),
+  );
 
 /**
  * Best-effort category for a module code, derived from the major's own structure:
@@ -299,61 +304,109 @@ export interface RequirementStatus {
   info?: string;
 }
 
+/** Secondary programmes use the degree's elective space; their progress cards
+ * do not reduce that space a second time. NOC-adjusted primary targets still apply. */
+export const computeUeTarget = (major: Major): number => {
+  const primaryTarget = major.categories
+    .filter(cat => cat.id !== 'unrestricted-electives' &&
+      !cat.id.startsWith('minor-') && !cat.id.startsWith('second-major-'))
+    .reduce((total, cat) => total + (cat.mcTarget ?? 0), 0);
+  return Math.max(0, major.totalMcTarget - primaryTarget);
+};
+
 export const computeRequirements = (
   source: Pick<Major, 'requirements'>,
   semesters: StudentSemester[],
   waivedModules: WaivedModule[] = [],
   requirementMappings: Record<string, string[]> = {},
-  specialProgramme: SpecialProgramme | null = null,
+  pathways: SpecialProgramme[] | SpecialProgramme | null = [],
 ): RequirementStatus[] => {
+  const specialProgrammes = normalizeSpecialProgrammes(pathways, pathways);
+  const nocDuration = getNocDuration(specialProgrammes);
   const plannedCodes = semesters.flatMap((s) => s.modules.map((m) => m.code));
   const waivedCodes = waivedModules.map((m) => m.code);
   const allCodes = Array.from(new Set([...plannedCodes, ...waivedCodes]));
+  const modulesByCode = new Map([...semesters.flatMap(s => s.modules), ...waivedModules].map(m => [m.code, m]));
+  const allocated = new Map<string, Set<string>>();
   return source.requirements.map((req) => {
     // Scanning `allCodes` keeps a mapped-but-removed module dormant: the link
     // survives in the plan, but only counts while the module is placed/waived.
     const mappedCodes = requirementMappings[req.name] ?? [];
-    const matchCount = allCodes.filter(
+    const used = req.allocationGroup ? allocated.get(req.allocationGroup) ?? new Set<string>() : new Set<string>();
+    let matchingCodes = allCodes.filter(
       (code) =>
-        req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)) ||
-        mappedCodes.includes(code),
-    ).length;
-    const need = req.count ?? 1;
+        !used.has(code) && !(req.excludedCodes ?? []).some(pattern => matchesFulfiller(code, pattern)) &&
+        (req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)) || mappedCodes.includes(code)),
+    );
+    if (req.name === 'Making Connections') {
+      // A placed NEX course is credit; choosing the GEx chip alone is not.
+      const gex = allCodes.find(code => /^NEX\d/.test(code));
+      if (gex && !matchingCodes.includes(gex)) matchingCodes.push(gex);
+      let gexCount = 0;
+      matchingCodes = matchingCodes.filter(code => !code.startsWith('NEX') || ++gexCount <= 1);
+      const isPww = nocDuration === '6-month' || nocDuration === '1-year';
+      const domainMin = isPww ? 1 : 2;
+      const exchange = matchingCodes.filter(code => /^(NFB|NFC)/.test(code));
+      const local = matchingCodes.filter(code => !exchange.includes(code));
+      const hssDeficit = Math.max(0, domainMin - local.filter(code => code.startsWith('NHS')).length);
+      const stDeficit = Math.max(0, domainMin - local.filter(code => code.startsWith('NST')).length);
+      const priority = [
+        ...exchange.filter(code => code.startsWith('NFB')).slice(0, hssDeficit),
+        ...exchange.filter(code => code.startsWith('NFC')).slice(0, stDeficit),
+        ...exchange,
+      ];
+      const accepted = new Set<string>();
+      const perSemester = new Map<string, number>();
+      for (const code of priority) {
+        if (accepted.has(code)) continue;
+        const semester = semesters.find(s => s.modules.some(m => m.code === code));
+        const key = semester ? `${semester.year}:${semester.sem}` : 'transferred';
+        if (isPww ? accepted.size >= 1 : (perSemester.get(key) ?? 0) >= 2) continue;
+        accepted.add(code);
+        perSemester.set(key, (perSemester.get(key) ?? 0) + 1);
+      }
+      matchingCodes = [...local, ...accepted];
+    }
+    const applicable = !req.whenCourse || allCodes.includes(req.whenCourse);
+    const need = req.minUnits ?? req.count ?? 1;
+    let matchCount = 0;
+    const seenEquivalents = new Set<number>();
+    for (const code of matchingCodes) {
+      if (req.allocationGroup && matchCount >= need) break;
+      const group = (req.equivalentGroups ?? []).findIndex(codes => codes.includes(code));
+      if (group >= 0 && seenEquivalents.has(group)) continue;
+      if (group >= 0) seenEquivalents.add(group);
+      matchCount += req.minUnits !== undefined ? modulesByCode.get(code)?.mcs ?? 0 : 1;
+      if (req.allocationGroup) used.add(code);
+    }
+    if (req.allocationGroup) allocated.set(req.allocationGroup, used);
     const codeSet = new Set(allCodes);
     const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) => codeSet.has(code)));
-    const specialProgrammeBonus =
-      req.name === 'Making Connections'
-        ? (specialProgramme === 'gex' ? 1 : 0) + (specialProgramme === 'sep' ? 2 : 0)
-        : 0;
-    const have = matchCount + specialProgrammeBonus;
-    
-    const nocSatisfied =
-      (req.name.toLowerCase().includes('industry') || req.name.toLowerCase().includes('industrial')) &&
-      Boolean(specialProgramme && specialProgramme.startsWith('noc'));
+    const have = matchCount;
     const isGlobalPathwayReq = req.name.toLowerCase().includes('global pathway');
-    const globalPathwaySatisfied = isGlobalPathwayReq && Boolean(specialProgramme);
-    let fulfilled = have >= need || altGroupSatisfied || nocSatisfied || globalPathwaySatisfied;
+    const globalPathwaySatisfied = isGlobalPathwayReq && specialProgrammes.length > 0;
+    let fulfilled = isGlobalPathwayReq ? globalPathwaySatisfied : !applicable || have >= need || altGroupSatisfied;
     let info: string | undefined = undefined;
 
     if (isGlobalPathwayReq && !fulfilled) {
-      info = 'Select a Global Pathway (NOC, SEP, GEx, etc.) above to fulfill this requirement';
+      info = 'Select a Global Pathway in Settings → Pathways';
     }
 
-    if (req.name.startsWith('Making Connections')) {
-      const hssCount = allCodes.filter((code) =>
-        code.startsWith('NHS') || code.startsWith('NFC') || code.startsWith('NHT')
-      ).length;
-      const stCount = allCodes.filter((code) =>
-        code.startsWith('NST') || code.startsWith('NFB')
-      ).length;
-      const isNocWaiver = specialProgramme === 'noc-6-month' || specialProgramme === 'noc-1-year';
-      const isReducedMce = isNocWaiver || specialProgramme === 'sep' || specialProgramme === 'gex';
-      const minHss = isReducedMce ? 1 : 2;
-      const minSt = isReducedMce ? 1 : 2;
-
-      if (hssCount < minHss || stCount < minSt) {
+    if (req.name === 'Making Connections') {
+      const hssCount = matchingCodes.filter(code => code.startsWith('NHS') || code.startsWith('NFB')).length;
+      const stCount = matchingCodes.filter(code => code.startsWith('NST') || code.startsWith('NFC')).length;
+      const isNocWaiver = nocDuration === '6-month' || nocDuration === '1-year';
+      const minDomain = isNocWaiver ? 1 : 2;
+      const taughtHss = matchingCodes.some(code => code.startsWith('NHS'));
+      const taughtSt = matchingCodes.some(code => code.startsWith('NST'));
+      const needsTaught = isNocWaiver && (nocDuration === '1-year' ? !taughtHss && !taughtSt : !taughtHss || !taughtSt);
+      if (hssCount < minDomain || stCount < minDomain) {
         fulfilled = false;
-        info = `Need at least ${minHss} HSS & ${minSt} ST courses (${hssCount} HSS, ${stCount} ST on plan)`;
+        info = `Need at least ${minDomain} HSS & ${minDomain} ST courses (${hssCount} HSS, ${stCount} ST on plan)`;
+      } else if (needsTaught) {
+        fulfilled = false;
+        info = nocDuration === '1-year' ? 'Read at least one NHS/NST course in NUSC' : 'Read at least one NHS and one NST course in NUSC';
+
       }
     }
 
@@ -361,7 +414,7 @@ export const computeRequirements = (
       name: req.name,
       fulfilled,
       categoryId: req.categoryId,
-      have: (nocSatisfied || altGroupSatisfied || globalPathwaySatisfied) ? need : have,
+      have: isGlobalPathwayReq ? (globalPathwaySatisfied ? need : 0) : (!applicable || altGroupSatisfied) ? need : have,
       need,
       info,
     };
@@ -423,17 +476,6 @@ export const computeTripleCountedCodes = (
   );
 };
 
-/** NOC waives Making Connections Electives (MCEs) only — 4 UT each, confirmed
- * uniform across NUSC-wide and SoC/NUSC-specific curricula alike. Waiver
- * counts and freed MC are NUS-wide constants, independent of a major's own
- * `nus-college` MC total (52 for SoC/NUSC majors, 56 generically) — the
- * waived count is what shrinks, the per-elective 4 MC weight is fixed. */
-const NOC_MCE_WAIVERS: Record<NocDuration, { wavered: number; freedMc: number }> = {
-  '3-month': { wavered: 0, freedMc: 0 },
-  '6-month': { wavered: 2, freedMc: 8 },
-  '1-year': { wavered: 4, freedMc: 16 },
-};
-
 /** Applies NOC (NUS Overseas Colleges) Programme-With-Waivers adjustments to a
  * major: reduces the "Making Connections" requirement's `count` by the waived
  * amount, and moves the freed MC from `nus-college` to `unrestricted-electives`
@@ -442,49 +484,26 @@ const NOC_MCE_WAIVERS: Record<NocDuration, { wavered: number; freedMc: number }>
  * FAQ: "the waiver ... is for NUSC requirements only." A major with no
  * `nus-college` category or no "Making Connections" row (i.e. not modeled with
  * the NUSC block at all) is returned unchanged. Returns `major` unchanged
- * when `duration` is nullish (3-month NOC waives nothing, so it isn't a
- * distinct `NocDuration` value — see the type's own doc comment). */
+ * when `duration` is nullish. Three-month NOC grants no MCE waivers.
+ * Faculty targets and Industry Experience are checked against actual courses. */
 export const applyNocAdjustment = (major: Major, duration?: NocDuration | null): Major => {
   if (!duration) return major;
-  const rule = NOC_MCE_WAIVERS[duration];
+  const waiverCount = getMceWaiverCount([`noc-${duration}` as SpecialProgramme]);
+  const rule = { wavered: waiverCount, freedMc: waiverCount * 4 };
   const mceIndex = major.requirements.findIndex(
     (r) => r.categoryId === 'nus-college' && r.name.startsWith('Making Connections'),
   );
   const hasNusCollege = major.categories.some((c) => c.id === 'nus-college');
-  if (!rule || mceIndex === -1 || !hasNusCollege) return major;
+  if (mceIndex === -1 || !hasNusCollege) return major;
 
   const mceReq = major.requirements[mceIndex];
   const newCount = Math.max(0, (mceReq.count ?? 1) - rule.wavered);
 
-  const nocTarget = duration === '3-month' ? 6 : (duration === '6-month' ? 12 : 36);
-  const bdReduction = duration === '1-year' ? 12 : 6;
-
-  let categories = major.categories.map((cat) => {
-    if (cat.id === 'nus-college' && cat.mcTarget !== undefined) {
-      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - rule.freedMc) };
-    }
-    if ((cat.id === 'breadth-depth' || cat.id === 'ai-breadth-depth' || cat.id === 'industry-experience') && cat.mcTarget !== undefined) {
-      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - bdReduction) };
-    }
-    if ((cat.id === 'ba-foundation' || cat.id === 'bais-foundation') && cat.mcTarget !== undefined) {
-      const reduction = duration === '3-month' ? 6 : 12;
-      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - reduction) };
-    }
-    if ((cat.id === 'ba-electives' || cat.id === 'bais-electives') && cat.mcTarget !== undefined) {
-      const reduction = duration === '1-year' ? 4 : 0;
-      return { ...cat, mcTarget: Math.max(0, cat.mcTarget - reduction) };
-    }
-    return cat;
-  });
-
-  if (!categories.some((c) => c.id === 'noc')) {
-    categories.push({
-      id: 'noc',
-      label: 'NUS Overseas Colleges (NOC)',
-      mcTarget: nocTarget,
-      color: '#e07a5f',
-    });
-  }
+  let categories = major.categories.map(cat =>
+    cat.id === 'nus-college' && cat.mcTarget !== undefined
+      ? { ...cat, mcTarget: Math.max(0, cat.mcTarget - rule.freedMc) }
+      : cat,
+  );
 
   // Balance remaining MCs against unrestricted-electives to keep totalMcTarget fixed at 160.
   const hasUe = categories.some((c) => c.id === 'unrestricted-electives');
@@ -499,14 +518,9 @@ export const applyNocAdjustment = (major: Major, duration?: NocDuration | null):
     );
   }
 
-  const updatedBreadthDepth = major.breadthDepth
-    ? { ...major.breadthDepth, totalUnits: Math.max(0, major.breadthDepth.totalUnits - bdReduction) }
-    : undefined;
-
   return {
     ...major,
     categories,
-    breadthDepth: updatedBreadthDepth,
     requirements: major.requirements.map((r, i) => (i === mceIndex ? { ...r, count: newCount } : r)),
   };
 };

@@ -1,3 +1,5 @@
+import { normalizeSpecialProgrammes, getNocDuration, toggleSpecialProgramme } from '@shared/pathways';
+import { expandProgrammes, normalizeDoubleDegreeId } from '../lib/programmes';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type {
   Major,
@@ -41,10 +43,10 @@ export const loadMajors = (): Major[] =>
   Object.values(majorModules).map((m) => (m as { default: Major }).default);
 
 export const loadSecondMajors = (): SecondaryProgramme[] =>
-  Object.values(secondMajorModules).map((m) => (m as { default: SecondaryProgramme }).default);
+  expandProgrammes('second-major', Object.values(secondMajorModules).map((m) => (m as { default: SecondaryProgramme }).default));
 
 export const loadMinors = (): SecondaryProgramme[] =>
-  Object.values(minorModules).map((m) => (m as { default: SecondaryProgramme }).default);
+  expandProgrammes('minor', Object.values(minorModules).map((m) => (m as { default: SecondaryProgramme }).default));
 
 /** NUS caps a student at 1 declared second major and 3 declared minors. */
 const MAX_MINORS = 3;
@@ -52,36 +54,19 @@ const MAX_MINORS = 3;
 const planKey = (majorId: string) => `studyplan:${majorId}`;
 
 interface SavedPlanState {
+  doubleDegreeId: string | null;
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
   secondMajorId: string | null;
   minorIds: string[];
   requirementMappings: Record<string, string[]>;
   nocDuration: NocDuration | null;
-  specialProgramme: SpecialProgramme | null;
+  specialProgrammes: SpecialProgramme[];
   polytechnicApcUnits?: number;
 }
 
 const normalizeNocDuration = (value: unknown): NocDuration | null =>
   value === '3-month' || value === '6-month' || value === '1-year' ? value as NocDuration : null;
-
-const normalizeSpecialProgramme = (value: unknown): SpecialProgramme | null =>
-  value === 'noc-3-month' ||
-  value === 'noc-6-month' ||
-  value === 'noc-1-year' ||
-  value === 'sep' ||
-  value === 'gex' ||
-  value === 'regional-iex' ||
-  value === 'siip'
-    ? (value as SpecialProgramme)
-    : null;
-
-const specialProgrammeToNocDuration = (value: SpecialProgramme | null): NocDuration | null => {
-  if (value === 'noc-3-month') return '3-month';
-  if (value === 'noc-6-month') return '6-month';
-  if (value === 'noc-1-year') return '1-year';
-  return null;
-};
 
 const normalizeRequirementMappings = (value: unknown): Record<string, string[]> => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -148,12 +133,13 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
     const plan = JSON.parse(raw) as StudentPlan;
     if (!Array.isArray(plan.semesters)) return null;
     return {
+      doubleDegreeId: normalizeDoubleDegreeId(plan.doubleDegreeId),
       semesters: normalizeSemesters(major, plan.semesters),
       waivedModules: normalizeWaivedModules(major, plan.waivedModules),
       secondMajorId: typeof plan.secondMajorId === 'string' ? plan.secondMajorId : null,
       minorIds: Array.isArray(plan.minorIds) ? plan.minorIds.slice(0, MAX_MINORS) : [],
       requirementMappings: normalizeRequirementMappings(plan.requirementMappings),
-      specialProgramme: normalizeSpecialProgramme(plan.specialProgramme) ?? (normalizeNocDuration(plan.nocDuration) ? `noc-${normalizeNocDuration(plan.nocDuration)}` as SpecialProgramme : null),
+      specialProgrammes: normalizeSpecialProgrammes(plan.specialProgrammes, plan.specialProgramme, plan.nocDuration),
       nocDuration: normalizeNocDuration(plan.nocDuration),
       polytechnicApcUnits: typeof plan.polytechnicApcUnits === 'number' && plan.polytechnicApcUnits > 0 ? plan.polytechnicApcUnits : 0,
     };
@@ -163,13 +149,14 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
 };
 
 const jsonDefaultPlan = (major: Major): SavedPlanState => ({
+  doubleDegreeId: null,
   semesters: defaultPlanToSemesters(major),
   waivedModules: normalizeWaivedModules(major, major.defaultWaivedModules),
   secondMajorId: null,
   minorIds: [],
   requirementMappings: {},
   nocDuration: null,
-  specialProgramme: null,
+  specialProgrammes: [],
   polytechnicApcUnits: 0,
 });
 
@@ -177,13 +164,14 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
   const savedPlan = loadSavedPlan(major);
   const defaultPlan = jsonDefaultPlan(major);
   return {
+    doubleDegreeId: savedPlan?.doubleDegreeId ?? null,
     semesters: savedPlan?.semesters ?? defaultPlan.semesters,
     waivedModules: savedPlan?.waivedModules ?? defaultPlan.waivedModules,
     secondMajorId: savedPlan?.secondMajorId ?? defaultPlan.secondMajorId,
     minorIds: savedPlan?.minorIds ?? defaultPlan.minorIds,
     requirementMappings: savedPlan?.requirementMappings ?? defaultPlan.requirementMappings,
     nocDuration: savedPlan?.nocDuration ?? defaultPlan.nocDuration,
-    specialProgramme: savedPlan?.specialProgramme ?? defaultPlan.specialProgramme,
+    specialProgrammes: savedPlan?.specialProgrammes ?? defaultPlan.specialProgrammes,
     polytechnicApcUnits: savedPlan?.polytechnicApcUnits ?? defaultPlan.polytechnicApcUnits,
   };
 };
@@ -191,13 +179,14 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
 const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
   const plan: StudentPlan = {
     majorId,
+    doubleDegreeId: state.doubleDegreeId,
     semesters: state.semesters,
     waivedModules: state.waivedModules,
     secondMajorId: state.secondMajorId ?? undefined,
     minorIds: state.minorIds,
     requirementMappings: state.requirementMappings,
-    nocDuration: state.nocDuration ?? undefined,
-    specialProgramme: state.specialProgramme ?? undefined,
+
+    specialProgrammes: state.specialProgrammes,
     polytechnicApcUnits: state.polytechnicApcUnits && state.polytechnicApcUnits > 0 ? state.polytechnicApcUnits : undefined,
     lastUpdated: new Date().toISOString(),
   };
@@ -233,18 +222,17 @@ export const useStudyPlan = () => {
   const [secondMajorId, setSecondMajorIdState] = useState<string | null>(
     () => initialPlan?.secondMajorId ?? null,
   );
+  const [doubleDegreeId, setDoubleDegreeId] = useState<string | null>(() => initialPlan?.doubleDegreeId ?? null);
   const [minorIds, setMinorIds] = useState<string[]>(() => initialPlan?.minorIds ?? []);
   const [requirementMappings, setRequirementMappings] = useState<Record<string, string[]>>(
     () => initialPlan?.requirementMappings ?? {},
   );
-  const [specialProgramme, setSpecialProgrammeState] = useState<SpecialProgramme | null>(
-    () => initialPlan?.specialProgramme ?? (initialPlan?.nocDuration ? `noc-${initialPlan.nocDuration}` as SpecialProgramme : null),
-  );
+  const [specialProgrammes, setSpecialProgrammesState] = useState<SpecialProgramme[]>(() => initialPlan?.specialProgrammes ?? []);
   const [polytechnicApcUnits, setPolytechnicApcUnitsState] = useState<number>(
     () => initialPlan?.polytechnicApcUnits ?? 0,
   );
 
-  const nocDuration = useMemo(() => specialProgrammeToNocDuration(specialProgramme), [specialProgramme]);
+  const nocDuration = useMemo(() => getNocDuration(specialProgrammes), [specialProgrammes]);
 
   const major = useMemo<Major>(() => {
     let adjusted = applyNocAdjustment(rawMajor, nocDuration);
@@ -295,14 +283,15 @@ export const useStudyPlan = () => {
     writeSavedPlan(major.id, {
       semesters,
       waivedModules,
+      doubleDegreeId,
       secondMajorId,
       minorIds,
       requirementMappings,
       nocDuration,
-      specialProgramme,
+      specialProgrammes,
       polytechnicApcUnits,
     });
-  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme, polytechnicApcUnits, major, mode]);
+  }, [semesters, waivedModules, doubleDegreeId, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgrammes, polytechnicApcUnits, major, mode]);
 
   const setPolytechnicApcUnits = useCallback((units: number) => {
     setPolytechnicApcUnitsState(units);
@@ -312,8 +301,8 @@ export const useStudyPlan = () => {
     setSecondMajorIdState(id);
   }, []);
 
-  const setSpecialProgramme = useCallback((programme: SpecialProgramme | null) => {
-    setSpecialProgrammeState(programme);
+  const togglePathway = useCallback((programme: SpecialProgramme) => {
+    setSpecialProgrammesState(current => toggleSpecialProgramme(current, programme));
   }, []);
 
   const rememberMajorId = (id: string) => {
@@ -376,9 +365,10 @@ export const useStudyPlan = () => {
       setSemesters(nextPlan.semesters);
       setWaivedModules(nextPlan.waivedModules);
       setSecondMajorIdState(nextPlan.secondMajorId);
+      setDoubleDegreeId(nextPlan.doubleDegreeId);
       setMinorIds(nextPlan.minorIds);
       setRequirementMappings(nextPlan.requirementMappings);
-      setSpecialProgrammeState(nextPlan.specialProgramme ?? (nextPlan.nocDuration ? `noc-${nextPlan.nocDuration}` as SpecialProgramme : null));
+      setSpecialProgrammesState(nextPlan.specialProgrammes);
       setMajorId(newMajorId);
       if (mode === 'personal') rememberMajorId(newMajorId);
     },
@@ -394,9 +384,10 @@ export const useStudyPlan = () => {
         mode === 'example' ? normalizeWaivedModules(newMajor, newMajor.defaultWaivedModules) : [],
       );
       setSecondMajorIdState(null);
+      setDoubleDegreeId(null);
       setMinorIds([]);
       setRequirementMappings({});
-      setSpecialProgrammeState(null);
+      setSpecialProgrammesState([]);
       setMajorId(newMajorId);
       rememberMajorId(newMajorId);
     },
@@ -514,9 +505,10 @@ export const useStudyPlan = () => {
         setSemesters(defaultPlanToSemesters(major, { lockedOnly: true }));
         setWaivedModules([]);
         setSecondMajorIdState(null);
+        setDoubleDegreeId(null);
         setMinorIds([]);
         setRequirementMappings({});
-        setSpecialProgrammeState(null);
+        setSpecialProgrammesState([]);
         return;
       }
 
@@ -524,9 +516,10 @@ export const useStudyPlan = () => {
       setSemesters(nextSemesters);
       setWaivedModules(normalizeWaivedModules(major, major.defaultWaivedModules));
       setSecondMajorIdState(null);
+      setDoubleDegreeId(null);
       setMinorIds([]);
       setRequirementMappings({});
-      setSpecialProgrammeState(null);
+      setSpecialProgrammesState([]);
 
       if (template === 'poly-accelerated' || template === 'poly-balanced') {
         setPolytechnicApcUnitsState(20);
@@ -546,12 +539,14 @@ export const useStudyPlan = () => {
       importedMinorIds: string[] = [],
       importedRequirementMappings: Record<string, string[]> = {},
       importedNocDuration: NocDuration | null = null,
-      importedSpecialProgramme: SpecialProgramme | null = null,
+      importedSpecialProgramme: SpecialProgramme[] | SpecialProgramme | null = null,
       importedPolytechnicApcUnits: number = 0,
+      importedDoubleDegreeId: string | null = null,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
       setMode('personal');
+      setDoubleDegreeId(normalizeDoubleDegreeId(importedDoubleDegreeId));
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
       setSecondMajorIdState(
@@ -561,10 +556,7 @@ export const useStudyPlan = () => {
       );
       setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
-      setSpecialProgrammeState(
-        normalizeSpecialProgramme(importedSpecialProgramme) ??
-          (normalizeNocDuration(importedNocDuration) ? `noc-${normalizeNocDuration(importedNocDuration)}` as SpecialProgramme : null),
-      );
+      setSpecialProgrammesState(normalizeSpecialProgrammes(importedSpecialProgramme, importedSpecialProgramme, importedNocDuration));
       setPolytechnicApcUnitsState(importedPolytechnicApcUnits);
       setMajorId(newMajorId);
       rememberMajorId(newMajorId);
@@ -582,12 +574,14 @@ export const useStudyPlan = () => {
       importedMinorIds: string[] = [],
       importedRequirementMappings: Record<string, string[]> = {},
       importedNocDuration: NocDuration | null = null,
-      importedSpecialProgramme: SpecialProgramme | null = null,
+      importedSpecialProgramme: SpecialProgramme[] | SpecialProgramme | null = null,
       importedPolytechnicApcUnits: number = 0,
+      importedDoubleDegreeId: string | null = null,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
       setMode('review');
+      setDoubleDegreeId(normalizeDoubleDegreeId(importedDoubleDegreeId));
       setSemesters(normalizeSemesters(newMajor, importedSemesters));
       setWaivedModules(normalizeWaivedModules(newMajor, importedWaived));
       setSecondMajorIdState(
@@ -597,10 +591,7 @@ export const useStudyPlan = () => {
       );
       setMinorIds(importedMinorIds.filter((id) => minors.some((m) => m.id === id)).slice(0, MAX_MINORS));
       setRequirementMappings(normalizeRequirementMappings(importedRequirementMappings));
-      setSpecialProgrammeState(
-        normalizeSpecialProgramme(importedSpecialProgramme) ??
-          (normalizeNocDuration(importedNocDuration) ? `noc-${normalizeNocDuration(importedNocDuration)}` as SpecialProgramme : null),
-      );
+      setSpecialProgrammesState(normalizeSpecialProgrammes(importedSpecialProgramme, importedSpecialProgramme, importedNocDuration));
       setPolytechnicApcUnitsState(importedPolytechnicApcUnits);
       setMajorId(newMajorId);
       return true;
@@ -616,11 +607,10 @@ export const useStudyPlan = () => {
     setSemesters(personalPlan.semesters);
     setWaivedModules(personalPlan.waivedModules);
     setSecondMajorIdState(personalPlan.secondMajorId);
+    setDoubleDegreeId(personalPlan.doubleDegreeId);
     setMinorIds(personalPlan.minorIds);
     setRequirementMappings(personalPlan.requirementMappings);
-    setSpecialProgrammeState(
-      personalPlan.specialProgramme ?? (personalPlan.nocDuration ? `noc-${personalPlan.nocDuration}` as SpecialProgramme : null),
-    );
+    setSpecialProgrammesState(personalPlan.specialProgrammes);
     setPolytechnicApcUnitsState(personalPlan.polytechnicApcUnits ?? 0);
     setMajorId(personalMajor.id);
   }, [majors, personalMajorId, defaultMajor]);
@@ -636,11 +626,12 @@ export const useStudyPlan = () => {
       setPreviousPlanSnapshot({
         semesters,
         waivedModules,
+        doubleDegreeId,
         secondMajorId,
         minorIds,
         requirementMappings,
         nocDuration,
-        specialProgramme,
+        specialProgrammes,
         polytechnicApcUnits,
       });
       undoAiTimeoutRef.current = setTimeout(() => setPreviousPlanSnapshot(null), 15000);
@@ -650,10 +641,10 @@ export const useStudyPlan = () => {
         setMinorIds((prev) => [...prev, recommendedMinorId].slice(0, MAX_MINORS));
       }
       if (recommendedSpecialProgramme) {
-        setSpecialProgrammeState(recommendedSpecialProgramme);
+        setSpecialProgrammesState(current => normalizeSpecialProgrammes([...current, recommendedSpecialProgramme]));
       }
     },
-    [major, semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme, polytechnicApcUnits],
+    [major, semesters, waivedModules, doubleDegreeId, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgrammes, polytechnicApcUnits],
   );
 
   const undoAiPlan = useCallback(() => {
@@ -662,9 +653,10 @@ export const useStudyPlan = () => {
     setSemesters(previousPlanSnapshot.semesters);
     setWaivedModules(previousPlanSnapshot.waivedModules);
     setSecondMajorIdState(previousPlanSnapshot.secondMajorId);
+    setDoubleDegreeId(previousPlanSnapshot.doubleDegreeId);
     setMinorIds(previousPlanSnapshot.minorIds);
     setRequirementMappings(previousPlanSnapshot.requirementMappings);
-    setSpecialProgrammeState(previousPlanSnapshot.specialProgramme);
+    setSpecialProgrammesState(previousPlanSnapshot.specialProgrammes);
     setPolytechnicApcUnitsState(previousPlanSnapshot.polytechnicApcUnits ?? 0);
     setPreviousPlanSnapshot(null);
   }, [previousPlanSnapshot]);
@@ -675,11 +667,13 @@ export const useStudyPlan = () => {
   }, []);
 
   const requirements = major
-    ? computeRequirements(major, semesters, waivedModules, requirementMappings, specialProgramme)
+    ? computeRequirements(major, semesters, waivedModules, requirementMappings, specialProgrammes)
     : [];
   const stats = major ? computeStats(major, semesters, waivedModules) : { totalMc: 0, byCategory: {} };
 
   return {
+    doubleDegreeId,
+    setDoubleDegreeId,
     majors,
     major,
     majorId,
@@ -690,8 +684,8 @@ export const useStudyPlan = () => {
     setSecondMajorId,
     toggleMinorId,
     nocDuration,
-    specialProgramme,
-    setSpecialProgramme,
+    specialProgrammes,
+    togglePathway,
     polytechnicApcUnits,
     setPolytechnicApcUnits,
     requirementMappings,
