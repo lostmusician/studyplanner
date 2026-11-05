@@ -61,5 +61,7 @@
     "FIN3702C": { "code": "FIN3702C", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
     "FIN3702D": { "code": "FIN3702D", "name": "Investment Analysis and Portfolio Management", "mcs": 4 },
     "FIN3716": { "code": "FIN3716", "name": "Financial Modelling", "mcs": 4 }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "Course checks are a planning aid. Check cohort-specific substitutions, residency, eligibility and overlap with the host department."
 }

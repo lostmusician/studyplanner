@@ -1,0 +1,55 @@
+{
+  "id": "philosophy",
+  "label": "Philosophy",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirementStatus": "partial",
+  "sourceUrl": "https://fass.nus.edu.sg/philo/overview/academic-requirements/",
+  "reviewedOn": "2026-11-05",
+  "notes": "AY2021/22 onwards. Department-approved recognised courses and substitutions require manual review; the checklist counts the published subject-coded route. Residency and preclusions are not automatically checked.",
+  "moduleCatalog": {
+    "GEX1015": {
+      "code": "GEX1015",
+      "name": "Life, the Universe, and Everything",
+      "mcs": 4
+    },
+    "GEX1014": {
+      "code": "GEX1014",
+      "name": "Logic",
+      "mcs": 4
+    }
+  },
+  "requirements": [
+    {
+      "name": "Life, the Universe, and Everything",
+      "fulfilledBy": [
+        "GEX1015"
+      ]
+    },
+    {
+      "name": "Logic",
+      "fulfilledBy": [
+        "GEX1014"
+      ]
+    },
+    {
+      "name": "At least 16 units at level 3000 or above",
+      "fulfilledBy": [
+        "PH3*",
+        "PH4*",
+        "PH5*",
+        "PH6*"
+      ],
+      "minUnits": 16
+    },
+    {
+      "name": "At least 40 programme units",
+      "fulfilledBy": [
+        "PH*",
+        "GEX1015",
+        "GEX1014"
+      ],
+      "minUnits": 40
+    }
+  ]
+}

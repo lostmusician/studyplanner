@@ -24,5 +24,7 @@
     "EC1101E": { "code": "EC1101E", "name": "Introduction to Economic Analysis", "mcs": 4 },
     "EC2101": { "code": "EC2101", "name": "Microeconomic Analysis I", "mcs": 4 },
     "EC2102": { "code": "EC2102", "name": "Macroeconomic Analysis I", "mcs": 4 }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "Course checks are a planning aid. Check cohort-specific substitutions, residency, eligibility and overlap with the host department."
 }

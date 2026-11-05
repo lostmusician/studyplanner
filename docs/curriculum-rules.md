@@ -80,6 +80,8 @@ minor/specialisation.
 
 ### NOC (NUS Overseas Colleges) Programme-With-Waivers (PWW) MCE waiver rules
 
+**Implementation update (5 November 2026):** Global Pathways are now multi-select. The current behaviour and migration rules are documented in [programme coverage](programme-coverage.md#global-pathways-multi-select). The implementation history below predates that update. NOC selection now changes NUSC/UE targets only; industry credit requires approved actual courses.
+
 Per NUSC official PDFs (AY2022-24 and AY2025/26+ cohorts) and NUSC FAQs (updated 9 Apr 2026):
 
 - NOC = "Programme-With-Waivers." It waives **Making Connections Electives (MCEs) only** — it

@@ -1,0 +1,1774 @@
+[
+  {
+    "id": "anthropology",
+    "label": "Anthropology",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(Offered to Cohort 2022 onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-language",
+    "label": "Chinese Language",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-media",
+    "label": "Chinese Media",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-studies",
+    "label": "Chinese Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "communications-and-new-media",
+    "label": "Communications and New Media",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "criminal-justice",
+    "label": "Criminal Justice",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(with effect from Semester 2 AY2026/27)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "economics",
+    "label": "Economics",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "english-language-and-linguistics",
+    "label": "English Language and Linguistics",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "english-literature",
+    "label": "English Literature",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "history",
+    "label": "History",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "human-ai-systems",
+    "label": "Human-AI Systems",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(wef AY2026/2027)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "human-services",
+    "label": "Human Services",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "india-studies",
+    "label": "India Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "interpreting",
+    "label": "Interpreting",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(effective from Semester 1, AY2022/23 for Cohort 2021 Onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "japanese-studies",
+    "label": "Japanese Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "malay-studies",
+    "label": "Malay Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "philosophy",
+    "label": "Philosophy",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "political-science",
+    "label": "Political Science",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "psychology",
+    "label": "Psychology",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "sociology",
+    "label": "Sociology",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "southeast-asian-arts-and-heritage",
+    "label": "Southeast Asian Arts and Heritage",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "southeast-asian-studies",
+    "label": "Southeast Asian Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "theatre-and-performance-studies",
+    "label": "Theatre and Performance Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "visual-cultures",
+    "label": "Visual Cultures",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "aquatic-ecology",
+    "label": "Aquatic Ecology",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "art-history",
+    "label": "Art History",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "asian-studies",
+    "label": "Asian Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "china-studies",
+    "label": "China Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "cultural-studies",
+    "label": "Cultural Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "english-studies",
+    "label": "English Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(Open to students from all faculties except students majoring in English Language and/or English Literature)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "film-studies",
+    "label": "Film Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "gender-studies",
+    "label": "Gender Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "geographical-information-systems",
+    "label": "Geographical Information Systems",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "geosciences",
+    "label": "Geosciences",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "global-studies",
+    "label": "Global Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "health-and-social-sciences",
+    "label": "Health and Social Sciences",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "health-wellbeing-and-society",
+    "label": "Health, Wellbeing and Society",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "interactive-media-development",
+    "label": "Interactive Media Development",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "language-science",
+    "label": "Language Science",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(Offered to Cohort 2021 Onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "religious-studies",
+    "label": "Religious Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "science-technology-and-society",
+    "label": "Science, Technology and Society",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "urban-studies",
+    "label": "Urban Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "management",
+    "label": "Management",
+    "kind": "minor",
+    "school": "School of Business",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "entrepreneurship",
+    "label": "Entrepreneurship",
+    "kind": "minor",
+    "school": "School of Business",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "real-estate",
+    "label": "Real Estate",
+    "kind": "minor",
+    "school": "School of Business",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "artificial-intelligence",
+    "label": "Artificial Intelligence",
+    "kind": "minor",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "business-analytics",
+    "label": "Business Analytics",
+    "kind": "minor",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "computer-science",
+    "label": "Computer Science",
+    "kind": "minor",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://www.comp.nus.edu.sg/programmes/ug/minorc/cs-minor/",
+    "reviewedOn": "2026-11-05",
+    "excludedPrimaryIds": [
+      "computer-science-nusc",
+      "information-security-nusc",
+      "business-analytics-nusc",
+      "business-ai-systems-nusc",
+      "artificial-intelligence-nusc"
+    ]
+  },
+  {
+    "id": "information-security",
+    "label": "Information Security",
+    "kind": "minor",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "information-systems",
+    "label": "Information Systems",
+    "kind": "minor",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "data-engineering",
+    "label": "Data Engineering",
+    "kind": "minor",
+    "school": "School of Computing & College of Design and Engineering",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "ai-and-data-science-for-materials",
+    "label": "AI and Data Science for Materials",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "(wef AY2026/27)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "architectural-studies",
+    "label": "Architectural Studies",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "applied-ai-design-and-engineering",
+    "label": "Applied AI (Design and Engineering)",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "biomedical-engineering",
+    "label": "Biomedical Engineering",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "(for Cohort AY2019/20 onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "computing-design-and-engineering",
+    "label": "Computing (Design and Engineering)",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "restricted",
+    "notes": " Offered through the home faculty; Computing (Sciences) is for FoS students and Computing (Design and Engineering) is for CDE students.",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05",
+    "excludedPrimaryIds": [
+      "computer-science-nusc",
+      "information-security-nusc",
+      "business-analytics-nusc",
+      "business-ai-systems-nusc",
+      "artificial-intelligence-nusc"
+    ]
+  },
+  {
+    "id": "electrical-engineering",
+    "label": "Electrical Engineering",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "hydrogen-and-low-carbon-technology",
+    "label": "Hydrogen and Low Carbon Technology",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "landscape-architectural-studies",
+    "label": "Landscape Architectural Studies",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "mechanical-engineering",
+    "label": "Mechanical Engineering",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "project-management",
+    "label": "Project Management",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "sustainability-solutions",
+    "label": "Sustainability Solutions",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "systems-engineering",
+    "label": "Systems Engineering",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "visual-communication-design",
+    "label": "Visual Communication Design",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "engineering-materials",
+    "label": "Engineering Materials",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "infrastructure-management-and-finance",
+    "label": "Infrastructure Management and Finance",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "innovation-and-design",
+    "label": "Innovation and Design",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "biomedical-informatics",
+    "label": "Biomedical Informatics",
+    "kind": "minor",
+    "school": "Yong Loo Lin School of Medicine",
+    "admission": "open",
+    "notes": "(With effect from Semester 1, AY2023/24)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "integrative-health",
+    "label": "Integrative Health",
+    "kind": "minor",
+    "school": "Yong Loo Lin School of Medicine",
+    "admission": "open",
+    "notes": "(With effect from Semester 1, AY2023/24)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "music-and-society",
+    "label": "Music and Society",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "performing-arts",
+    "label": "Performing Arts",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "public-health",
+    "label": "Public Health",
+    "kind": "minor",
+    "school": "Saw Swee Hock School of Public Health",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "analytical-chemistry",
+    "label": "Analytical Chemistry",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "astronomy",
+    "label": "Astronomy",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "bioinformatics",
+    "label": "Bioinformatics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "biophysics",
+    "label": "Biophysics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "botany",
+    "label": "Botany",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "(With effect from Semester 1, AY2023/24 for Cohort AY2020/21 onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chemistry",
+    "label": "Chemistry",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "forensic-science",
+    "label": "Forensic Science",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "life-sciences",
+    "label": "Life Sciences",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "mathematics",
+    "label": "Mathematics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "meteorology-and-climate-science",
+    "label": "Meteorology and Climate Science",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "environmental-sustainability",
+    "label": "Environmental Sustainability",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "(with effect from Semester 1, AY2024/25 for Cohort AY2021/22 onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "anthropology",
+    "label": "Anthropology",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "(Offered to Cohort 2022 onwards)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-language",
+    "label": "Chinese Language",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-studies",
+    "label": "Chinese Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "communications-and-new-media",
+    "label": "Communications and New Media",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "economics",
+    "label": "Economics",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "english-language-and-linguistics",
+    "label": "English Language and Linguistics",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "english-literature",
+    "label": "English Literature",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "geography",
+    "label": "Geography",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "global-studies",
+    "label": "Global Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "history",
+    "label": "History",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "japanese-studies",
+    "label": "Japanese Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "malay-studies",
+    "label": "Malay Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "philosophy",
+    "label": "Philosophy",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "political-science",
+    "label": "Political Science",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "psychology",
+    "label": "Psychology",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "social-work",
+    "label": "Social Work",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "sociology",
+    "label": "Sociology",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "southeast-asian-studies",
+    "label": "Southeast Asian Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "south-asian-studies",
+    "label": "South Asian Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "theatre-and-performance-studies",
+    "label": "Theatre and Performance Studies",
+    "kind": "second-major",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "management",
+    "label": "Management",
+    "kind": "second-major",
+    "school": "School of Business",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "real-estate-finance",
+    "label": "Real Estate Finance",
+    "kind": "second-major",
+    "school": "School of Business",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "artificial-intelligence",
+    "label": "Artificial Intelligence",
+    "kind": "second-major",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "(wef AY2026/27)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "business-analytics",
+    "label": "Business Analytics",
+    "kind": "second-major",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "computer-science",
+    "label": "Computer Science",
+    "kind": "second-major",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://www.comp.nus.edu.sg/programmes/ug/major/cs-secmajor/",
+    "reviewedOn": "2026-11-05",
+    "excludedPrimaryIds": [
+      "computer-science-nusc",
+      "information-security-nusc",
+      "business-analytics-nusc",
+      "business-ai-systems-nusc",
+      "artificial-intelligence-nusc"
+    ]
+  },
+  {
+    "id": "information-security",
+    "label": "Information Security",
+    "kind": "second-major",
+    "school": "School of Computing",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "applied-ai-design-and-engineering",
+    "label": "Applied AI (Design and Engineering)",
+    "kind": "second-major",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "(wef AY2026/27)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "computing-design-and-engineering",
+    "label": "Computing (Design and Engineering)",
+    "kind": "second-major",
+    "school": "College of Design and Engineering",
+    "admission": "restricted",
+    "notes": " Offered through the home faculty; Computing (Sciences) is for FoS students and Computing (Design and Engineering) is for CDE students.",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05",
+    "excludedPrimaryIds": [
+      "computer-science-nusc",
+      "information-security-nusc",
+      "business-analytics-nusc",
+      "business-ai-systems-nusc",
+      "artificial-intelligence-nusc"
+    ]
+  },
+  {
+    "id": "innovation-and-design",
+    "label": "Innovation and Design",
+    "kind": "second-major",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "systems-engineering",
+    "label": "Systems Engineering",
+    "kind": "second-major",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "sustainable-urban-development",
+    "label": "Sustainable Urban Development",
+    "kind": "second-major",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "biomedical-informatics",
+    "label": "Biomedical Informatics",
+    "kind": "second-major",
+    "school": "Yong Loo Lin School of Medicine",
+    "admission": "open",
+    "notes": "(with effect from Semester 1, AY2023/24)",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "performing-arts",
+    "label": "Performing Arts",
+    "kind": "second-major",
+    "school": "College of Design and Engineering",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "public-health",
+    "label": "Public Health",
+    "kind": "second-major",
+    "school": "Saw Swee Hock School of Public Health",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chemistry",
+    "label": "Chemistry",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "computing-sciences",
+    "label": "Computing (Sciences)",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": " Offered through the home faculty; Computing (Sciences) is for FoS students and Computing (Design and Engineering) is for CDE students.",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05",
+    "excludedPrimaryIds": [
+      "computer-science-nusc",
+      "information-security-nusc",
+      "business-analytics-nusc",
+      "business-ai-systems-nusc",
+      "artificial-intelligence-nusc"
+    ]
+  },
+  {
+    "id": "data-analytics",
+    "label": "Data Analytics",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "food-science",
+    "label": "Food Science",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "life-sciences",
+    "label": "Life Sciences",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "mathematics",
+    "label": "Mathematics",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "nutrition",
+    "label": "Nutrition",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "pharmaceutical-science",
+    "label": "Pharmaceutical Science",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "physics",
+    "label": "Physics",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "quantitative-finance",
+    "label": "Quantitative Finance",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "statistics",
+    "label": "Statistics",
+    "kind": "second-major",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/double-major-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "arabic-language-studies",
+    "label": "Arabic Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-language-studies",
+    "label": "Chinese Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "french-language-studies",
+    "label": "French Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "german-language-studies",
+    "label": "German Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "hindi-language-studies",
+    "label": "Hindi Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "indonesian-language-studies",
+    "label": "Indonesian Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "japanese-language-studies",
+    "label": "Japanese Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "korean-language-studies",
+    "label": "Korean Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "malay-language-studies",
+    "label": "Malay Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "spanish-language-studies",
+    "label": "Spanish Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "thai-language-studies",
+    "label": "Thai Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "vietnamese-language-studies",
+    "label": "Vietnamese Language Studies",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://fass.nus.edu.sg/discover/second-majors-minors/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "audio-arts-and-sciences",
+    "label": "Audio Arts and Sciences",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "composition",
+    "label": "Composition",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "voice",
+    "label": "Voice",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "music-and-society",
+    "label": "Music and Society",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "music-collaboration-and-production",
+    "label": "Music, Collaboration and Production",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "bassoon",
+    "label": "Bassoon",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "cello",
+    "label": "Cello",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "double-bass",
+    "label": "Double Bass",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "flute",
+    "label": "Flute",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "harp",
+    "label": "Harp",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "horn",
+    "label": "Horn",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "oboe",
+    "label": "Oboe",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "percussion",
+    "label": "Percussion",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "piano",
+    "label": "Piano",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "trumpet",
+    "label": "Trumpet",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "trombone",
+    "label": "Trombone",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "tuba",
+    "label": "Tuba",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "violin",
+    "label": "Violin",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "viola",
+    "label": "Viola",
+    "kind": "second-major",
+    "school": "Yong Siew Toh Conservatory of Music",
+    "admission": "restricted",
+    "notes": "Audition/application and programme-specific approval required.",
+    "sourceUrl": "https://www.ystmusic.nus.edu.sg/",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "chinese-translation",
+    "label": "Chinese Translation",
+    "kind": "minor",
+    "school": "Faculty of Arts & Social Sciences",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "cities",
+    "label": "Cities",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "management-of-technology",
+    "label": "Management of Technology",
+    "kind": "minor",
+    "school": "College of Design and Engineering",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "computing-sciences",
+    "label": "Computing (Sciences)",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": " Offered through the home faculty; Computing (Sciences) is for FoS students and Computing (Design and Engineering) is for CDE students.",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05",
+    "excludedPrimaryIds": [
+      "computer-science-nusc",
+      "information-security-nusc",
+      "business-analytics-nusc",
+      "business-ai-systems-nusc",
+      "artificial-intelligence-nusc"
+    ]
+  },
+  {
+    "id": "data-analytics",
+    "label": "Data Analytics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "nanoscience",
+    "label": "Nanoscience",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "nutrition",
+    "label": "Nutrition",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "pharmaceutical-science",
+    "label": "Pharmaceutical Science",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "physics",
+    "label": "Physics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "physics-in-technology",
+    "label": "Physics in Technology",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "statistics",
+    "label": "Statistics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "quantitative-finance",
+    "label": "Quantitative Finance",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "medical-physics",
+    "label": "Medical Physics",
+    "kind": "minor",
+    "school": "Faculty of Science",
+    "admission": "restricted",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  },
+  {
+    "id": "community-development-and-leadership",
+    "label": "Community Development and Leadership",
+    "kind": "minor",
+    "school": "Chua Thian Poh Community Leadership Centre",
+    "admission": "open",
+    "notes": "",
+    "sourceUrl": "https://nus.edu.sg/registrar/academic-information-policies/undergraduate-students/special-programmes/minor-programmes",
+    "reviewedOn": "2026-11-05"
+  }
+]

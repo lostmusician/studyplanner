@@ -12,22 +12,30 @@
       "count": 1
     },
     {
-      "name": "Linear Algebra (MA1508E, MA1522, or MA2001)",
+      "name": "Linear algebra (MA1508E / MA1513 / MA1522 / MA2001)",
       "fulfilledBy": [
         "MA1508E",
         "MA1522",
-        "MA2001"
+        "MA2001",
+        "MA1513"
       ],
       "count": 1
     },
     {
-      "name": "Calculus (MA1312, MA1521, or MA2002)",
+      "name": "Calculus (MA1312 / MA1505 / MA1521 / MA2002, or MA1511 + MA1512)",
       "fulfilledBy": [
         "MA1312",
         "MA1521",
-        "MA2002"
+        "MA2002",
+        "MA1505"
       ],
-      "count": 1
+      "count": 1,
+      "altGroups": [
+        [
+          "MA1511",
+          "MA1512"
+        ]
+      ]
     },
     {
       "name": "Multivariable Calculus (MA2104 or MA2311)",
@@ -61,16 +69,70 @@
         "ST32*",
         "ST42*"
       ],
-      "count": 1
+      "count": 1,
+      "excludedCodes": [
+        "ST328*",
+        "ST4288"
+      ],
+      "allocationGroup": "statistics-electives"
     },
     {
-      "name": "Statistics electives (ST3131, ST32xx, or ST42xx)",
+      "name": "At least 12 units of distinct Statistics electives",
       "fulfilledBy": [
         "ST3131",
         "ST32*",
         "ST42*"
       ],
-      "count": 3
+      "count": 3,
+      "excludedCodes": [
+        "ST328*",
+        "ST4288"
+      ],
+      "allocationGroup": "statistics-electives",
+      "minUnits": 12
+    },
+    {
+      "name": "Additional advanced elective when using 2-unit MA1513",
+      "fulfilledBy": [
+        "ST32*",
+        "ST42*"
+      ],
+      "excludedCodes": [
+        "ST328*",
+        "ST4288"
+      ],
+      "allocationGroup": "statistics-electives",
+      "whenCourse": "MA1513"
+    },
+    {
+      "name": "At least 40 units of programme courses",
+      "fulfilledBy": [
+        "MA1312",
+        "MA1505",
+        "MA1508E",
+        "MA1513",
+        "MA1521",
+        "MA1522",
+        "MA2001",
+        "MA2002",
+        "MA2104",
+        "MA2116",
+        "MA2116T",
+        "MA2311",
+        "ST1131",
+        "ST2131",
+        "ST2132",
+        "ST2137",
+        "ST2334",
+        "ST3131",
+        "ST32*",
+        "ST42*"
+      ],
+      "excludedCodes": [
+        "ST328*",
+        "ST4288"
+      ],
+      "minUnits": 40
     }
   ],
   "moduleCatalog": {
@@ -153,6 +215,30 @@
       "code": "ST3131",
       "name": "Regression Analysis",
       "mcs": 4
+    },
+    "MA1513": {
+      "code": "MA1513",
+      "name": "Linear Algebra with Differential Equations",
+      "mcs": 2
+    },
+    "MA1511": {
+      "code": "MA1511",
+      "name": "Engineering Calculus",
+      "mcs": 2
+    },
+    "MA1512": {
+      "code": "MA1512",
+      "name": "Differential Equations for Engineering",
+      "mcs": 2
+    },
+    "MA1505": {
+      "code": "MA1505",
+      "name": "Mathematics I",
+      "mcs": 4
     }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "AY2021/22 onwards. Engineering-only alternatives and course preclusions still require department review. At least 60% must be read at NUS; overlap is limited to 16 units.",
+  "sourceUrl": "https://www.stat.nus.edu.sg/wp-content/uploads/sites/8/2026/07/ST2MJ-AY21-22-after_updated-July-2026.pdf",
+  "reviewedOn": "2026-11-05"
 }

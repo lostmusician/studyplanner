@@ -91,5 +91,7 @@
     "FST3202": { "code": "FST3202", "name": "Nutrition and Disease Prevention", "mcs": 4 },
     "LSM3225": { "code": "LSM3225", "name": "Molecular Microbiology in Human Diseases", "mcs": 4 },
     "LSM4217": { "code": "LSM4217", "name": "Functional Ageing", "mcs": 4 }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "Course checks are a planning aid. Check cohort-specific substitutions, residency, eligibility and overlap with the host department."
 }
