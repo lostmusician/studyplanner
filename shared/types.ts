@@ -184,7 +184,14 @@ export type NocDuration = '3-month' | '6-month' | '1-year';
 /** NUSC Global Pathways / special-programme choices carried in the plan.
  * Only NOC currently changes the planner's Making Connections MC targets; the
  * other options are tracked so the plan can represent the official pathways. */
-export type SpecialProgramme = 'noc-3-month' | 'noc-6-month' | 'noc-1-year' | 'gex';
+export type SpecialProgramme =
+  | 'noc-3-month'
+  | 'noc-6-month'
+  | 'noc-1-year'
+  | 'sep'
+  | 'gex'
+  | 'regional-iex'
+  | 'siip';
 
 export interface StudentPlan {
   majorId: string;
@@ -196,6 +203,8 @@ export interface StudentPlan {
   nocDuration?: NocDuration | null;
   /** Declared NUSC special programme / Global Pathways choice, if any. */
   specialProgramme?: SpecialProgramme | null;
+  /** Advanced Placement Credits (APCs) granted (e.g. 20 MC for Polytechnic diploma). */
+  polytechnicApcUnits?: number;
   /** Manual links from a requirement (by its `RequirementRule.name`) to planner
    * module codes that should count toward it even though they don't match its
    * `fulfilledBy` list. A mapped code only counts while that module is actually

@@ -24,6 +24,7 @@ import {
   applyNocAdjustment,
   recategorizeModule,
   recategorizeWaivedModule,
+  type PlanTemplate,
 } from '../lib/studyPlan';
 
 const majorModules = import.meta.glob('../../shared/data/majors/*.json', { eager: true });
@@ -58,13 +59,22 @@ interface SavedPlanState {
   requirementMappings: Record<string, string[]>;
   nocDuration: NocDuration | null;
   specialProgramme: SpecialProgramme | null;
+  polytechnicApcUnits?: number;
 }
 
 const normalizeNocDuration = (value: unknown): NocDuration | null =>
   value === '3-month' || value === '6-month' || value === '1-year' ? value as NocDuration : null;
 
 const normalizeSpecialProgramme = (value: unknown): SpecialProgramme | null =>
-  value === 'noc-3-month' || value === 'noc-6-month' || value === 'noc-1-year' || value === 'gex' ? value as SpecialProgramme : null;
+  value === 'noc-3-month' ||
+  value === 'noc-6-month' ||
+  value === 'noc-1-year' ||
+  value === 'sep' ||
+  value === 'gex' ||
+  value === 'regional-iex' ||
+  value === 'siip'
+    ? (value as SpecialProgramme)
+    : null;
 
 const specialProgrammeToNocDuration = (value: SpecialProgramme | null): NocDuration | null => {
   if (value === 'noc-3-month') return '3-month';
@@ -145,6 +155,7 @@ const loadSavedPlan = (major: Major): SavedPlanState | null => {
       requirementMappings: normalizeRequirementMappings(plan.requirementMappings),
       specialProgramme: normalizeSpecialProgramme(plan.specialProgramme) ?? (normalizeNocDuration(plan.nocDuration) ? `noc-${normalizeNocDuration(plan.nocDuration)}` as SpecialProgramme : null),
       nocDuration: normalizeNocDuration(plan.nocDuration),
+      polytechnicApcUnits: typeof plan.polytechnicApcUnits === 'number' && plan.polytechnicApcUnits > 0 ? plan.polytechnicApcUnits : 0,
     };
   } catch {
     return null;
@@ -159,6 +170,7 @@ const jsonDefaultPlan = (major: Major): SavedPlanState => ({
   requirementMappings: {},
   nocDuration: null,
   specialProgramme: null,
+  polytechnicApcUnits: 0,
 });
 
 const loadPlanForMajor = (major: Major): SavedPlanState => {
@@ -172,6 +184,7 @@ const loadPlanForMajor = (major: Major): SavedPlanState => {
     requirementMappings: savedPlan?.requirementMappings ?? defaultPlan.requirementMappings,
     nocDuration: savedPlan?.nocDuration ?? defaultPlan.nocDuration,
     specialProgramme: savedPlan?.specialProgramme ?? defaultPlan.specialProgramme,
+    polytechnicApcUnits: savedPlan?.polytechnicApcUnits ?? defaultPlan.polytechnicApcUnits,
   };
 };
 
@@ -185,6 +198,7 @@ const writeSavedPlan = (majorId: string, state: SavedPlanState) => {
     requirementMappings: state.requirementMappings,
     nocDuration: state.nocDuration ?? undefined,
     specialProgramme: state.specialProgramme ?? undefined,
+    polytechnicApcUnits: state.polytechnicApcUnits && state.polytechnicApcUnits > 0 ? state.polytechnicApcUnits : undefined,
     lastUpdated: new Date().toISOString(),
   };
   localStorage.setItem(planKey(majorId), JSON.stringify(plan));
@@ -225,6 +239,9 @@ export const useStudyPlan = () => {
   );
   const [specialProgramme, setSpecialProgrammeState] = useState<SpecialProgramme | null>(
     () => initialPlan?.specialProgramme ?? (initialPlan?.nocDuration ? `noc-${initialPlan.nocDuration}` as SpecialProgramme : null),
+  );
+  const [polytechnicApcUnits, setPolytechnicApcUnitsState] = useState<number>(
+    () => initialPlan?.polytechnicApcUnits ?? 0,
   );
 
   const nocDuration = useMemo(() => specialProgrammeToNocDuration(specialProgramme), [specialProgramme]);
@@ -275,8 +292,21 @@ export const useStudyPlan = () => {
 
   useEffect(() => {
     if (!major || mode !== 'personal') return;
-    writeSavedPlan(major.id, { semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme });
-  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme, major, mode]);
+    writeSavedPlan(major.id, {
+      semesters,
+      waivedModules,
+      secondMajorId,
+      minorIds,
+      requirementMappings,
+      nocDuration,
+      specialProgramme,
+      polytechnicApcUnits,
+    });
+  }, [semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme, polytechnicApcUnits, major, mode]);
+
+  const setPolytechnicApcUnits = useCallback((units: number) => {
+    setPolytechnicApcUnitsState(units);
+  }, []);
 
   const setSecondMajorId = useCallback((id: string | null) => {
     setSecondMajorIdState(id);
@@ -401,9 +431,12 @@ export const useStudyPlan = () => {
     insertBeforeCode?: string;
   } | null>(null);
   const undoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [previousPlanSnapshot, setPreviousPlanSnapshot] = useState<SavedPlanState | null>(null);
+  const undoAiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    if (undoAiTimeoutRef.current) clearTimeout(undoAiTimeoutRef.current);
   }, []);
 
   const deleteModule = useCallback((moduleCode: string, year?: number, sem?: number) => {
@@ -474,16 +507,35 @@ export const useStudyPlan = () => {
     setWaivedModules((prev) => prev.filter((m) => m.code !== moduleCode));
   }, []);
 
-  const resetPlan = useCallback(() => {
-    if (!major) return;
-    const defaultPlan = jsonDefaultPlan(major);
-    setSemesters(defaultPlan.semesters);
-    setWaivedModules(defaultPlan.waivedModules);
-    setSecondMajorIdState(defaultPlan.secondMajorId);
-    setMinorIds(defaultPlan.minorIds);
-    setRequirementMappings(defaultPlan.requirementMappings);
-    setSpecialProgrammeState(defaultPlan.specialProgramme ?? (defaultPlan.nocDuration ? `noc-${defaultPlan.nocDuration}` as SpecialProgramme : null));
-  }, [major]);
+  const resetPlan = useCallback(
+    (template: PlanTemplate | 'scratch' = 'standard') => {
+      if (!major) return;
+      if (template === 'scratch') {
+        setSemesters(defaultPlanToSemesters(major, { lockedOnly: true }));
+        setWaivedModules([]);
+        setSecondMajorIdState(null);
+        setMinorIds([]);
+        setRequirementMappings({});
+        setSpecialProgrammeState(null);
+        return;
+      }
+
+      const nextSemesters = defaultPlanToSemesters(major, { template });
+      setSemesters(nextSemesters);
+      setWaivedModules(normalizeWaivedModules(major, major.defaultWaivedModules));
+      setSecondMajorIdState(null);
+      setMinorIds([]);
+      setRequirementMappings({});
+      setSpecialProgrammeState(null);
+
+      if (template === 'poly-accelerated' || template === 'poly-balanced') {
+        setPolytechnicApcUnitsState(20);
+      } else if (template === 'standard') {
+        setPolytechnicApcUnitsState(0);
+      }
+    },
+    [major],
+  );
 
   const importSharedPlan = useCallback(
     (
@@ -495,6 +547,7 @@ export const useStudyPlan = () => {
       importedRequirementMappings: Record<string, string[]> = {},
       importedNocDuration: NocDuration | null = null,
       importedSpecialProgramme: SpecialProgramme | null = null,
+      importedPolytechnicApcUnits: number = 0,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
@@ -512,6 +565,7 @@ export const useStudyPlan = () => {
         normalizeSpecialProgramme(importedSpecialProgramme) ??
           (normalizeNocDuration(importedNocDuration) ? `noc-${normalizeNocDuration(importedNocDuration)}` as SpecialProgramme : null),
       );
+      setPolytechnicApcUnitsState(importedPolytechnicApcUnits);
       setMajorId(newMajorId);
       rememberMajorId(newMajorId);
       return true;
@@ -529,6 +583,7 @@ export const useStudyPlan = () => {
       importedRequirementMappings: Record<string, string[]> = {},
       importedNocDuration: NocDuration | null = null,
       importedSpecialProgramme: SpecialProgramme | null = null,
+      importedPolytechnicApcUnits: number = 0,
     ) => {
       const newMajor = majors.find((m) => m.id === newMajorId);
       if (!newMajor) return false;
@@ -546,6 +601,7 @@ export const useStudyPlan = () => {
         normalizeSpecialProgramme(importedSpecialProgramme) ??
           (normalizeNocDuration(importedNocDuration) ? `noc-${normalizeNocDuration(importedNocDuration)}` as SpecialProgramme : null),
       );
+      setPolytechnicApcUnitsState(importedPolytechnicApcUnits);
       setMajorId(newMajorId);
       return true;
     },
@@ -565,13 +621,63 @@ export const useStudyPlan = () => {
     setSpecialProgrammeState(
       personalPlan.specialProgramme ?? (personalPlan.nocDuration ? `noc-${personalPlan.nocDuration}` as SpecialProgramme : null),
     );
+    setPolytechnicApcUnitsState(personalPlan.polytechnicApcUnits ?? 0);
     setMajorId(personalMajor.id);
   }, [majors, personalMajorId, defaultMajor]);
+
+  const applyAiPlan = useCallback(
+    (
+      newSemesters: StudentSemester[],
+      recommendedMinorId?: string | null,
+      recommendedSpecialProgramme?: SpecialProgramme | null,
+    ) => {
+      if (!major) return;
+      if (undoAiTimeoutRef.current) clearTimeout(undoAiTimeoutRef.current);
+      setPreviousPlanSnapshot({
+        semesters,
+        waivedModules,
+        secondMajorId,
+        minorIds,
+        requirementMappings,
+        nocDuration,
+        specialProgramme,
+        polytechnicApcUnits,
+      });
+      undoAiTimeoutRef.current = setTimeout(() => setPreviousPlanSnapshot(null), 15000);
+
+      setSemesters(newSemesters);
+      if (recommendedMinorId && !minorIds.includes(recommendedMinorId)) {
+        setMinorIds((prev) => [...prev, recommendedMinorId].slice(0, MAX_MINORS));
+      }
+      if (recommendedSpecialProgramme) {
+        setSpecialProgrammeState(recommendedSpecialProgramme);
+      }
+    },
+    [major, semesters, waivedModules, secondMajorId, minorIds, requirementMappings, nocDuration, specialProgramme, polytechnicApcUnits],
+  );
+
+  const undoAiPlan = useCallback(() => {
+    if (!previousPlanSnapshot) return;
+    if (undoAiTimeoutRef.current) clearTimeout(undoAiTimeoutRef.current);
+    setSemesters(previousPlanSnapshot.semesters);
+    setWaivedModules(previousPlanSnapshot.waivedModules);
+    setSecondMajorIdState(previousPlanSnapshot.secondMajorId);
+    setMinorIds(previousPlanSnapshot.minorIds);
+    setRequirementMappings(previousPlanSnapshot.requirementMappings);
+    setSpecialProgrammeState(previousPlanSnapshot.specialProgramme);
+    setPolytechnicApcUnitsState(previousPlanSnapshot.polytechnicApcUnits ?? 0);
+    setPreviousPlanSnapshot(null);
+  }, [previousPlanSnapshot]);
+
+  const dismissAiUndo = useCallback(() => {
+    if (undoAiTimeoutRef.current) clearTimeout(undoAiTimeoutRef.current);
+    setPreviousPlanSnapshot(null);
+  }, []);
 
   const requirements = major
     ? computeRequirements(major, semesters, waivedModules, requirementMappings, specialProgramme)
     : [];
-  const stats = major ? computeStats(major, semesters) : { totalMc: 0, byCategory: {} };
+  const stats = major ? computeStats(major, semesters, waivedModules) : { totalMc: 0, byCategory: {} };
 
   return {
     majors,
@@ -586,6 +692,8 @@ export const useStudyPlan = () => {
     nocDuration,
     specialProgramme,
     setSpecialProgramme,
+    polytechnicApcUnits,
+    setPolytechnicApcUnits,
     requirementMappings,
     addRequirementMapping,
     removeRequirementMapping,
@@ -606,6 +714,10 @@ export const useStudyPlan = () => {
     deleteSpecialTerm,
     resetPlan,
     importSharedPlan,
+    applyAiPlan,
+    undoAiPlan,
+    dismissAiUndo,
+    hasAiUndo: previousPlanSnapshot !== null,
     openReviewPlan,
     exitReviewMode,
     isReviewMode: mode === 'review',

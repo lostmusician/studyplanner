@@ -24,6 +24,7 @@ interface Props {
   minorIds: string[];
   nocDuration: NocDuration | null;
   specialProgramme: SpecialProgramme | null;
+  polytechnicApcUnits?: number;
 }
 
 export const PrintView = ({
@@ -41,6 +42,7 @@ export const PrintView = ({
   minorIds,
   nocDuration,
   specialProgramme,
+  polytechnicApcUnits,
 }: Props) => {
   const declaredSecondMajor = secondMajorId
     ? secondMajors.find((m) => m.id === secondMajorId) ?? null
@@ -84,8 +86,13 @@ export const PrintView = ({
               · {major.school} · {major.batches.join(', ')}
             </span>
           </div>
-          {(declaredSecondMajor || declaredMinors.length > 0 || nocDuration || specialProgramme) && (
+          {(declaredSecondMajor || declaredMinors.length > 0 || nocDuration || specialProgramme || (polytechnicApcUnits ?? 0) > 0) && (
             <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
+              {(polytechnicApcUnits ?? 0) > 0 && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">
+                  Polytechnic Track ({polytechnicApcUnits} MC APC)
+                </span>
+              )}
               {declaredSecondMajor && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">
                   2nd Major: {declaredSecondMajor.label}
@@ -99,8 +106,17 @@ export const PrintView = ({
               {nocDuration && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">NOC: {nocDuration}</span>
               )}
+              {specialProgramme === 'sep' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">SEP (Exchange)</span>
+              )}
               {specialProgramme === 'gex' && (
                 <span className="rounded-full border border-ink/20 px-2 py-0.5">GEx</span>
+              )}
+              {specialProgramme === 'regional-iex' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">Regional IEx</span>
+              )}
+              {specialProgramme === 'siip' && (
+                <span className="rounded-full border border-ink/20 px-2 py-0.5">SIIP</span>
               )}
             </div>
           )}
@@ -111,24 +127,32 @@ export const PrintView = ({
       <section className="mb-5">
         <h2 className="mb-2 text-sm font-semibold">Progress</h2>
         <div className="mb-2 text-xs font-medium">
-          Total: {stats.totalMc}/{major.totalMcTarget} MC
+          Total: {stats.totalMc + (polytechnicApcUnits ?? 0)}/{major.totalMcTarget} MC
+          {(polytechnicApcUnits ?? 0) > 0 && ` (incl. ${polytechnicApcUnits} MC Poly APC)`}
         </div>
         <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-          {major.categories.map((cat) => (
-            <li key={cat.id} className="flex items-center gap-1.5">
-              <span
-                className="h-2 w-2 flex-shrink-0 rounded-full"
-                style={{
-                  backgroundColor: cat.color,
-                  WebkitPrintColorAdjust: 'exact',
-                  printColorAdjust: 'exact',
-                }}
-                aria-hidden="true"
-              />
-              {cat.label}: {stats.byCategory[cat.id] ?? 0}
-              /{cat.id === 'unrestricted-electives' ? dynamicUeTarget : (cat.mcTarget ?? 0)} MC
-            </li>
-          ))}
+          {major.categories.map((cat) => {
+            const isUe = cat.id === 'unrestricted-electives';
+            const catMc = (stats.byCategory[cat.id] ?? 0) + (isUe ? (polytechnicApcUnits ?? 0) : 0);
+            const catTarget = isUe ? dynamicUeTarget : (cat.mcTarget ?? 0);
+            return (
+              <li key={cat.id} className="flex items-center gap-1.5">
+                <span
+                  className="h-2 w-2 flex-shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: cat.color,
+                    WebkitPrintColorAdjust: 'exact',
+                    printColorAdjust: 'exact',
+                  }}
+                  aria-hidden="true"
+                />
+                {cat.label}: {catMc}/{catTarget} MC
+                {isUe && (polytechnicApcUnits ?? 0) > 0 && (
+                  <span className="text-muted text-[10px]">({polytechnicApcUnits} MC APC)</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
 

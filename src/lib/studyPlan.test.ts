@@ -14,6 +14,7 @@ import {
   autoCategoryId,
   createEmptySemesters,
   defaultPlanToSemesters,
+  getPlanTemplateEntries,
   upsertModule,
   removeModule,
   isModuleLocked,
@@ -86,6 +87,17 @@ describe('computeStats', () => {
     expect(stats.byCategory['cs-foundation']).toBe(8);
     expect(stats.byCategory['math-sciences']).toBe(4);
   });
+
+  it('does not include waived modules in total MCs or category totals', () => {
+    const major = { totalMcTarget: 160 } as Major;
+    const sems = semesters([
+      { code: 'CS1101S', name: 'Programming Methodology', mcs: 4, categoryId: 'cs-foundation', year: 1, sem: 1 },
+    ]);
+    const waived = [{ code: 'CS1010X', name: 'Programming Methodology', mcs: 4, categoryId: 'cs-foundation' }];
+    const stats = computeStats(major, sems, waived);
+    expect(stats.totalMc).toBe(4);
+    expect(stats.byCategory['cs-foundation']).toBe(4);
+  });
 });
 
 describe('computeRequirements', () => {
@@ -116,6 +128,76 @@ describe('computeRequirements', () => {
     const [, mce] = computeRequirements(source, sems, [], {}, 'gex');
     expect(mce.have).toBe(1);
     expect(mce.fulfilled).toBe(false);
+  });
+
+  it('counts SEP as two Making Connections slots and reduces HSS/ST minimums to 1', () => {
+    const mceSource = {
+      requirements: [
+        {
+          name: 'Making Connections',
+          fulfilledBy: ['NHS*', 'NFB*', 'NST*', 'NFC*', 'NHT*'],
+          count: 6,
+          categoryId: 'nus-college',
+        },
+      ],
+    };
+    // 4 courses on plan (2 HSS, 2 ST) + 2 credited by SEP = 6 total
+    const sems = semesters([
+      { code: 'NHS2001', name: 'HSS 1', mcs: 4, categoryId: 'nus-college', year: 2, sem: 1 },
+      { code: 'NFC2001', name: 'HSS 2', mcs: 4, categoryId: 'nus-college', year: 2, sem: 2 },
+      { code: 'NST2001', name: 'ST 1', mcs: 4, categoryId: 'nus-college', year: 3, sem: 1 },
+      { code: 'NFB2001', name: 'ST 2', mcs: 4, categoryId: 'nus-college', year: 3, sem: 2 },
+    ]);
+    const [mce] = computeRequirements(mceSource, sems, [], {}, 'sep');
+    expect(mce.have).toBe(6);
+    expect(mce.fulfilled).toBe(true);
+    expect(mce.info).toBeUndefined();
+  });
+
+  it('fulfills the Global Pathways requirement when any special programme is declared', () => {
+    const gpSource = {
+      requirements: [
+        {
+          name: 'Global Pathways (NOC / SEP / GEx / Regional IEx / SIIP)',
+          fulfilledBy: [],
+          count: 1,
+          categoryId: 'nus-college',
+        },
+      ],
+    };
+    const empty = semesters([]);
+    const [unfulfilled] = computeRequirements(gpSource, empty, [], {}, null);
+    expect(unfulfilled.fulfilled).toBe(false);
+    expect(unfulfilled.info).toContain('Select a Global Pathway');
+
+    const [sepFulfilled] = computeRequirements(gpSource, empty, [], {}, 'sep');
+    expect(sepFulfilled.fulfilled).toBe(true);
+    expect(sepFulfilled.have).toBe(1);
+
+    const [nocFulfilled] = computeRequirements(gpSource, empty, [], {}, 'noc-6-month');
+    expect(nocFulfilled.fulfilled).toBe(true);
+  });
+
+  it('recognizes NFC/NHT as HSS and NFB as ST for Making Connections domain balance', () => {
+    const mceSource = {
+      requirements: [
+        {
+          name: 'Making Connections',
+          fulfilledBy: ['NHS*', 'NFB*', 'NST*', 'NFC*', 'NHT*'],
+          count: 4,
+          categoryId: 'nus-college',
+        },
+      ],
+    };
+    const sems = semesters([
+      { code: 'NFC2001', name: 'HSS 1', mcs: 4, categoryId: 'nus-college', year: 2, sem: 1 },
+      { code: 'NHT2001', name: 'HSS 2', mcs: 4, categoryId: 'nus-college', year: 2, sem: 2 },
+      { code: 'NFB2001', name: 'ST 1', mcs: 4, categoryId: 'nus-college', year: 3, sem: 1 },
+      { code: 'NST2001', name: 'ST 2', mcs: 4, categoryId: 'nus-college', year: 3, sem: 2 },
+    ]);
+    const [mce] = computeRequirements(mceSource, sems);
+    expect(mce.fulfilled).toBe(true);
+    expect(mce.info).toBeUndefined();
   });
 
   it('counts a manually mapped code only while it is actually placed', () => {
@@ -180,6 +262,16 @@ describe('computeDoubleCount', () => {
     const result = computeDoubleCount(wideSecondary, sems);
     expect(result.doubleCountMc).toBe(12);
     expect(result.warn).toBe(true);
+  });
+
+  it('does not treat modules under unrestricted-electives as double-counted against the primary major', () => {
+    const sems = semesters([
+      { code: 'ST2334', name: 'x', mcs: 4, categoryId: 'unrestricted-electives', year: 2, sem: 1 },
+    ]);
+    const result = computeDoubleCount(secondary, sems);
+    expect(result.doubleCountMc).toBe(0);
+    expect(result.doubleCountedCodes).toEqual([]);
+    expect(result.warn).toBe(false);
   });
 
   it('returns the zero baseline for an empty plan (nothing placed, nothing waived)', () => {
@@ -561,6 +653,47 @@ describe('defaultPlanToSemesters', () => {
     const result = defaultPlanToSemesters(major, { lockedOnly: true });
     const allCodes = result.flatMap((s) => s.modules.map((m) => m.code));
     expect(allCodes).toEqual(['NEP2001A']);
+  });
+
+  it('generates poly-balanced plan omitting generic UE modules', () => {
+    const major: Major = {
+      id: 'computer-science-nusc', label: 'CS NUSC', school: 'SoC', batches: [], totalMcTarget: 160,
+      categories: [{ id: 'cs-foundation', label: 'CS Foundation', color: '#000' }, { id: 'unrestricted-electives', label: 'UE', color: '#fff' }],
+      requirements: [],
+      moduleCatalog: {
+        CS1101S: { code: 'CS1101S', name: 'Programming', mcs: 4 },
+        GEN2001: { code: 'GEN2001', name: 'UE I', mcs: 4 },
+      },
+      defaultPlan: [
+        { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'cs-foundation' },
+        { year: 3, sem: 2, moduleCode: 'GEN2001', categoryId: 'unrestricted-electives' },
+      ],
+    };
+    const entries = getPlanTemplateEntries(major, 'poly-balanced');
+    expect(entries.some((e) => e.moduleCode === 'GEN2001')).toBe(false);
+    expect(entries.some((e) => e.moduleCode === 'CS1101S')).toBe(true);
+  });
+
+  it('generates poly-accelerated plan leaving Year 4 Semester 2 free', () => {
+    const major: Major = {
+      id: 'computer-science-nusc', label: 'CS NUSC', school: 'SoC', batches: [], totalMcTarget: 160,
+      categories: [], requirements: [],
+      moduleCatalog: {
+        CS1101S: { code: 'CS1101S', name: 'Programming', mcs: 4 },
+        NHS2030: { code: 'NHS2030', name: 'NHS Course', mcs: 4 },
+        NST2015: { code: 'NST2015', name: 'NST Course', mcs: 4 },
+      },
+      defaultPlan: [
+        { year: 1, sem: 1, moduleCode: 'CS1101S', categoryId: 'cs-foundation' },
+        { year: 4, sem: 2, moduleCode: 'NHS2030', categoryId: 'nus-college' },
+        { year: 4, sem: 2, moduleCode: 'NST2015', categoryId: 'nus-college' },
+      ],
+    };
+    const sems = defaultPlanToSemesters(major, { template: 'poly-accelerated' });
+    const y4s2 = sems.find((s) => s.year === 4 && s.sem === 2)!;
+    const y4s1 = sems.find((s) => s.year === 4 && s.sem === 1)!;
+    expect(y4s2.modules).toHaveLength(0);
+    expect(y4s1.modules.map((m) => m.code)).toEqual(['NHS2030', 'NST2015']);
   });
 });
 

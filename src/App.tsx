@@ -50,6 +50,8 @@ const App = () => {
       pendingImport.plan.minorIds ?? [],
       pendingImport.plan.requirementMappings ?? {},
       pendingImport.plan.nocDuration ?? null,
+      pendingImport.plan.specialProgramme ?? null,
+      pendingImport.plan.polytechnicApcUnits ?? 0,
     );
     if (ok) {
       importProfile(pendingImport.profile);
@@ -69,6 +71,8 @@ const App = () => {
       pendingImport.plan.minorIds ?? [],
       pendingImport.plan.requirementMappings ?? {},
       pendingImport.plan.nocDuration ?? null,
+      pendingImport.plan.specialProgramme ?? null,
+      pendingImport.plan.polytechnicApcUnits ?? 0,
     );
     if (ok) {
       setReviewProfile(pendingImport.profile);
@@ -165,6 +169,26 @@ const App = () => {
             className="ml-3 font-medium underline underline-offset-2"
           >
             Undo
+          </button>
+        </div>
+      )}
+      {plan.hasAiUndo && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-2xl bg-ink px-4 py-3 text-sm text-canvas shadow-lg">
+          <span>Study plan updated from advisor</span>
+          <button
+            type="button"
+            onClick={plan.undoAiPlan}
+            className="ml-2 font-medium underline underline-offset-2 hover:opacity-80"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={plan.dismissAiUndo}
+            className="ml-2 text-xs opacity-60 hover:opacity-100"
+            aria-label="Dismiss"
+          >
+            ✕
           </button>
         </div>
       )}

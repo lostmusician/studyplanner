@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-31T15:57:00Z",
+  "title": "Design System: ModStack",
+  "extensions": {
+    "colorMeta": {
+      "canvas": { "role": "neutral", "displayName": "Warm Sand", "canonical": "#efeee7", "tonalRamp": ["#302f2d", "#5e5c58", "#8d8b85", "#bcaaa1", "#d4c9b8", "#efeee7", "#f5f4f0", "#faf9f6"] },
+      "paper": { "role": "neutral", "displayName": "Aged Parchment", "canonical": "#e1dacd", "tonalRamp": ["#2e2b26", "#5a544a", "#877d6f", "#b4a794", "#e1dacd", "#ebdcc3", "#f4ecd8", "#faf8f2"] },
+      "ink": { "role": "primary", "displayName": "Charcoal Ink", "canonical": "#141413", "tonalRamp": ["#000000", "#141413", "#2a2a29", "#41413f", "#6b6b69", "#969693", "#c2c2c0", "#eeeeee"] },
+      "muted": { "role": "neutral", "displayName": "Muted Clay", "canonical": "#5a5956", "tonalRamp": ["#161514", "#2c2a29", "#42413e", "#5a5956", "#7b7a76", "#9d9c98", "#bfbebb", "#e1e0de"] },
+      "line": { "role": "neutral", "displayName": "Sandstone Border", "canonical": "#c7bfb0", "tonalRamp": ["#2b2823", "#524d44", "#7b7366", "#a49a88", "#c7bfb0", "#dbd4c9", "#ebe6e0", "#faf9f8"] },
+      "accent": { "role": "accent", "displayName": "Deep Khaki", "canonical": "#605c4e", "tonalRamp": ["#161512", "#2e2b24", "#464237", "#605c4e", "#847f6f", "#a8a392", "#ccc8ba", "#f0eee9"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "App titles and high-level header typography." },
+      "headline": { "displayName": "Headline", "purpose": "Semester names and major checklist section groups." },
+      "title": { "displayName": "Title", "purpose": "Module card headings and check item text." },
+      "body": { "displayName": "Body", "purpose": "Standard module details, counts, and descriptions." },
+      "label": { "displayName": "Label", "purpose": "Interactive inputs, buttons, indicators, and caps." }
+    },
+    "shadows": [
+      { "name": "soft", "value": "0 18px 40px rgba(20, 20, 19, 0.08)", "purpose": "Soft background lift for dropdown menus, popovers, and modal containers." }
+    ],
+    "motion": [
+      { "name": "standard-ease", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Fluid animation curve for transitions and hover states." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Standard action button used for submitting forms, confirming modals, or adding modules.",
+      "html": "<button class=\"ds-btn-primary\">Confirm</button>",
+      "css": ".ds-btn-primary { background: #141413; color: #efeee7; padding: 6px 12px; font-size: 0.625rem; font-weight: 500; text-transform: uppercase; border: none; border-radius: 16px; cursor: pointer; transition: background 0.15s ease, transform 0.15s ease; } .ds-btn-primary:hover { background: #5a5956; transform: translateY(-0.5px); } .ds-btn-primary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary actions like printing, sharing, or opening settings.",
+      "html": "<button class=\"ds-btn-secondary\">Share</button>",
+      "css": ".ds-btn-secondary { background: rgba(20, 20, 19, 0.1); color: #141413; padding: 6px 12px; font-size: 0.625rem; font-weight: 500; border: none; border-radius: 16px; cursor: pointer; transition: background 0.15s ease, transform 0.15s ease; } .ds-btn-secondary:hover { background: rgba(20, 20, 19, 0.15); transform: translateY(-0.5px); } .ds-btn-secondary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Module Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Represents an individual module slot placed inside the semester grid.",
+      "html": "<div class=\"ds-module-card\"><div class=\"ds-module-header\"><span class=\"ds-module-code\">CS1101S</span><span class=\"ds-module-mcs\">4 MC</span></div><div class=\"ds-module-name\">Programming Methodology</div></div>",
+      "css": ".ds-module-card { background: #e1dacd; border: 1px solid #c7bfb0; border-radius: 16px; padding: 12px; max-width: 180px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box; cursor: grab; transition: transform 0.15s ease, box-shadow 0.15s ease; } .ds-module-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(20, 20, 19, 0.05); } .ds-module-header { display: flex; justify-content: space-between; align-items: baseline; } .ds-module-code { font-size: 0.875rem; font-weight: 600; color: #141413; } .ds-module-mcs { font-size: 0.625rem; font-weight: 500; color: #5a5956; text-transform: uppercase; } .ds-module-name { font-size: 0.75rem; color: #5a5956; line-height: 1.2; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Academic Parchment",
+    "overview": "ModStack is styled as an interactive, highly legible academic parchment. The aesthetic prioritizes density, structure, and readability over dramatic visual flare, creating an atmosphere that feels scholarly, precise, and premium. Layouts are flat and structured, using subtle borders and backgrounds to define boundaries rather than heavy shadows or floating layers.",
+    "keyCharacteristics": [
+      "Scholarly, low-contrast, and warm color scheme.",
+      "High layout density for complete information scanability.",
+      "Flat visual style with precise borders.",
+      "Tactile interactions with micro-translations and soft transitions."
+    ],
+    "rules": [
+      { "name": "The Flat Border Rule", "body": "Layout boundaries are defined using 1px borders colored in Sandstone Border (#c7bfb0) rather than drop shadows. Contrast is achieved via the difference between Warm Sand (#efeee7) and Aged Parchment (#e1dacd).", "section": "colors" },
+      { "name": "The Restrained Shadow Rule", "body": "Drop shadows are never applied to static cards or grids. They are strictly reserved for temporary floating overlays (dropdowns, modals) to manage temporary visual hierarchy.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do align all grid elements to the 4px horizontal and vertical rhythm.",
+      "Do use Aged Parchment (#e1dacd) to distinguish planner sections from the Warm Sand (#efeee7) body.",
+      "Do preserve high text contrast against component background fills."
+    ],
+    "donts": [
+      "Don't use standard Tailwind blue, red, or green for main interface states; use the custom palette's soft tones or desaturated fills.",
+      "Don't add drop shadows to module cards or semester containers.",
+      "Don't use text sizes larger than 1.5rem (24px) to preserve screen real estate."
+    ]
+  }
+}

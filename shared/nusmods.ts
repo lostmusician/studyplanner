@@ -31,6 +31,16 @@ export interface NusModsPrerequisiteAssessment {
 
 const API_BASE = 'https://api.nusmods.com/v2';
 const listCache = new Map<string, NusModsModuleSummary[]>();
+const detailCache = new Map<string, { acadYear: string; detail: NusModsModuleDetail }>();
+
+export const clearNusModsCachesForTesting = (): void => {
+  listCache.clear();
+  detailCache.clear();
+};
+
+export const getCachedModuleDetail = (moduleCode: string): NusModsModuleDetail | undefined => {
+  return detailCache.get(moduleCode.trim().toUpperCase())?.detail;
+};
 
 const toAcadYearSlug = (startYear: number): string => `${startYear}-${startYear + 1}`;
 
@@ -50,7 +60,7 @@ const extractModuleCode = (value: string): string | null => {
   return match ? match[0] : null;
 };
 
-const normalizePrereqCode = (value: string): string => {
+export const normalizePrereqCode = (value: string): string => {
   const normalized = value.trim().toUpperCase();
   const match = normalized.match(/^([A-Z]+\d{4})[A-Z]*$/);
   return match ? match[1] : normalized;
@@ -208,6 +218,11 @@ export const fetchNusModsModuleDetail = async (
   const normalizedCode = moduleCode.trim().toUpperCase();
   if (!normalizedCode) throw new Error('Module code is required');
 
+  const cached = detailCache.get(normalizedCode);
+  if (cached && (!preferredAcadYear || cached.acadYear === preferredAcadYear)) {
+    return cached;
+  }
+
   const candidates = preferredAcadYear
     ? [preferredAcadYear, ...getAcadYearCandidates().filter((item) => item !== preferredAcadYear)]
     : getAcadYearCandidates();
@@ -220,11 +235,99 @@ export const fetchNusModsModuleDetail = async (
       if (!response.ok) continue;
       const payload = (await response.json()) as NusModsModuleDetail;
       if (!payload || typeof payload !== 'object' || typeof payload.moduleCode !== 'string') continue;
-      return { acadYear, detail: payload };
+      const result = { acadYear, detail: payload };
+      detailCache.set(normalizedCode, result);
+      return result;
     } catch (error) {
       lastError = error;
     }
   }
 
   throw lastError instanceof Error ? lastError : new Error(`Module ${normalizedCode} not found in NUSMods`);
+};
+
+export interface NusModsSemesterAvailability {
+  hasSemesterData: boolean;
+  offeredSemesters: number[];
+  isAvailable: boolean;
+  warning: string | null;
+}
+
+export const checkSemesterAvailability = (
+  detail: NusModsModuleDetail,
+  currentSem: number,
+): NusModsSemesterAvailability => {
+  const offered = detail.semesterData?.map((s) => s.semester) ?? [];
+  if (offered.length === 0) {
+    return {
+      hasSemesterData: false,
+      offeredSemesters: [],
+      isAvailable: true,
+      warning: null,
+    };
+  }
+
+  const isAvailable = offered.includes(currentSem);
+  if (isAvailable) {
+    return {
+      hasSemesterData: true,
+      offeredSemesters: offered,
+      isAvailable: true,
+      warning: null,
+    };
+  }
+
+  const semNames: Record<number, string> = {
+    1: 'Sem 1',
+    2: 'Sem 2',
+    3: 'Special Term I',
+    4: 'Special Term II',
+  };
+  const offeredStr = offered.map((s) => semNames[s] ?? `Sem ${s}`).join(', ');
+  const currentStr = semNames[currentSem] ?? `Sem ${currentSem}`;
+
+  return {
+    hasSemesterData: true,
+    offeredSemesters: offered,
+    isAvailable: false,
+    warning: `Not usually offered in ${currentStr} (typically offered in ${offeredStr})`,
+  };
+};
+
+export const getNusModsTimetableUrl = (sem: number, moduleCodes: string[]): string | null => {
+  const cleanCodes = moduleCodes
+    .map((c) => c.trim().toUpperCase())
+    .filter((c) => /^[A-Z]{2,}[A-Z0-9]*\d[A-Z0-9]*$/.test(c) && !c.startsWith('GEN'));
+  if (cleanCodes.length === 0) return null;
+  const semSlug = sem === 1 ? 'sem-1' : sem === 2 ? 'sem-2' : sem === 3 ? 'st-i' : 'st-ii';
+  const query = cleanCodes.map((code) => `${encodeURIComponent(code)}=`).join('&');
+  return `https://nusmods.com/timetable/${semSlug}/share?${query}`;
+};
+
+export const extractPrerequisiteCodes = (tree: unknown): string[] => {
+  if (!tree) return [];
+  if (typeof tree === 'string') {
+    const code = extractModuleCode(tree);
+    return code ? [code] : [];
+  }
+  if (Array.isArray(tree)) {
+    return Array.from(new Set(tree.flatMap(extractPrerequisiteCodes)));
+  }
+  if (typeof tree === 'object') {
+    const record = tree as Record<string, unknown>;
+    const codes: string[] = [];
+    if (Array.isArray(record.and)) codes.push(...record.and.flatMap(extractPrerequisiteCodes));
+    if (Array.isArray(record.or)) codes.push(...record.or.flatMap(extractPrerequisiteCodes));
+    return Array.from(new Set(codes));
+  }
+  return [];
+};
+
+export const isPrerequisiteOf = (
+  parentDetail: NusModsModuleDetail,
+  candidateCode: string,
+): boolean => {
+  const codes = extractPrerequisiteCodes(parentDetail.prereqTree);
+  const targetNorm = normalizePrereqCode(candidateCode);
+  return codes.some((c) => normalizePrereqCode(c) === targetNorm);
 };

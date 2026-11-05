@@ -15,6 +15,7 @@ interface Props {
   requirementMappings: Record<string, string[]>;
   addRequirementMapping: (requirementName: string, moduleCode: string) => void;
   removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
+  polytechnicApcUnits?: number;
 }
 
 export const StatsSummary = ({
@@ -26,10 +27,13 @@ export const StatsSummary = ({
   requirementMappings,
   addRequirementMapping,
   removeRequirementMapping,
+  polytechnicApcUnits = 0,
 }: Props) => {
   const [openId, setOpenId] = useState<string | null>(null);
   const openCategory = major.categories.find((cat) => cat.id === openId) ?? null;
-  const remainingDegreeMc = Math.max(0, major.totalMcTarget - stats.totalMc);
+  const apcUnits = polytechnicApcUnits ?? 0;
+  const effectiveTotalMc = stats.totalMc + apcUnits;
+  const remainingDegreeMc = Math.max(0, major.totalMcTarget - effectiveTotalMc);
 
   const otherCategoriesTargetSum = major.categories
     .filter((cat) => cat.id !== 'unrestricted-electives')
@@ -37,25 +41,34 @@ export const StatsSummary = ({
   const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col gap-3 w-full">
+      <div className="flex flex-wrap gap-2.5 w-full items-stretch">
         <TotalStatCard
           value={stats.totalMc}
           target={major.totalMcTarget}
           remaining={remainingDegreeMc}
+          apcUnits={apcUnits}
         />
-        {major.categories.map((cat) => (
-          <StatCard
-            key={cat.id}
-            label={cat.label}
-            value={stats.byCategory[cat.id] ?? 0}
-            target={cat.id === 'unrestricted-electives' ? dynamicUeTarget : cat.mcTarget}
-            color={cat.color}
-            isOpen={openId === cat.id}
-            controlsId={`category-panel-${cat.id}`}
-            onClick={() => setOpenId((current) => (current === cat.id ? null : cat.id))}
-          />
-        ))}
+        {major.categories.map((cat) => {
+          const isUe = cat.id === 'unrestricted-electives';
+          const baseValue = stats.byCategory[cat.id] ?? 0;
+          const displayValue = isUe ? baseValue + apcUnits : baseValue;
+          const target = isUe ? dynamicUeTarget : cat.mcTarget;
+
+          return (
+            <StatCard
+              key={cat.id}
+              label={cat.label}
+              value={displayValue}
+              target={target}
+              color={cat.color}
+              isOpen={openId === cat.id}
+              controlsId={`category-panel-${cat.id}`}
+              badge={isUe && apcUnits > 0 ? `+${apcUnits} APC` : undefined}
+              onClick={() => setOpenId((current) => (current === cat.id ? null : cat.id))}
+            />
+          );
+        })}
       </div>
 
       {openCategory && (
@@ -71,6 +84,7 @@ export const StatsSummary = ({
           addRequirementMapping={addRequirementMapping}
           removeRequirementMapping={removeRequirementMapping}
           dynamicUeTarget={dynamicUeTarget}
+          polytechnicApcUnits={apcUnits}
         />
       )}
     </div>
@@ -81,27 +95,43 @@ const TotalStatCard = ({
   value,
   target,
   remaining,
+  apcUnits = 0,
 }: {
   value: number;
   target: number;
   remaining: number;
+  apcUnits?: number;
 }) => {
-  const pct = Math.min(100, (value / target) * 100);
+  const totalEffective = value + apcUnits;
+  const pct = Math.min(100, (totalEffective / target) * 100);
 
   return (
     <div
-      className="flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl bg-white px-4 py-3 text-left shadow-soft sm:grow-0 sm:basis-auto sm:min-w-[160px] sm:px-5 sm:py-4"
-      style={{ border: '1px solid rgba(20,20,19,0.08)' }}
+      className="flex flex-[1.5] min-w-[200px] flex-col justify-between rounded-2xl bg-white px-4 py-2.5 shadow-soft border border-ink/10 text-left"
     >
-      <span className="text-xs text-ink/80 font-medium tracking-wide uppercase">Total MCs</span>
-      <span className="text-2xl font-bold text-ink leading-none">
-        {value}
-        <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>
-      </span>
-      <span className="text-xs text-muted">Remaining degree MC: {remaining}</span>
-      <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-ink/60 font-bold tracking-wider uppercase">Total Degree MCs</span>
+        <span className="text-[10px] font-semibold text-muted">
+          {remaining} MC remaining{apcUnits > 0 ? ' at NUS' : ''}
+        </span>
+      </div>
+      <div className="flex items-baseline justify-between mt-1">
+        <div className="text-2xl font-bold text-ink leading-none">
+          {totalEffective}
+          <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-mono font-semibold text-ink/70">{Math.round(pct)}%</span>
+          {apcUnits > 0 && (
+            <span className="text-[9px] font-mono font-medium text-emerald-800 bg-emerald-100/80 px-1 py-0.2 rounded mt-0.5">
+              incl. {apcUnits} MC Poly APC
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="h-1.5 rounded-full bg-ink/10 overflow-hidden mt-1.5">
         <div
-          className="h-full rounded-full bg-ink/40 transition-all duration-300"
+          className="h-full rounded-full bg-ink transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -116,6 +146,7 @@ const StatCard = ({
   color,
   isOpen = false,
   controlsId,
+  badge,
   onClick,
 }: {
   label: string;
@@ -124,26 +155,34 @@ const StatCard = ({
   color: string;
   isOpen?: boolean;
   controlsId?: string;
+  badge?: string;
   onClick?: () => void;
 }) => {
   const pct = target ? Math.min(100, (value / target) * 100) : null;
   const className =
-    'flex min-w-0 grow basis-[calc(50%-0.375rem)] flex-col gap-1.5 rounded-3xl px-4 py-3 text-left transition sm:grow-0 sm:basis-auto sm:min-w-[140px] sm:px-5 sm:py-4';
+    'flex flex-1 min-w-[125px] flex-col justify-between rounded-2xl px-3.5 py-2.5 text-left transition hover:brightness-95 cursor-pointer select-none';
   const style = {
     backgroundColor: color,
-    boxShadow: isOpen ? `0 0 0 2px ${color}, 0 0 0 5px rgba(20,20,19,0.16)` : 'none',
+    boxShadow: isOpen ? `0 0 0 2px ${color}, 0 0 0 4px rgba(20,20,19,0.2)` : 'none',
   };
   const content = (
     <>
-      <span className="text-xs text-ink/80 font-medium tracking-wide uppercase">{label}</span>
-      <span className="text-2xl font-bold text-ink leading-none">
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-[10px] text-ink/75 font-bold tracking-wider uppercase truncate">{label}</span>
+        {badge && (
+          <span className="rounded bg-ink/15 text-[8px] font-mono font-bold px-1 py-0.2 text-ink flex-shrink-0">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div className="text-base font-bold text-ink leading-tight mt-0.5">
         {value}
-        {target && <span className="text-sm font-normal text-ink/80 ml-1">/ {target}</span>}
-      </span>
+        {target && <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>}
+      </div>
       {pct !== null && (
-        <div className="h-1 rounded-full bg-ink/10 overflow-hidden">
+        <div className="h-1 rounded-full bg-ink/10 overflow-hidden mt-1.5">
           <div
-            className="h-full rounded-full bg-ink/30 transition-all duration-300"
+            className="h-full rounded-full bg-ink/40 transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -162,11 +201,11 @@ const StatCard = ({
   return (
     <button
       type="button"
-      className={`${className} hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/30`}
+      className={className}
       style={style}
-      onClick={onClick}
       aria-expanded={isOpen}
       aria-controls={controlsId}
+      onClick={onClick}
     >
       {content}
     </button>
@@ -185,6 +224,7 @@ const CategoryPanel = ({
   addRequirementMapping,
   removeRequirementMapping,
   dynamicUeTarget,
+  polytechnicApcUnits,
 }: {
   id: string;
   category: MajorCategory;
@@ -197,7 +237,10 @@ const CategoryPanel = ({
   addRequirementMapping: (requirementName: string, moduleCode: string) => void;
   removeRequirementMapping: (requirementName: string, moduleCode: string) => void;
   dynamicUeTarget: number;
+  polytechnicApcUnits?: number;
 }) => {
+  const isUe = category.id === 'unrestricted-electives';
+  const apcUnits = isUe ? (polytechnicApcUnits ?? 0) : 0;
   const categoryRequirements = requirements.filter((req) => req.categoryId === category.id);
   const expectedModules = major.defaultPlan
     .filter((entry) => entry.categoryId === category.id)
@@ -209,10 +252,11 @@ const CategoryPanel = ({
   const waivedForCategory = waivedModules.filter((module) => module.categoryId === category.id);
   const placedCodes = new Set(placedModules.map((module) => module.code));
   const waivedCodes = new Set(waivedForCategory.map((module) => module.code));
-  const placedMc = stats.byCategory[category.id] ?? 0;
-  const hasTarget = category.id === 'unrestricted-electives' ? true : category.mcTarget !== undefined;
-  const targetMc = category.id === 'unrestricted-electives' ? dynamicUeTarget : (category.mcTarget ?? 0);
-  const remainingMc = Math.max(0, targetMc - placedMc);
+  const rawPlacedMc = stats.byCategory[category.id] ?? 0;
+  const effectivePlacedMc = rawPlacedMc + apcUnits;
+  const hasTarget = isUe ? true : category.mcTarget !== undefined;
+  const targetMc = isUe ? dynamicUeTarget : (category.mcTarget ?? 0);
+  const remainingMc = Math.max(0, targetMc - effectivePlacedMc);
   const showBreadthDepth = category.id === major.breadthDepth?.categoryId;
   const showProgrammeElectives = category.id === major.programmeElectives?.categoryId;
 
@@ -236,9 +280,24 @@ const CategoryPanel = ({
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
         <h2 className="text-sm font-semibold text-ink">{category.label}</h2>
         {hasTarget && (
-          <span className="text-xs text-muted">{placedMc}/{targetMc} MC</span>
+          <span className="text-xs text-muted">
+            {effectivePlacedMc}/{targetMc} MC
+            {apcUnits > 0 ? ` (incl. ${apcUnits} MC APC)` : ''}
+          </span>
         )}
       </div>
+
+      {isUe && apcUnits > 0 && (
+        <div className="mb-4 rounded-2xl bg-canvas/80 border border-ink/10 p-3 text-xs text-ink">
+          <div className="flex items-center gap-1.5 font-semibold text-ink">
+            <span>🎓 Polytechnic Advanced Placement Credits (APCs)</span>
+            <span className="rounded bg-ink px-1.5 py-0.2 text-[9px] font-mono text-canvas">+{apcUnits} MC</span>
+          </div>
+          <p className="mt-1 text-[11px] text-muted leading-relaxed">
+            You are granted {apcUnits} MCs of Advanced Standing as a polytechnic diploma holder. These credits count directly toward your Unrestricted Electives requirement (160 MC total degree requirement), reducing the number of elective courses you need to take at NUS.
+          </p>
+        </div>
+      )}
 
       {showBreadthDepth && (
         <BreadthDepthPanel major={major} semesters={semesters} waivedModules={waivedModules} />

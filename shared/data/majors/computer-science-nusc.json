@@ -112,6 +112,12 @@
         "NEP*"
       ],
       "categoryId": "nus-college"
+    },
+    {
+      "name": "Global Pathways (NOC / SEP / GEx / Regional IEx / SIIP)",
+      "fulfilledBy": [],
+      "count": 1,
+      "categoryId": "nus-college"
     }
   ],
   "breadthDepth": {
@@ -564,6 +570,106 @@
       "code": "CP4101",
       "name": "B.Comp. Dissertation",
       "mcs": 12
+    },
+    "NSW2001A": {
+      "code": "NSW2001A",
+      "name": "Understanding the Social World: Singapore & Beyond",
+      "mcs": 4
+    },
+    "NGN2001A": {
+      "code": "NGN2001A",
+      "name": "Global Narratives",
+      "mcs": 4
+    },
+    "NSS2001A": {
+      "code": "NSS2001A",
+      "name": "Science and Society",
+      "mcs": 4
+    },
+    "NHS2017": {
+      "code": "NHS2017",
+      "name": "Making Sense of Colonial Ideology and Its Legacies",
+      "mcs": 4
+    },
+    "NHS2026": {
+      "code": "NHS2026",
+      "name": "Singaporean Nostalgia",
+      "mcs": 4
+    },
+    "NHS2030": {
+      "code": "NHS2030",
+      "name": "Singapore: The Making Of A Nation",
+      "mcs": 4
+    },
+    "NST2001": {
+      "code": "NST2001",
+      "name": "The Biomolecular Revolution",
+      "mcs": 4
+    },
+    "NST2008": {
+      "code": "NST2008",
+      "name": "Invertebrate Innovations",
+      "mcs": 4
+    },
+    "NST2015": {
+      "code": "NST2015",
+      "name": "Mathematics and Reality",
+      "mcs": 4
+    },
+    "GEN2001": {
+      "code": "GEN2001",
+      "name": "Unrestricted Elective I",
+      "mcs": 4
+    },
+    "GEN2002": {
+      "code": "GEN2002",
+      "name": "Unrestricted Elective II",
+      "mcs": 4
+    },
+    "GEN2003": {
+      "code": "GEN2003",
+      "name": "Unrestricted Elective III",
+      "mcs": 4
+    },
+    "GEN2004": {
+      "code": "GEN2004",
+      "name": "Unrestricted Elective IV",
+      "mcs": 4
+    },
+    "GEN2005": {
+      "code": "GEN2005",
+      "name": "Unrestricted Elective V",
+      "mcs": 4
+    },
+    "CS1231S": {
+      "code": "CS1231S",
+      "name": "Discrete Structures",
+      "mcs": 4
+    },
+    "CS3243": {
+      "code": "CS3243",
+      "name": "Introduction to Artificial Intelligence",
+      "mcs": 4
+    },
+    "CS3244": {
+      "code": "CS3244",
+      "name": "Machine Learning",
+      "mcs": 4
+    },
+    "CS4246": {
+      "code": "CS4246",
+      "name": "AI Planning and Decision Making",
+      "mcs": 4
+    },
+    "CS4248": {
+      "code": "CS4248",
+      "name": "Natural Language Processing",
+      "mcs": 4
+    },
+    "CS4243": {
+      "code": "CS4243",
+      "name": "Computer Vision and Pattern Recognition",
+      "mcs": 4
     }
   },
   "defaultPlan": [
@@ -576,14 +682,14 @@
     {
       "year": 1,
       "sem": 1,
-      "moduleCode": "MA1521",
-      "categoryId": "math-sciences"
+      "moduleCode": "CS1231S",
+      "categoryId": "cs-foundation"
     },
     {
       "year": 1,
       "sem": 1,
-      "moduleCode": "CS1231",
-      "categoryId": "cs-foundation"
+      "moduleCode": "MA1521",
+      "categoryId": "math-sciences"
     },
     {
       "year": 1,
@@ -594,8 +700,14 @@
     {
       "year": 1,
       "sem": 1,
-      "moduleCode": "NGN2001A",
-      "categoryId": "nus-college"
+      "moduleCode": "IS1108",
+      "categoryId": "soc-common"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "CS2030S",
+      "categoryId": "cs-foundation"
     },
     {
       "year": 1,
@@ -618,8 +730,15 @@
     {
       "year": 1,
       "sem": 2,
-      "moduleCode": "CS2030S",
-      "categoryId": "cs-foundation"
+      "moduleCode": "GEA1000N",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 1,
+      "sem": 2,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
     },
     {
       "year": 2,
@@ -630,25 +749,44 @@
     {
       "year": 2,
       "sem": 1,
-      "moduleCode": "ST2334",
-      "categoryId": "math-sciences"
-    },
-    {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "GEA1000N",
-      "categoryId": "nus-college"
-    },
-    {
-      "year": 2,
-      "sem": 1,
-      "moduleCode": "CS2103T",
+      "moduleCode": "CS2109S",
       "categoryId": "cs-foundation"
     },
     {
       "year": 2,
       "sem": 1,
+      "moduleCode": "ST2334",
+      "categoryId": "math-sciences"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "NGN2001A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "NHS2017",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 1,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
+    },
+    {
+      "year": 2,
+      "sem": 2,
       "moduleCode": "CS2101",
+      "categoryId": "cs-foundation"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "CS2103T",
       "categoryId": "cs-foundation"
     },
     {
@@ -660,8 +798,21 @@
     {
       "year": 2,
       "sem": 2,
-      "moduleCode": "CS2109S",
-      "categoryId": "cs-foundation"
+      "moduleCode": "NST2001",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "NSS2001A",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 2,
+      "sem": 2,
+      "moduleCode": "NEP2001A",
+      "categoryId": "nus-college",
+      "locked": true
     },
     {
       "year": 3,
@@ -670,31 +821,28 @@
       "categoryId": "cs-foundation"
     },
     {
-      "year": 1,
+      "year": 3,
       "sem": 1,
-      "moduleCode": "IS1108",
-      "categoryId": "soc-common"
+      "moduleCode": "CS3243",
+      "categoryId": "breadth-depth"
     },
     {
-      "year": 1,
-      "sem": 2,
-      "moduleCode": "NEP2001A",
-      "categoryId": "nus-college",
-      "locked": true
-    },
-    {
-      "year": 2,
+      "year": 3,
       "sem": 1,
-      "moduleCode": "NEP2001A",
-      "categoryId": "nus-college",
-      "locked": true
+      "moduleCode": "CS3244",
+      "categoryId": "breadth-depth"
     },
     {
-      "year": 2,
-      "sem": 2,
-      "moduleCode": "NEP2001A",
-      "categoryId": "nus-college",
-      "locked": true
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "NHS2026",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 3,
+      "sem": 1,
+      "moduleCode": "NST2008",
+      "categoryId": "nus-college"
     },
     {
       "year": 3,
@@ -702,6 +850,72 @@
       "moduleCode": "NEP2001A",
       "categoryId": "nus-college",
       "locked": true
+    },
+    {
+      "year": 3,
+      "sem": 2,
+      "moduleCode": "CP3880",
+      "categoryId": "breadth-depth"
+    },
+    {
+      "year": 3,
+      "sem": 2,
+      "moduleCode": "GEN2001",
+      "categoryId": "unrestricted-electives"
+    },
+    {
+      "year": 4,
+      "sem": 1,
+      "moduleCode": "CS4246",
+      "categoryId": "breadth-depth"
+    },
+    {
+      "year": 4,
+      "sem": 1,
+      "moduleCode": "CS4248",
+      "categoryId": "breadth-depth"
+    },
+    {
+      "year": 4,
+      "sem": 1,
+      "moduleCode": "CS4243",
+      "categoryId": "breadth-depth"
+    },
+    {
+      "year": 4,
+      "sem": 1,
+      "moduleCode": "GEN2002",
+      "categoryId": "unrestricted-electives"
+    },
+    {
+      "year": 4,
+      "sem": 1,
+      "moduleCode": "GEN2003",
+      "categoryId": "unrestricted-electives"
+    },
+    {
+      "year": 4,
+      "sem": 2,
+      "moduleCode": "NHS2030",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 4,
+      "sem": 2,
+      "moduleCode": "NST2015",
+      "categoryId": "nus-college"
+    },
+    {
+      "year": 4,
+      "sem": 2,
+      "moduleCode": "GEN2004",
+      "categoryId": "unrestricted-electives"
+    },
+    {
+      "year": 4,
+      "sem": 2,
+      "moduleCode": "GEN2005",
+      "categoryId": "unrestricted-electives"
     }
   ],
   "defaultWaivedModules": [

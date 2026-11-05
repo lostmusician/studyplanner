@@ -3,6 +3,9 @@ dist
 .DS_Store
 *.tsbuildinfo
 coverage
+.env
+.env.*
+*.local
 
 # impeccable-ignore-start
 # Ephemeral output, runtime state, and per-dev overrides.
@@ -26,3 +29,5 @@ coverage
 .impeccable/live/deferred-svelte-component-accepts.json
 .impeccable/live/*.png
 # impeccable-ignore-end
+.claude/skills
+.github/skills

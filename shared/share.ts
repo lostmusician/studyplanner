@@ -17,6 +17,7 @@ export interface SharePlan {
   requirementMappings?: Record<string, string[]>;
   nocDuration?: NocDuration | null;
   specialProgramme?: SpecialProgramme | null;
+  polytechnicApcUnits?: number;
 }
 
 /** Self-contained payload encoded into a share URL. */
@@ -53,6 +54,8 @@ interface CompactSharePayload {
   noc?: NocDuration;
   /** Declared special programme. Omitted entirely when none is declared. */
   sp?: SpecialProgramme;
+  /** Polytechnic APC units granted. Omitted entirely when 0 / standard. */
+  apc?: number;
 }
 
 const toBase64Url = (json: string): string => {
@@ -71,24 +74,104 @@ const fromBase64Url = (encoded: string): string => {
   return new TextDecoder().decode(bytes);
 };
 
+const CATEGORY_MAP: Record<string, string> = {
+  'cs-foundation': 'cf',
+  'breadth-depth': 'bd',
+  'math-sciences': 'ms',
+  'soc-common': 'sc',
+  'nus-college': 'nc',
+  'unrestricted-electives': 'ue',
+  'ba-foundation': 'bf',
+  'ba-electives': 'be',
+  'computing-foundation': 'cof',
+  'security-requirements': 'sr',
+  'industry-experience': 'ie',
+  'bais-foundation': 'baf',
+  'bais-electives': 'bae',
+  'ai-foundation': 'af',
+  'ai-breadth-depth': 'abd'
+};
+
+const REVERSE_CATEGORY_MAP = Object.fromEntries(
+  Object.entries(CATEGORY_MAP).map(([k, v]) => [v, k])
+);
+
+const PROGRAMME_MAP: Record<string, string> = {
+  'computer-science-nusc': 'cs',
+  'business-analytics-nusc': 'ba',
+  'information-security-nusc': 'is',
+  'business-ai-systems-nusc': 'bais',
+  'artificial-intelligence-nusc': 'ai',
+  'mathematics': 'ma',
+  'statistics': 'st',
+  'economics': 'ec',
+  'public-health': 'ph',
+  'data-analytics': 'da',
+  'management': 'mg',
+  'psychology': 'ps',
+  'quantitative-finance': 'qf',
+  'entrepreneurship': 'ep',
+  'interactive-media-development': 'imd'
+};
+
+const REVERSE_PROGRAMME_MAP = Object.fromEntries(
+  Object.entries(PROGRAMME_MAP).map(([k, v]) => [v, k])
+);
+
+const NOC_MAP: Record<string, string> = {
+  '3-month': '3m',
+  '6-month': '6m',
+  '1-year': '1y'
+};
+
+const REVERSE_NOC_MAP = Object.fromEntries(
+  Object.entries(NOC_MAP).map(([k, v]) => [v, k])
+);
+
+const SP_MAP: Record<string, string> = {
+  'noc-3-month': 'n3',
+  'noc-6-month': 'n6',
+  'noc-1-year': 'n1',
+  'sep': 'sp',
+  'gex': 'gx',
+  'regional-iex': 'ri',
+  'siip': 'si',
+};
+
+const REVERSE_SP_MAP = Object.fromEntries(
+  Object.entries(SP_MAP).map(([k, v]) => [v, k])
+);
+
+const isSpecialProgramme = (val: unknown): val is SpecialProgramme =>
+  val === 'noc-3-month' ||
+  val === 'noc-6-month' ||
+  val === 'noc-1-year' ||
+  val === 'sep' ||
+  val === 'gex' ||
+  val === 'regional-iex' ||
+  val === 'siip';
+
 const isCatalogEquivalent = (module: PlacedModule, catalog?: ModuleCatalog): boolean => {
   const catalogModule = catalog?.[module.code];
   return Boolean(catalogModule && catalogModule.name === module.name && catalogModule.mcs === module.mcs);
 };
 
-const compactModule = (module: PlacedModule, catalog?: ModuleCatalog): CompactModule =>
-  isCatalogEquivalent(module, catalog)
-    ? [module.code, module.categoryId]
-    : [module.code, module.categoryId, module.name, module.mcs];
+const compactModule = (module: PlacedModule, catalog?: ModuleCatalog): CompactModule => {
+  const shortCategory = CATEGORY_MAP[module.categoryId] ?? module.categoryId;
+  return isCatalogEquivalent(module, catalog)
+    ? [module.code, shortCategory]
+    : [module.code, shortCategory, module.name, module.mcs];
+};
 
 const expandModule = (module: unknown): PlacedModule | null => {
   if (!Array.isArray(module)) return null;
   const [code, categoryId, name, mcs] = module;
   const normalizedCode = String(code ?? '').trim().toUpperCase();
   if (!normalizedCode) return null;
+  const expandedCategory = REVERSE_CATEGORY_MAP[String(categoryId ?? '')] ?? String(categoryId ?? '');
   return {
     code: normalizedCode,
-    categoryId: String(categoryId ?? ''),
+    categoryId: expandedCategory,
     name: typeof name === 'string' && name.trim() ? name : normalizedCode,
     mcs: Number.isFinite(Number(mcs)) ? Number(mcs) : 0,
   };
@@ -103,7 +186,7 @@ const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalo
   const compact: CompactSharePayload = {
     v: COMPACT_VERSION,
     p: [payload.profile.name, payload.profile.matricNumber, payload.profile.year],
-    m: payload.plan.majorId,
+    m: PROGRAMME_MAP[payload.plan.majorId] ?? payload.plan.majorId,
     s: payload.plan.semesters
       .map((semester): CompactSemester => [
         semester.year,
@@ -113,13 +196,24 @@ const compactPayload = (payload: Omit<SharePayload, 'v'>, catalog?: ModuleCatalo
       .filter((semester) => semester[2].length > 0),
     w: payload.plan.waivedModules.map((module) => compactModule(module, catalog)),
   };
-  if (payload.plan.secondMajorId) compact.sm = payload.plan.secondMajorId;
-  if (payload.plan.minorIds && payload.plan.minorIds.length > 0) compact.mn = payload.plan.minorIds;
+  if (payload.plan.secondMajorId) {
+    compact.sm = PROGRAMME_MAP[payload.plan.secondMajorId] ?? payload.plan.secondMajorId;
+  }
+  if (payload.plan.minorIds && payload.plan.minorIds.length > 0) {
+    compact.mn = payload.plan.minorIds.map((id) => PROGRAMME_MAP[id] ?? id);
+  }
   if (payload.plan.requirementMappings && Object.keys(payload.plan.requirementMappings).length > 0) {
     compact.rm = payload.plan.requirementMappings;
   }
-  if (payload.plan.nocDuration) compact.noc = payload.plan.nocDuration;
-  if (payload.plan.specialProgramme) compact.sp = payload.plan.specialProgramme;
+  if (payload.plan.nocDuration) {
+    compact.noc = (NOC_MAP[payload.plan.nocDuration] ?? payload.plan.nocDuration) as NocDuration;
+  }
+  if (payload.plan.specialProgramme) {
+    compact.sp = (SP_MAP[payload.plan.specialProgramme] ?? payload.plan.specialProgramme) as SpecialProgramme;
+  }
+  if (payload.plan.polytechnicApcUnits && payload.plan.polytechnicApcUnits > 0) {
+    compact.apc = payload.plan.polytechnicApcUnits;
+  }
   return compact;
 };
 
@@ -146,6 +240,7 @@ export const decodePlan = (encoded: string): SharePayload | null => {
         majorId: plan.majorId,
         semesters: plan.semesters,
         waivedModules: Array.isArray(plan.waivedModules) ? plan.waivedModules : [],
+        polytechnicApcUnits: typeof plan.polytechnicApcUnits === 'number' && plan.polytechnicApcUnits > 0 ? plan.polytechnicApcUnits : 0,
       },
     };
   } catch {
@@ -172,6 +267,14 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
     if (parsed.v !== COMPACT_VERSION) return null;
     if (!Array.isArray(parsed.p) || typeof parsed.m !== 'string' || !Array.isArray(parsed.s)) return null;
 
+    const expandedMajorId = REVERSE_PROGRAMME_MAP[parsed.m] ?? parsed.m;
+    const expandedSecondMajorId = typeof parsed.sm === 'string' ? (REVERSE_PROGRAMME_MAP[parsed.sm] ?? parsed.sm) : null;
+    const expandedMinorIds = Array.isArray(parsed.mn)
+      ? parsed.mn.map((id) => (typeof id === 'string' ? (REVERSE_PROGRAMME_MAP[id] ?? id) : id))
+      : [];
+    const expandedNoc = parsed.noc ? (REVERSE_NOC_MAP[parsed.noc] ?? parsed.noc) : null;
+    const expandedSp = parsed.sp ? (REVERSE_SP_MAP[parsed.sp] ?? parsed.sp) : null;
+
     return {
       v: CURRENT_VERSION,
       profile: {
@@ -180,7 +283,7 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
         year: String(parsed.p[2] ?? ''),
       },
       plan: {
-        majorId: parsed.m,
+        majorId: expandedMajorId,
         semesters: parsed.s
           .filter((semester): semester is CompactSemester => Array.isArray(semester) && semester.length >= 3)
           .map(([year, sem, modules]) => ({
@@ -190,11 +293,12 @@ export const decodeCompactPlan = (encoded: string): SharePayload | null => {
           }))
           .filter((semester) => Number.isFinite(semester.year) && Number.isFinite(semester.sem)),
         waivedModules: expandModules(parsed.w),
-        secondMajorId: typeof parsed.sm === 'string' ? parsed.sm : null,
-        minorIds: Array.isArray(parsed.mn) ? parsed.mn.filter((id): id is string => typeof id === 'string') : [],
+        secondMajorId: expandedSecondMajorId,
+        minorIds: expandedMinorIds.filter((id): id is string => typeof id === 'string'),
         requirementMappings: isRequirementMappings(parsed.rm) ? parsed.rm : {},
-        nocDuration: parsed.noc === '3-month' || parsed.noc === '6-month' || parsed.noc === '1-year' ? parsed.noc : null,
-        specialProgramme: parsed.sp === 'noc-3-month' || parsed.sp === 'noc-6-month' || parsed.sp === 'noc-1-year' || parsed.sp === 'gex' ? parsed.sp : null,
+        nocDuration: expandedNoc === '3-month' || expandedNoc === '6-month' || expandedNoc === '1-year' ? expandedNoc : null,
+        specialProgramme: isSpecialProgramme(expandedSp) ? expandedSp : null,
+        polytechnicApcUnits: typeof parsed.apc === 'number' && parsed.apc > 0 ? parsed.apc : 0,
       },
     };
   } catch {

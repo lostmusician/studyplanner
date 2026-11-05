@@ -69,6 +69,21 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
     expect(decoded?.plan.nocDuration).toBe('1-year');
   });
 
+  it('round-trips specialProgramme options including SEP, GEx, regional-iex, and siip', () => {
+    for (const sp of ['sep', 'gex', 'regional-iex', 'siip', 'noc-6-month'] as const) {
+      const payload = {
+        ...basePayload,
+        plan: {
+          ...basePayload.plan,
+          specialProgramme: sp,
+        },
+      };
+      const encoded = encodeCompactPlan(payload);
+      const decoded = decodeCompactPlan(encoded);
+      expect(decoded?.plan.specialProgramme).toBe(sp);
+    }
+  });
+
   it('drops name/mcs for a module matching the catalog exactly, falling back to the code as name and 0 mcs on decode (lossy by design)', () => {
     // isCatalogEquivalent finds a catalog entry for CS1101S with the same
     // name/mcs, so compactModule emits the short 2-element tuple. expandModule
@@ -113,6 +128,19 @@ describe('encodeCompactPlan / decodeCompactPlan round trip', () => {
     ]);
   });
 
+  it('round-trips polytechnic APC units', () => {
+    const payload = {
+      ...basePayload,
+      plan: {
+        ...basePayload.plan,
+        polytechnicApcUnits: 20,
+      },
+    };
+    const encoded = encodeCompactPlan(payload);
+    const decoded = decodeCompactPlan(encoded);
+    expect(decoded?.plan.polytechnicApcUnits).toBe(20);
+  });
+
   it('drops a semester with zero modules entirely from the encoded output rather than keeping it as an empty entry', () => {
     const payload = {
       ...basePayload,
@@ -135,6 +163,19 @@ describe('encodePlan / decodePlan (legacy v1 codec)', () => {
     expect(decoded?.profile).toEqual(basePayload.profile);
     expect(decoded?.plan.majorId).toBe(basePayload.plan.majorId);
     expect(decoded?.plan.semesters).toEqual(basePayload.plan.semesters);
+  });
+
+  it('round-trips polytechnic APC units in v1 payload', () => {
+    const payload = {
+      ...basePayload,
+      plan: {
+        ...basePayload.plan,
+        polytechnicApcUnits: 20,
+      },
+    };
+    const encoded = encodePlan(payload);
+    const decoded = decodePlan(encoded);
+    expect(decoded?.plan.polytechnicApcUnits).toBe(20);
   });
 
   it('does not carry secondMajorId/minorIds/requirementMappings/nocDuration on round trip — this gap is why share links moved to the v2 compact codec for those fields, not a v1 bug', () => {

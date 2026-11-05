@@ -1,0 +1,154 @@
+{
+  "id": "interactive-media-development",
+  "label": "Interactive Media Development",
+  "kind": "minor",
+  "mcTarget": 20,
+  "requirements": [
+    {
+      "name": "Communications & New Media courses, 8 MC (choose 2)",
+      "fulfilledBy": [
+        "NM2207",
+        "NM3217",
+        "NM3230",
+        "NM3243",
+        "NM4259",
+        "NM4260",
+        "NM5219R"
+      ],
+      "count": 2
+    },
+    {
+      "name": "Computer Science courses, 8 MC (choose 2)",
+      "fulfilledBy": [
+        "CS1010",
+        "CS1010S",
+        "CS1010E",
+        "CS1010J",
+        "CS1010X",
+        "CS1101S",
+        "CS3240",
+        "CS3249",
+        "CS4240",
+        "CS4249",
+        "CS4350"
+      ],
+      "count": 2
+    },
+    {
+      "name": "Elective IMD course, 4 MC (choose 1)",
+      "fulfilledBy": [
+        "NM2207",
+        "NM3217",
+        "NM3230",
+        "NM3243",
+        "NM4259",
+        "NM4260",
+        "NM5219R",
+        "CS1010",
+        "CS1010S",
+        "CS1010E",
+        "CS1010J",
+        "CS1010X",
+        "CS1101S",
+        "CS3240",
+        "CS3249",
+        "CS4240",
+        "CS4249",
+        "CS4350"
+      ],
+      "count": 1
+    }
+  ],
+  "moduleCatalog": {
+    "NM2207": {
+      "code": "NM2207",
+      "name": "Computational Media Literacy",
+      "mcs": 4
+    },
+    "NM3217": {
+      "code": "NM3217",
+      "name": "Principles of Communication Design",
+      "mcs": 4
+    },
+    "NM3230": {
+      "code": "NM3230",
+      "name": "Digital Storytelling",
+      "mcs": 4
+    },
+    "NM3243": {
+      "code": "NM3243",
+      "name": "User Experience Design",
+      "mcs": 4
+    },
+    "NM4259": {
+      "code": "NM4259",
+      "name": "Mobile Interaction Design",
+      "mcs": 4
+    },
+    "NM4260": {
+      "code": "NM4260",
+      "name": "Game Design",
+      "mcs": 4
+    },
+    "NM5219R": {
+      "code": "NM5219R",
+      "name": "Critical Design",
+      "mcs": 4
+    },
+    "CS1010": {
+      "code": "CS1010",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS1010S": {
+      "code": "CS1010S",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS1010E": {
+      "code": "CS1010E",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS1010J": {
+      "code": "CS1010J",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS1010X": {
+      "code": "CS1010X",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS1101S": {
+      "code": "CS1101S",
+      "name": "Programming Methodology",
+      "mcs": 4
+    },
+    "CS3240": {
+      "code": "CS3240",
+      "name": "Interaction Design",
+      "mcs": 4
+    },
+    "CS3249": {
+      "code": "CS3249",
+      "name": "User Interface Development",
+      "mcs": 4
+    },
+    "CS4240": {
+      "code": "CS4240",
+      "name": "Interaction Design for Virtual and Augmented Reality",
+      "mcs": 4
+    },
+    "CS4249": {
+      "code": "CS4249",
+      "name": "Phenomena and Theories of Human-Computer Interaction",
+      "mcs": 4
+    },
+    "CS4350": {
+      "code": "CS4350",
+      "name": "Game Development Project",
+      "mcs": 4
+    }
+  }
+}

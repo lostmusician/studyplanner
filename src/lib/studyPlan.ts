@@ -8,6 +8,7 @@ import type {
   RequirementRule,
   NocDuration,
   SpecialProgramme,
+  DefaultPlanEntry,
 } from '@shared/types';
 
 export const semesterLabel = (year: number, sem: number): string => {
@@ -21,12 +22,70 @@ export const semesterLabel = (year: number, sem: number): string => {
 export const createEmptySemesters = (): StudentSemester[] =>
   [1, 2, 3, 4].flatMap((year) => [1, 2].map((sem) => ({ year, sem, modules: [] })));
 
+export type PlanTemplate = 'standard' | 'poly-accelerated' | 'poly-balanced';
+
+export const getPlanTemplateEntries = (
+  major: Major,
+  template: PlanTemplate = 'standard',
+): DefaultPlanEntry[] => {
+  if (template === 'standard') {
+    return major.defaultPlan;
+  }
+
+  // Both polytechnic plans drop generic unrestricted electives (pre-satisfied by 20 MC Poly APCs)
+  const nonGenericEntries = major.defaultPlan.filter(
+    (entry) => entry.categoryId !== 'unrestricted-electives' && !entry.moduleCode.startsWith('GEN'),
+  );
+
+  if (template === 'poly-balanced') {
+    return nonGenericEntries;
+  }
+
+  // poly-accelerated (3.5 years / 7 semesters)
+  // Shift courses scheduled in Year 4 Semester 2 to Year 4 Semester 1 or appropriate earlier slot
+  const y4s2Entries = nonGenericEntries.filter((e) => e.year === 4 && e.sem === 2);
+  const otherEntries = nonGenericEntries.filter((e) => !(e.year === 4 && e.sem === 2));
+
+  if (major.id === 'computer-science-nusc') {
+    // Y4S2 has NHS2030 and NST2015 -> both move to Y4S1 (making Y4S1 20 MC)
+    return [
+      ...otherEntries,
+      ...y4s2Entries.map((e) => ({ ...e, year: 4, sem: 1 })),
+    ];
+  }
+
+  if (major.id === 'artificial-intelligence-nusc') {
+    // Y4S2 has NHS2030 and NST2015.
+    // Move NST2015 to Y3S1 (which has space since GEN2001 was removed), and NHS2030 to Y4S1 (making Y4S1 20 MC)
+    return [
+      ...otherEntries,
+      ...y4s2Entries.map((e) => {
+        if (e.moduleCode === 'NST2015') return { ...e, year: 3, sem: 1 };
+        return { ...e, year: 4, sem: 1 };
+      }),
+    ];
+  }
+
+  // For business-ai-systems-nusc, business-analytics-nusc, information-security-nusc:
+  // NST2015 moves to Y2S2 (which had GEN2001/GEN2002 removed), and remaining Y4S2 courses move to Y4S1 (making Y4S1 20 MC)
+  return [
+    ...otherEntries,
+    ...y4s2Entries.map((e) => {
+      if (e.moduleCode === 'NST2015') return { ...e, year: 2, sem: 2 };
+      return { ...e, year: 4, sem: 1 };
+    }),
+  ];
+};
+
 export const defaultPlanToSemesters = (
   major: Major,
-  options: { lockedOnly?: boolean } = {},
+  options: { lockedOnly?: boolean; template?: PlanTemplate } = {},
 ): StudentSemester[] => {
   const semesters = createEmptySemesters();
-  for (const entry of major.defaultPlan) {
+  const planEntries = options.template
+    ? getPlanTemplateEntries(major, options.template)
+    : major.defaultPlan;
+  for (const entry of planEntries) {
     if (options.lockedOnly && !entry.locked) continue;
     const sem = semesters.find((s) => s.year === entry.year && s.sem === entry.sem);
     if (!sem) continue;
@@ -263,23 +322,34 @@ export const computeRequirements = (
     const codeSet = new Set(allCodes);
     const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) => codeSet.has(code)));
     const specialProgrammeBonus =
-      specialProgramme === 'gex' && req.name === 'Making Connections'
-        ? 1
+      req.name === 'Making Connections'
+        ? (specialProgramme === 'gex' ? 1 : 0) + (specialProgramme === 'sep' ? 2 : 0)
         : 0;
     const have = matchCount + specialProgrammeBonus;
     
     const nocSatisfied =
       (req.name.toLowerCase().includes('industry') || req.name.toLowerCase().includes('industrial')) &&
       Boolean(specialProgramme && specialProgramme.startsWith('noc'));
-    let fulfilled = have >= need || altGroupSatisfied || nocSatisfied;
+    const isGlobalPathwayReq = req.name.toLowerCase().includes('global pathway');
+    const globalPathwaySatisfied = isGlobalPathwayReq && Boolean(specialProgramme);
+    let fulfilled = have >= need || altGroupSatisfied || nocSatisfied || globalPathwaySatisfied;
     let info: string | undefined = undefined;
 
+    if (isGlobalPathwayReq && !fulfilled) {
+      info = 'Select a Global Pathway (NOC, SEP, GEx, etc.) above to fulfill this requirement';
+    }
+
     if (req.name.startsWith('Making Connections')) {
-      const hssCount = allCodes.filter((code) => code.startsWith('NHS')).length;
-      const stCount = allCodes.filter((code) => code.startsWith('NST')).length;
+      const hssCount = allCodes.filter((code) =>
+        code.startsWith('NHS') || code.startsWith('NFC') || code.startsWith('NHT')
+      ).length;
+      const stCount = allCodes.filter((code) =>
+        code.startsWith('NST') || code.startsWith('NFB')
+      ).length;
       const isNocWaiver = specialProgramme === 'noc-6-month' || specialProgramme === 'noc-1-year';
-      const minHss = isNocWaiver ? 1 : 2;
-      const minSt = isNocWaiver ? 1 : 2;
+      const isReducedMce = isNocWaiver || specialProgramme === 'sep' || specialProgramme === 'gex';
+      const minHss = isReducedMce ? 1 : 2;
+      const minSt = isReducedMce ? 1 : 2;
 
       if (hssCount < minHss || stCount < minSt) {
         fulfilled = false;
@@ -291,7 +361,7 @@ export const computeRequirements = (
       name: req.name,
       fulfilled,
       categoryId: req.categoryId,
-      have: (nocSatisfied || altGroupSatisfied) ? need : have,
+      have: (nocSatisfied || altGroupSatisfied || globalPathwaySatisfied) ? need : have,
       need,
       info,
     };
@@ -322,9 +392,16 @@ export const computeDoubleCount = (
   const byCode = new Map<string, PlacedModule>();
   for (const m of allModules) if (!byCode.has(m.code)) byCode.set(m.code, m);
 
-  const doubleCountedCodes = [...byCode.keys()].filter((code) =>
-    matchesAnyRequirement(secondary.requirements, code),
-  );
+  // A course is only double-counted with the primary major if it fulfills a secondary requirement
+  // AND is booked to a primary major category (not Unrestricted Electives or a secondary container).
+  const doubleCountedCodes = [...byCode.entries()]
+    .filter(([code, m]) =>
+      m.categoryId !== 'unrestricted-electives' &&
+      !m.categoryId.startsWith('second-major-') &&
+      !m.categoryId.startsWith('minor-') &&
+      matchesAnyRequirement(secondary.requirements, code),
+    )
+    .map(([code]) => code);
   const doubleCountMc = doubleCountedCodes.reduce((sum, code) => sum + (byCode.get(code)?.mcs ?? 0), 0);
   const capMc = secondary.mcTarget * 0.4;
 
@@ -409,9 +486,27 @@ export const applyNocAdjustment = (major: Major, duration?: NocDuration | null):
     });
   }
 
+  // Balance remaining MCs against unrestricted-electives to keep totalMcTarget fixed at 160.
+  const hasUe = categories.some((c) => c.id === 'unrestricted-electives');
+  if (hasUe) {
+    const nonUeSum = categories
+      .filter((c) => c.id !== 'unrestricted-electives')
+      .reduce((s, c) => s + (c.mcTarget ?? 0), 0);
+    categories = categories.map((cat) =>
+      cat.id === 'unrestricted-electives'
+        ? { ...cat, mcTarget: Math.max(0, major.totalMcTarget - nonUeSum) }
+        : cat,
+    );
+  }
+
+  const updatedBreadthDepth = major.breadthDepth
+    ? { ...major.breadthDepth, totalUnits: Math.max(0, major.breadthDepth.totalUnits - bdReduction) }
+    : undefined;
+
   return {
     ...major,
     categories,
+    breadthDepth: updatedBreadthDepth,
     requirements: major.requirements.map((r, i) => (i === mceIndex ? { ...r, count: newCount } : r)),
   };
 };
@@ -711,7 +806,11 @@ export interface Stats {
   byCategory: Record<string, number>;
 }
 
-export const computeStats = (major: Major, semesters: StudentSemester[]): Stats => {
+export const computeStats = (
+  major: Major,
+  semesters: StudentSemester[],
+  _waivedModules: WaivedModule[] = [],
+): Stats => {
   const byCategory: Record<string, number> = {};
   let totalMc = 0;
   for (const sem of semesters) {
