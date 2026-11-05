@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   getSoclaasApiKey,
-  setSoclaasApiKey,
   getSoclaasEndpoint,
   setSoclaasEndpoint,
   callSoclaasChat,
@@ -33,11 +32,7 @@ describe('soclaas client', () => {
     vi.restoreAllMocks();
   });
 
-  it('gets and sets API key in localStorage', () => {
-    expect(getSoclaasApiKey()).toBe('');
-    setSoclaasApiKey('test-key-123');
-    expect(getSoclaasApiKey()).toBe('test-key-123');
-    setSoclaasApiKey('');
+  it('no longer stores personal API keys on the client', () => {
     expect(getSoclaasApiKey()).toBe('');
   });
 
@@ -49,7 +44,7 @@ describe('soclaas client', () => {
     expect(getSoclaasEndpoint()).toBe('/api/soclaas');
   });
 
-  it('fails callSoclaasChat on 401 when API key is missing or invalid', async () => {
+  it('fails callSoclaasChat on 401 when API key is missing or invalid on server', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,
       status: 401,
@@ -61,11 +56,10 @@ describe('soclaas client', () => {
       callSoclaasChat({
         messages: [{ role: 'user', content: 'hello' }],
       }),
-    ).rejects.toThrow('SoCLaaS API key is missing');
+    ).rejects.toThrow('SoCLaaS API key is missing or invalid in server environment variables');
   });
 
   it('successfully returns content on 200 response with server proxy key', async () => {
-    // No client API key in localStorage
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -88,8 +82,7 @@ describe('soclaas client', () => {
     );
   });
 
-  it('tests connection with personal key and reports success', async () => {
-    setSoclaasApiKey('valid-key');
+  it('tests connection and reports success', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -97,22 +90,10 @@ describe('soclaas client', () => {
 
     const result = await testSoclaasConnection();
     expect(result.ok).toBe(true);
-    expect(result.message).toContain('personal key');
+    expect(result.message).toContain('Successfully connected');
   });
 
-  it('tests connection with server key and reports success', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-    }));
-
-    const result = await testSoclaasConnection();
-    expect(result.ok).toBe(true);
-    expect(result.message).toContain('server proxy key');
-  });
-
-  it('tests connection and reports 401 unauthorized', async () => {
-    setSoclaasApiKey('bad-key');
+  it('tests connection and reports 401 unauthorized when server key is missing or invalid', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,
       status: 401,
@@ -121,6 +102,6 @@ describe('soclaas client', () => {
 
     const result = await testSoclaasConnection();
     expect(result.ok).toBe(false);
-    expect(result.message).toContain('401');
+    expect(result.message).toContain('SOCLAAS_API_KEY');
   });
 });

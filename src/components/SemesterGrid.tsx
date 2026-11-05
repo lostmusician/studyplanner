@@ -270,7 +270,7 @@ export const SemesterGrid = ({
 
         {viewMode === 'columns' ? (
           <div className="flex gap-2.5 items-stretch overflow-x-auto pt-1 pb-6 sm:pb-8 scroll-smooth snap-x snap-mandatory -mx-2 px-2 sm:mx-0 sm:px-0">
-            <div id="sem-col-waived" className="snap-start flex-shrink-0 flex flex-col">
+            <div id="sem-col-waived" className="snap-start flex-1 min-w-[160px] flex flex-col">
               <WaivedCourses
                 major={major}
                 waivedModules={waivedModules}
@@ -280,7 +280,7 @@ export const SemesterGrid = ({
               />
             </div>
             {semesters.map((semester) => (
-              <div id={`sem-col-${semester.year}-${semester.sem}`} key={`${semester.year}-${semester.sem}`} className="snap-start flex-shrink-0 flex flex-col">
+              <div id={`sem-col-${semester.year}-${semester.sem}`} key={`${semester.year}-${semester.sem}`} className="snap-start flex-1 min-w-[160px] flex flex-col">
                 <SemesterColumn
                   semester={semester}
                   major={major}
@@ -301,7 +301,7 @@ export const SemesterGrid = ({
               </div>
             ))}
             {possibleSpecialTerms.length > 0 && (
-              <div className="w-[160px] min-w-[160px] flex-shrink-0 flex flex-col gap-2 rounded-2xl border border-dashed border-ink/20 p-3 justify-center items-center text-center bg-paper/30 snap-start h-full min-h-full">
+              <div className="w-[160px] min-w-[160px] max-w-[200px] flex-shrink-0 flex flex-col gap-2 rounded-2xl border border-dashed border-ink/20 p-3 justify-center items-center text-center bg-paper/30 snap-start h-full min-h-full">
                 <span className="text-xs font-semibold text-ink/70">Special Term</span>
                 <p className="text-[10px] text-muted max-w-[140px]">Plan Orbital, internship, winter/summer school, etc.</p>
                 <select
@@ -471,10 +471,8 @@ const SemesterColumn = ({
   return (
     <div
       ref={setNodeRef}
-      className="relative flex flex-col flex-shrink-0 flex-1 rounded-2xl p-2.5 transition-colors h-full min-h-full hover:z-30 focus-within:z-30"
+      className="relative flex flex-col flex-1 min-w-[160px] w-full rounded-2xl p-2.5 transition-colors h-full min-h-full hover:z-30 focus-within:z-30"
       style={{
-        minWidth: fullWidth ? undefined : '160px',
-        width: fullWidth ? '100%' : '160px',
         backgroundColor: isOver ? 'rgb(210,203,190)' : 'rgb(225,218,205)',
         outline: 'none',
         outlineOffset: '-2px',

@@ -96,22 +96,33 @@ describe('aiPlanner', () => {
     expect(result.usedMock).toBe(true);
   });
 
-  it('falls back to mock when SoCLaaS call fails or is unconfigured', async () => {
+  it('throws an error when SoCLaaS call fails or is unconfigured', async () => {
     vi.spyOn(soclaas, 'callSoclaasChat').mockRejectedValue(new Error('Unauthorized'));
-    const result = await generateAiStudyPlanRecommendation(
-      dummyMajor,
-      initialSemesters,
-      waivedModules,
-      survey,
-      [],
-    );
-
-    expect(result.usedMock).toBe(true);
-    expect(result.trackTitle).toBeDefined();
-    expect(result.updatedSemesters[0].modules.map((m) => m.code)).toEqual(['CS1101S', 'CS1231S']);
+    await expect(
+      generateAiStudyPlanRecommendation(
+        dummyMajor,
+        initialSemesters,
+        waivedModules,
+        survey,
+        [],
+      ),
+    ).rejects.toThrow('Unauthorized');
   });
 
   it('iterates on the plan when the student communicates follow-up adjustments', async () => {
+    vi.spyOn(soclaas, 'callSoclaasChat').mockResolvedValue(
+      JSON.stringify({
+        trackTitle: 'Artificial Intelligence & Machine Learning',
+        trackRationale: 'Updated with NLP focus.',
+        recommendedElectives: [{ code: 'CS4248', title: 'NLP', reason: 'Focus on language models' }],
+        updatedSemesters: initialSemesters.map((s, idx) => ({
+          ...s,
+          modules: idx === 2 ? [{ code: 'CS4248', name: 'NLP', mcs: 4, categoryId: 'breadth-depth' }] : s.modules,
+        })),
+        reply: "I've added CS4248 Natural Language Processing to your Year 2 Semester 1 schedule.",
+      }),
+    );
+
     const initialResult = generateMockRecommendation(
       dummyMajor,
       initialSemesters,
@@ -131,7 +142,7 @@ describe('aiPlanner', () => {
       { year: survey.standingYear, sem: survey.standingSem },
     );
 
-    expect(iteration.reply).toBeDefined();
+    expect(iteration.reply).toContain('CS4248');
     expect(iteration.result.updatedSemesters[0].modules.map((m) => m.code)).toEqual(['CS1101S', 'CS1231S']);
     const allCodes = iteration.result.updatedSemesters.flatMap((s) => s.modules.map((m) => m.code));
     expect(allCodes).toContain('CS4248');

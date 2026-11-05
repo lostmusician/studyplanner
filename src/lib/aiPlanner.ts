@@ -73,40 +73,88 @@ export const generateMockRecommendation = (
       .flatMap((s) => s.modules.map((m) => m.code)),
   ]);
 
+  const selectedInterest = survey.interests[0] || 'Artificial Intelligence & ML';
   let trackTitle = 'Artificial Intelligence & Machine Learning';
   let trackRationale =
-    'Aligns with your indicated interests in AI/ML, intelligent systems, and software engineering. Focuses on foundational machine learning models followed by deep learning and practical applied computer vision.';
+    'Aligns with your indicated interests in AI/ML and intelligent decision systems. Focuses on foundational machine learning models followed by deep learning and practical applied computer vision.';
   let candidateElectives: Array<{ code: string; title: string; reason: string }> = [];
 
-  if (major.id.includes('computer-science')) {
+  if (selectedInterest.includes('Cybersecurity') || selectedInterest.includes('Security')) {
+    trackTitle = 'Cybersecurity & Systems Defense';
+    trackRationale =
+      'Focuses on vulnerability research, software defense, secure protocol design, and modern cryptography.';
+    candidateElectives = [
+      { code: 'CS2107', title: 'Introduction to Information Security', reason: 'Essential security principles, authentication, access control, and crypto.' },
+      { code: 'CS3235', title: 'Computer Security', reason: 'Operating system and runtime defenses against memory safety exploitation.' },
+      { code: 'CS4239', title: 'Software Security', reason: 'Binary exploitation, vulnerability auditing, and program analysis.' },
+      { code: 'CS4236', title: 'Cryptography Theory and Practice', reason: 'Mathematical foundations of modern encryption and public key infrastructure.' },
+    ];
+  } else if (selectedInterest.includes('Cloud') || selectedInterest.includes('Distributed') || selectedInterest.includes('Systems')) {
+    trackTitle = 'Cloud, Networks & Distributed Systems';
+    trackRationale =
+      'Prepares you to design fault-tolerant, high-concurrency networked services and distributed infrastructure.';
+    candidateElectives = [
+      { code: 'CS2105', title: 'Introduction to Computer Networks', reason: 'Network protocols, transport mechanisms, and internet architecture.' },
+      { code: 'CS2106', title: 'Introduction to Operating Systems', reason: 'Kernel architecture, virtualization, threads, and memory hierarchy.' },
+      { code: 'CS3210', title: 'Parallel Computing', reason: 'High-performance shared and distributed memory programming.' },
+      { code: 'CS3219', title: 'Software Engineering Principles and Patterns', reason: 'DevOps, CI/CD pipelines, and cloud microservices.' },
+    ];
+  } else if (selectedInterest.includes('Software Engineering') || selectedInterest.includes('Fullstack')) {
+    trackTitle = 'Software Engineering & Enterprise Architecture';
+    trackRationale =
+      'Emphasizes clean architectural patterns, robust test-driven design, and large-scale application lifecycle management.';
+    candidateElectives = [
+      { code: 'CS2103T', title: 'Software Engineering', reason: 'Team software engineering, design patterns, and automated CI testing.' },
+      { code: 'CS3203', title: 'Software Engineering Project', reason: 'Milestone-driven implementation of an industrial-grade system.' },
+      { code: 'CS3219', title: 'Software Engineering Principles and Patterns', reason: 'Scalable service patterns and modern architectural styles.' },
+      { code: 'CS4211', title: 'Formal Methods for Software Engineering', reason: 'High-assurance validation and program verification.' },
+    ];
+  } else if (selectedInterest.includes('Fintech') || selectedInterest.includes('Trading')) {
+    trackTitle = 'Financial Technology & Quantitative Analytics';
+    trackRationale =
+      'Bridges quantitative modeling, algorithmic execution algorithms, and decentralized blockchain systems.';
+    candidateElectives = [
+      { code: 'BT4013', title: 'Analytics for Capital Market Trading', reason: 'Algorithmic trading strategies, market microstructure, and quantitative alpha backtesting.' },
+      { code: 'BT4016', title: 'Risk Analytics for Financial Services', reason: 'Credit risk estimation, default modeling, and portfolio risk management.' },
+      { code: 'CS3244', title: 'Machine Learning', reason: 'Predictive statistical models for financial time-series analysis.' },
+      { code: 'IFS4102', title: 'Digital Currency and Blockchain Technologies', reason: 'Distributed ledgers, smart contracts, and decentralized finance protocols.' },
+    ];
+  } else if (selectedInterest.includes('Algorithms') || selectedInterest.includes('Theory')) {
+    trackTitle = 'Algorithms & Theoretical Computing';
+    trackRationale =
+      'Deep dive into rigorous computational complexity, algorithmic optimization, and graph theories.';
+    candidateElectives = [
+      { code: 'CS3230', title: 'Design and Analysis of Algorithms', reason: 'Core algorithmic design techniques: greedy, dynamic programming, and NP-completeness.' },
+      { code: 'CS3231', title: 'Theory of Computation', reason: 'Automata, grammars, Turing machines, and undecidability.' },
+      { code: 'CS4231', title: 'Parallel and Distributed Algorithms', reason: 'Concurrent consensus and distributed graph algorithms.' },
+      { code: 'CS4234', title: 'Optimisation Algorithms', reason: 'Approximation algorithms and linear programming relaxations.' },
+    ];
+  } else if (selectedInterest.includes('Graphics') || selectedInterest.includes('Gaming')) {
+    trackTitle = 'Computer Graphics & Interactive Media';
+    trackRationale =
+      'Covers GPU rendering pipelines, 3D geometric modeling, animation, and real-time interactive game mechanics.';
+    candidateElectives = [
+      { code: 'CS3241', title: 'Computer Graphics', reason: 'Real-time rendering, shaders, and geometric coordinate transforms.' },
+      { code: 'CS3242', title: '3D Modeling and Animation', reason: 'Spline curves, character rigging, and kinematic simulation.' },
+      { code: 'CS4247', title: 'Advanced Computer Graphics', reason: 'Ray tracing, global illumination, and physically based shaders.' },
+      { code: 'CS4350', title: 'Game Development Project', reason: 'Engine design and interdisciplinary team game production.' },
+    ];
+  } else if (selectedInterest.includes('Data Science') || selectedInterest.includes('Analytics')) {
+    trackTitle = 'Data Science & Big Data Systems';
+    trackRationale =
+      'Prepares you for large-scale data transformation, statistical inference, and big data platform engineering.';
+    candidateElectives = [
+      { code: 'CS3244', title: 'Machine Learning', reason: 'Foundations of statistical learning and predictive model evaluation.' },
+      { code: 'BT4221', title: 'Big Data Techniques and Technologies', reason: 'Scalable data processing with Spark, Hadoop, and streaming engines.' },
+      { code: 'ST3131', title: 'Regression Analysis', reason: 'Parametric and non-parametric statistical regression modeling.' },
+      { code: 'CS4248', title: 'Natural Language Processing', reason: 'Mining insights from unstructured text and language models.' },
+    ];
+  } else {
     candidateElectives = [
       { code: 'CS3243', title: 'Introduction to Artificial Intelligence', reason: 'Core gateway into advanced reasoning, heuristic search, and constraint satisfaction.' },
       { code: 'CS3244', title: 'Machine Learning', reason: 'Foundational theory for statistical learning algorithms and neural networks.' },
       { code: 'CS4243', title: 'Computer Vision and Pattern Recognition', reason: 'Deep dive into visual perception and convolutional networks.' },
       { code: 'CS4248', title: 'Natural Language Processing', reason: 'Covers modern language representations, transformer architectures, and LLMs.' },
-    ];
-  } else if (major.id.includes('business-analytics')) {
-    trackTitle = 'Financial Analytics & Machine Learning';
-    trackRationale =
-      'Bridges data analytics with quantitative financial decision making and algorithmic valuation.';
-    candidateElectives = [
-      { code: 'BT4013', title: 'Analytics for Capital Market Trading and Investment', reason: 'Teaches algorithmic strategy design and financial market data analysis.' },
-      { code: 'BT4221', title: 'Big Data Techniques and Technologies', reason: 'Scalable data processing essential for high-throughput enterprise pipelines.' },
-      { code: 'BT4016', title: 'Risk Analytics for Financial Services', reason: 'Risk scoring and predictive credit modeling.' },
-    ];
-  } else if (major.id.includes('information-security')) {
-    trackTitle = 'Offensive & Defensive Systems Security';
-    trackRationale =
-      'Provides practical capabilities in vulnerability analysis, software exploitation, and network defence.';
-    candidateElectives = [
-      { code: 'CS4239', title: 'Software Security', reason: 'In-depth binary exploitation, memory safety, and modern mitigations.' },
-      { code: 'CS4236', title: 'Cryptography Theory and Practice', reason: 'Foundational cryptography for secure protocols and primitives.' },
-      { code: 'IS4231', title: 'Information Security Management', reason: 'Enterprise governance, incident response, and risk management.' },
-    ];
-  } else {
-    candidateElectives = [
-      { code: 'CS3243', title: 'Introduction to Artificial Intelligence', reason: 'Broad coverage of search algorithms and intelligent decision-making.' },
-      { code: 'CS3244', title: 'Machine Learning', reason: 'Key machine learning principles and statistical inference.' },
     ];
   }
 
@@ -347,8 +395,7 @@ OUTPUT JSON FORMAT ONLY:
       usedMock: false,
     };
   } catch (error) {
-    // If network or parsing error occurs, fallback gracefully to intelligent generator
-    return generateMockRecommendation(major, currentSemesters, waivedModules, survey, minors);
+    throw error;
   }
 };
 
@@ -437,6 +484,7 @@ ${enrichedModules.slice(0, 30).map((m) => `${m.code}: ${m.title} (Sem ${m.semest
 
     const parsed = JSON.parse(raw) as {
       assistantMessage?: string;
+      reply?: string;
       trackTitle?: string;
       trackRationale?: string;
       recommendedMinorId?: string | null;
@@ -489,7 +537,7 @@ ${enrichedModules.slice(0, 30).map((m) => `${m.code}: ${m.title} (Sem ${m.semest
     }
 
     return {
-      reply: parsed.assistantMessage || 'I have updated your study plan according to your feedback.',
+      reply: parsed.assistantMessage || parsed.reply || 'I have updated your study plan according to your feedback.',
       result: {
         trackTitle: parsed.trackTitle || currentResult.trackTitle,
         trackRationale: parsed.trackRationale || currentResult.trackRationale,
@@ -502,39 +550,7 @@ ${enrichedModules.slice(0, 30).map((m) => `${m.code}: ${m.title} (Sem ${m.semest
         usedMock: false,
       },
     };
-  } catch {
-    // Intelligent fallback iteration: inspect user prompt for module codes
-    const foundCodes = userPrompt.match(/[A-Z]{2,}\d{4}[A-Z]*/g) ?? [];
-    const updatedSemesters = currentResult.updatedSemesters.map((s) => ({
-      ...s,
-      modules: [...s.modules],
-    }));
-
-    if (foundCodes.length > 0) {
-      // Place the requested module in the earliest available future semester
-      for (const sem of updatedSemesters) {
-        if (!isSemesterPast(sem.year, sem.sem, standing.year, standing.sem)) {
-          for (const code of foundCodes) {
-            if (!updatedSemesters.some((s2) => s2.modules.some((m) => m.code === code))) {
-              sem.modules.push({
-                code,
-                name: code,
-                mcs: 4,
-                categoryId: major.categories[1]?.id ?? major.categories[0]?.id ?? 'unrestricted-electives',
-              });
-            }
-          }
-          break;
-        }
-      }
-    }
-
-    return {
-      reply: `I've updated your schedule according to your feedback${foundCodes.length > 0 ? ` (incorporated ${foundCodes.join(', ')})` : ''}. Review the revised courses above and apply when ready.`,
-      result: {
-        ...currentResult,
-        updatedSemesters,
-      },
-    };
+  } catch (error) {
+    throw error;
   }
 };

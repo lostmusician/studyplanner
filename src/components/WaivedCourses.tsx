@@ -185,10 +185,8 @@ export const WaivedCourses = ({ major, waivedModules, onAdd, onDelete, fullWidth
 
   return (
     <div
-      className="flex flex-col flex-shrink-0 flex-1 rounded-2xl p-2.5 h-full min-h-full"
+      className="flex flex-col flex-1 min-w-[160px] w-full rounded-2xl p-2.5 h-full min-h-full"
       style={{
-        minWidth: fullWidth ? undefined : '160px',
-        width: fullWidth ? '100%' : '160px',
         backgroundColor: 'rgb(225,218,205)',
       }}
     >

@@ -136,7 +136,14 @@ export const StudyPlanAdvisorSidebar = ({
         },
       ]);
     } catch {
-      // Handled inside aiPlanner
+      setCurrentResult(null);
+      setMessages([
+        {
+          id: 'init-unavailable',
+          role: 'assistant',
+          content: 'The advisor will be available soon.',
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +151,7 @@ export const StudyPlanAdvisorSidebar = ({
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend ?? inputDraft).trim();
-    if (!text || !currentResult || isIterating) return;
+    if (!text || isIterating) return;
 
     setInputDraft('');
     const userMsgId = `user-${Date.now()}`;
@@ -156,6 +163,10 @@ export const StudyPlanAdvisorSidebar = ({
     setIsIterating(true);
 
     try {
+      if (!currentResult) {
+        throw new Error('No active plan');
+      }
+
       const historyTurns: ChatTurn[] = messages.map((m) => ({
         role: m.role,
         content: m.content,
@@ -188,7 +199,7 @@ export const StudyPlanAdvisorSidebar = ({
         {
           id: `asst-${Date.now()}`,
           role: 'assistant',
-          content: 'I had trouble refining the plan just now. Please try rephrasing your request.',
+          content: 'The advisor will be available soon.',
         },
       ]);
     } finally {
@@ -211,36 +222,27 @@ export const StudyPlanAdvisorSidebar = ({
     'rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent w-full';
 
   return (
-    <>
-      {/* Mobile Backdrop Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-ink/20 backdrop-blur-xs z-40 lg:hidden transition-opacity"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Right-pinned Sidebar */}
-      <aside
-        className={`fixed inset-y-0 right-0 left-auto z-50 flex flex-col w-full max-w-sm sm:w-88 h-full bg-paper overflow-hidden shadow-2xl border-l border-line/20 transition-all duration-300 ease-in-out lg:sticky lg:top-[49px] lg:h-[calc(100vh-49px)] lg:shrink-0 lg:bg-paper/60 lg:shadow-none lg:backdrop-blur-sm lg:z-30 ${
-          isOpen
-            ? 'translate-x-0 opacity-100 pointer-events-auto lg:w-88'
-            : 'translate-x-full opacity-0 pointer-events-none lg:w-0 lg:border-0'
-        }`}
-      >
-        <div className="flex flex-col h-full w-full">
+    <aside
+      className={`transition-[width,opacity] duration-300 ease-in-out shrink-0 overflow-hidden bg-paper/60 backdrop-blur-sm sticky top-[49px] h-[calc(100vh-49px)] z-30 ${
+        isOpen
+          ? 'w-80 sm:w-96 border-l border-line/20 opacity-100 pointer-events-auto'
+          : 'w-0 border-0 opacity-0 pointer-events-none'
+      } max-sm:fixed max-sm:inset-y-0 max-sm:right-0 max-sm:z-50 max-sm:w-full max-sm:max-w-sm max-sm:bg-paper max-sm:shadow-2xl ${
+        isOpen ? 'max-sm:translate-x-0' : 'max-sm:translate-x-full'
+      }`}
+    >
+      <div className="w-[320px] sm:w-[384px] shrink-0 h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-line/20 shrink-0">
             <div className="flex items-center gap-2">
               <h2 className="text-xs font-bold text-ink uppercase tracking-wider">
                 Study Plan Advisor
               </h2>
-              {currentResult && (
+              {messages.length > 0 && (
                 <button
                   type="button"
                   onClick={handleStartOver}
-                  className="text-[10px] text-muted hover:text-ink transition-colors underline underline-offset-2"
+                  className="text-[10px] text-muted hover:text-ink transition-colors underline underline-offset-2 ml-1"
                 >
                   Reset
                 </button>
@@ -261,7 +263,7 @@ export const StudyPlanAdvisorSidebar = ({
               <div className="h-7 w-7 animate-spin rounded-full border-2 border-ink border-t-transparent mb-3 opacity-60" />
               <span className="text-xs font-medium text-ink">Analyzing courses...</span>
             </div>
-          ) : currentResult ? (
+          ) : messages.length > 0 ? (
             /* Conversational Iteration View */
             <div className="flex-1 flex flex-col min-h-0">
               {/* Message History Stream */}
@@ -340,48 +342,60 @@ export const StudyPlanAdvisorSidebar = ({
                 <div ref={chatBottomRef} />
               </div>
 
-              {/* Chat Input Bar */}
-              <div className="p-3 border-t border-line/20 bg-paper shrink-0 space-y-2">
-                {/* Quick suggestions */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                  {SUGGESTIONS.map((sug) => (
-                    <button
-                      key={sug}
-                      type="button"
-                      disabled={isIterating}
-                      onClick={() => handleSendMessage(sug)}
-                      className="whitespace-nowrap rounded-lg bg-canvas border border-line/30 px-2 py-1 text-[10px] font-medium text-ink/75 hover:bg-paper hover:text-ink transition-colors disabled:opacity-40 shrink-0"
-                    >
-                      + {sug}
-                    </button>
-                  ))}
-                </div>
+              {/* Chat Input Bar or Unavailable Action */}
+              {currentResult ? (
+                <div className="p-3 border-t border-line/20 bg-paper shrink-0 space-y-2">
+                  {/* Quick suggestions */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+                    {SUGGESTIONS.map((sug) => (
+                      <button
+                        key={sug}
+                        type="button"
+                        disabled={isIterating}
+                        onClick={() => handleSendMessage(sug)}
+                        className="whitespace-nowrap rounded-lg bg-canvas border border-line/30 px-2 py-1 text-[10px] font-medium text-ink/75 hover:bg-paper hover:text-ink transition-colors disabled:opacity-40 shrink-0"
+                      >
+                        + {sug}
+                      </button>
+                    ))}
+                  </div>
 
-                {/* Text input form */}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void handleSendMessage();
-                  }}
-                  className="flex items-center gap-1.5"
-                >
-                  <input
-                    type="text"
-                    value={inputDraft}
-                    disabled={isIterating}
-                    onChange={(e) => setInputDraft(e.target.value)}
-                    placeholder="Request adjustments (e.g. 'Swap CS4243 for an NLP course')..."
-                    className="flex-1 rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isIterating || !inputDraft.trim()}
-                    className="rounded-xl bg-ink px-3 py-1.5 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity disabled:opacity-30 shrink-0"
+                  {/* Text input form */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void handleSendMessage();
+                    }}
+                    className="flex items-center gap-1.5"
                   >
-                    Send
+                    <input
+                      type="text"
+                      value={inputDraft}
+                      disabled={isIterating}
+                      onChange={(e) => setInputDraft(e.target.value)}
+                      placeholder="Request adjustments (e.g. 'Swap CS4243 for an NLP course')..."
+                      className="flex-1 rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isIterating || !inputDraft.trim()}
+                      className="rounded-xl bg-ink px-3 py-1.5 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity disabled:opacity-30 shrink-0"
+                    >
+                      Send
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div className="p-3 border-t border-line/20 bg-paper shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleStartOver}
+                    className="w-full rounded-xl bg-ink py-2 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity"
+                  >
+                    Back to Survey
                   </button>
-                </form>
-              </div>
+                </div>
+              )}
             </div>
           ) : (
             /* Initial Survey Form */
@@ -538,6 +552,5 @@ export const StudyPlanAdvisorSidebar = ({
           )}
         </div>
       </aside>
-    </>
-  );
-};
+    );
+  };

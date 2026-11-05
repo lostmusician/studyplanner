@@ -13,7 +13,6 @@ import { SecondaryProgrammePanel } from './SecondaryProgrammePanel';
 import { PrintView } from './PrintView';
 import { CompetencyExplorer } from './competency/CompetencyExplorer';
 import { StudyPlanAdvisorSidebar } from './StudyPlanAdvisorSidebar';
-import { getSoclaasApiKey, setSoclaasApiKey, testSoclaasConnection } from '../lib/soclaas';
 
 interface Props {
   majors: Major[];
@@ -234,7 +233,7 @@ export const StudyPlan = ({
             isScrolled ? 'shadow-xs' : 'shadow-none'
           }`}
         >
-          <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-3 sm:gap-6 min-h-[38px]">
+          <div className="max-w-[2560px] mx-auto w-full flex items-center justify-between gap-3 sm:gap-6 min-h-[38px]">
             {/* Left Slot: Settings Toggle */}
             <div className="flex items-center min-w-[120px]">
               <button
@@ -367,7 +366,7 @@ export const StudyPlan = ({
 
         {isReviewMode && (
           <div className="border-b border-ink/10 bg-sky-100/70 px-4 py-2 sm:px-6">
-            <div className="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-2">
+            <div className="mx-auto flex max-w-[2560px] w-full flex-wrap items-center justify-between gap-2">
               <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-sky-950">
                 <span className="rounded-full bg-sky-950 px-2 py-0.5 font-medium text-canvas">Review mode</span>
                 <span className="leading-snug">Reviewing {reviewLabel}. Edits stay temporary.</span>
@@ -386,15 +385,18 @@ export const StudyPlan = ({
         )}
 
         <div className="relative flex min-h-[calc(100vh-65px)] min-w-0">
-          {/* Left Sidebar / Mobile Overlay (Settings) */}
+          {/* Left Sidebar (Settings) */}
           <aside
-            className={`transition-all duration-300 ease-in-out ${sidebarOpen
-                ? 'translate-x-0 opacity-100 pointer-events-auto lg:w-80 lg:p-5 lg:border-r lg:border-line/20'
-                : '-translate-x-full opacity-0 pointer-events-none lg:w-0 lg:p-0 lg:border-0 lg:translate-x-0'
-              } fixed inset-0 top-0 z-50 flex flex-col w-full h-full bg-paper p-5 overflow-y-auto shadow-2xl lg:sticky lg:top-[49px] lg:h-[calc(100vh-49px)] lg:shrink-0 lg:bg-paper/60 lg:shadow-none lg:backdrop-blur-sm lg:z-30`}
+            className={`transition-[width,padding,opacity] duration-300 ease-in-out shrink-0 overflow-hidden bg-paper/60 backdrop-blur-sm sticky top-[49px] h-[calc(100vh-49px)] z-30 ${
+              sidebarOpen
+                ? 'w-80 p-5 border-r border-line/20 opacity-100 pointer-events-auto'
+                : 'w-0 p-0 border-0 opacity-0 pointer-events-none'
+            } max-sm:fixed max-sm:inset-0 max-sm:z-50 max-sm:w-full max-sm:h-full max-sm:bg-paper max-sm:overflow-y-auto ${
+              sidebarOpen ? 'max-sm:translate-x-0' : 'max-sm:-translate-x-full'
+            }`}
           >
-            <div className="w-full lg:w-[280px] shrink-0">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-line/20">
+            <div className="w-[280px] shrink-0 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-line/20 shrink-0">
                 <h2 className="text-xs font-bold text-ink uppercase tracking-wider">Plan Settings</h2>
                 <button
                   type="button"
@@ -405,36 +407,38 @@ export const StudyPlan = ({
                   ✕
                 </button>
               </div>
-              <SettingsSidebar
-                majors={majors}
-                majorId={majorId}
-                secondMajors={secondMajors}
-                minors={minors}
-                secondMajorId={secondMajorId}
-                minorIds={minorIds}
-                setSecondMajorId={setSecondMajorId}
-                toggleMinorId={toggleMinorId}
-                nocDuration={nocDuration}
-                specialProgramme={specialProgramme}
-                setSpecialProgramme={setSpecialProgramme}
-                polytechnicApcUnits={polytechnicApcUnits}
-                setPolytechnicApcUnits={setPolytechnicApcUnits}
-                studentName={studentName}
-                setStudentName={setStudentName}
-                matricNumber={matricNumber}
-                setMatricNumber={setMatricNumber}
-                studentYear={studentYear}
-                setStudentYear={setStudentYear}
-                onSwitchMajor={handleSwitchMajor}
-                onResetPlan={handleResetPlan}
-              />
+              <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                <SettingsSidebar
+                  majors={majors}
+                  majorId={majorId}
+                  secondMajors={secondMajors}
+                  minors={minors}
+                  secondMajorId={secondMajorId}
+                  minorIds={minorIds}
+                  setSecondMajorId={setSecondMajorId}
+                  toggleMinorId={toggleMinorId}
+                  nocDuration={nocDuration}
+                  specialProgramme={specialProgramme}
+                  setSpecialProgramme={setSpecialProgramme}
+                  polytechnicApcUnits={polytechnicApcUnits}
+                  setPolytechnicApcUnits={setPolytechnicApcUnits}
+                  studentName={studentName}
+                  setStudentName={setStudentName}
+                  matricNumber={matricNumber}
+                  setMatricNumber={setMatricNumber}
+                  studentYear={studentYear}
+                  setStudentYear={setStudentYear}
+                  onSwitchMajor={handleSwitchMajor}
+                  onResetPlan={handleResetPlan}
+                />
+              </div>
             </div>
           </aside>
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 flex flex-col">
             <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
-              <div className="max-w-screen-2xl mx-auto">
+              <div className="max-w-[2560px] mx-auto w-full">
                 <StatsSummary
                   major={major}
                   stats={stats}
@@ -451,7 +455,7 @@ export const StudyPlan = ({
 
             {(declaredSecondMajor || declaredMinors.length > 0) && (
               <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
-                <div className="max-w-screen-2xl mx-auto flex flex-col gap-4">
+                <div className="max-w-[2560px] mx-auto w-full flex flex-col gap-4">
                   <button
                     type="button"
                     onClick={() => setSecondaryPanelsOpen((open) => !open)}
@@ -501,7 +505,7 @@ export const StudyPlan = ({
               </div>
             )}
 
-            <div className="max-w-screen-2xl mx-auto px-6 py-6 w-full">
+            <div className="max-w-[2560px] mx-auto px-4 sm:px-6 py-6 w-full">
               {activeView === 'competency' ? (
                 <CompetencyExplorer
                   major={major}
@@ -964,8 +968,6 @@ const SettingsSidebar = ({
         </div>
       </section>
 
-      <SoclaasSettingsSection />
-
       <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">Load Sample Plan</h3>
@@ -979,84 +981,5 @@ const SettingsSidebar = ({
         </div>
       </section>
     </div>
-  );
-};
-
-const SoclaasSettingsSection = () => {
-  const [apiKey, setApiKey] = useState(() => getSoclaasApiKey());
-  const [testStatus, setTestStatus] = useState<{ loading: boolean; message: string | null; ok?: boolean }>({
-    loading: false,
-    message: null,
-  });
-
-  const handleSave = (val: string) => {
-    setApiKey(val);
-    setSoclaasApiKey(val);
-    setTestStatus({ loading: false, message: null });
-  };
-
-  const handleTest = async () => {
-    setTestStatus({ loading: true, message: 'Testing connection...' });
-    const res = await testSoclaasConnection();
-    setTestStatus({ loading: false, message: res.message, ok: res.ok });
-  };
-
-  return (
-    <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
-      <div className="flex items-center gap-2 mb-2">
-        <div>
-          <h3 className="text-xs font-semibold text-ink uppercase tracking-wide">SoCLaaS API Key</h3>
-          <p className="text-[10px] text-muted">NUS School of Computing LLM Gateway</p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2 mt-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-wide text-muted font-medium">API Key</span>
-          <input
-            type="password"
-            value={apiKey}
-            onChange={(e) => handleSave(e.target.value)}
-            placeholder="sk-soclaas-..."
-            className="rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-ink/30 w-full"
-          />
-        </label>
-        <p className="text-[10px] text-muted leading-relaxed">
-          Stored locally in your browser. Leave blank to use the built-in recommendation engine.
-        </p>
-
-        <div className="flex items-center gap-2 mt-1">
-          <button
-            type="button"
-            disabled={testStatus.loading || !apiKey}
-            onClick={handleTest}
-            className="rounded-lg bg-canvas border border-line/30 px-2.5 py-1 text-[11px] font-medium text-ink hover:bg-paper transition-colors disabled:opacity-40"
-          >
-            {testStatus.loading ? 'Testing...' : 'Test Connection'}
-          </button>
-          {apiKey && (
-            <button
-              type="button"
-              onClick={() => handleSave('')}
-              className="text-[11px] text-muted hover:text-ink transition-colors"
-            >
-              Clear Key
-            </button>
-          )}
-        </div>
-
-        {testStatus.message && (
-          <div
-            className={`mt-1.5 rounded-xl px-2.5 py-1.5 text-[10px] leading-tight font-medium ${
-              testStatus.ok
-                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                : 'bg-amber-100 text-amber-900 border border-amber-300'
-            }`}
-          >
-            {testStatus.message}
-          </div>
-        )}
-      </div>
-    </section>
   );
 };
