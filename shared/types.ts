@@ -15,6 +15,15 @@ export interface MajorCategory {
 
 export interface RequirementRule {
   name: string;
+  /** Unit-based rules must use actual course units, not assume 4 units per course. */
+  minUnits?: number;
+  excludedCodes?: string[];
+  /** Courses can be used once across rows sharing this group. */
+  allocationGroup?: string;
+  /** Only apply this row when the specified course is present. */
+  whenCourse?: string;
+  /** Alternative versions of a course count once within a unit/count rule. */
+  equivalentGroups?: string[][];
   /** Module codes that satisfy this requirement. An entry ending in "*" matches by prefix
    * (e.g. "NTW*" matches any NTW-coded section); other entries match exactly. */
   fulfilledBy: string[];
@@ -167,6 +176,13 @@ export interface SecondaryProgramme {
   mcTarget: number;
   requirements: RequirementRule[];
   moduleCatalog: Record<string, Module>;
+  school?: string;
+  admission?: 'open' | 'restricted';
+  sourceUrl?: string;
+  reviewedOn?: string;
+  notes?: string;
+  requirementStatus?: 'review-needed' | 'partial' | 'verified';
+  excludedPrimaryIds?: string[];
 }
 
 export interface StudentSemester {
@@ -178,7 +194,7 @@ export interface StudentSemester {
 /** NUS Overseas Colleges duration. A student on NOC is on a "Programme-With-
  * Waivers" (PWW) that waives some Making Connections Electives only — NUSC
  * requirements, never Faculty/SoC common curriculum. 3-month NOC waives
- * nothing, but is tracked so it can satisfy Industry Experience. */
+ * nothing; approved internship courses may contribute to Industry Experience. */
 export type NocDuration = '3-month' | '6-month' | '1-year';
 
 /** NUSC Global Pathways / special-programme choices carried in the plan.
@@ -195,13 +211,16 @@ export type SpecialProgramme =
 
 export interface StudentPlan {
   majorId: string;
+  doubleDegreeId?: string | null;
   /** At most 1 declared second major. */
   secondMajorId?: string;
   /** At most 3 declared minors. */
   minorIds?: string[];
   /** Declared NOC Programme-With-Waivers duration, if any. See {@link NocDuration}. */
   nocDuration?: NocDuration | null;
-  /** Declared NUSC special programme / Global Pathways choice, if any. */
+  /** Selected Global Pathways; only one NOC duration may be present. */
+  specialProgrammes?: SpecialProgramme[];
+  /** @deprecated Read only when migrating older plans. */
   specialProgramme?: SpecialProgramme | null;
   /** Advanced Placement Credits (APCs) granted (e.g. 20 MC for Polytechnic diploma). */
   polytechnicApcUnits?: number;
