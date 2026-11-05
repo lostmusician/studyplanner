@@ -72,13 +72,28 @@ export const callSoclaasChat = async (options: SoclaasChatOptions): Promise<stri
     body.response_format = { type: 'json_object' };
   }
 
-  const response = await fetch(`${endpoint}/chat/completions`, {
+  const primaryUrl = endpoint.endsWith('/chat/completions')
+    ? endpoint
+    : `${endpoint}/chat/completions`;
+
+  let response = await fetch(primaryUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
   });
+
+  // If subpath returned 404 (common on hosts without catch-all rewrites), retry root endpoint directly
+  if (response.status === 404 && primaryUrl !== endpoint) {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+  }
 
   if (response.status === 401) {
     throw new Error('SoCLaaS API key is missing or invalid in server environment variables.');
