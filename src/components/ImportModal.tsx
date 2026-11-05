@@ -16,7 +16,7 @@ export const ImportModal = ({ payload, majorLabel, onConfirm, onReview, onCancel
   const unknownMajor = majorLabel === null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4">
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/40 px-4">
       <div className="w-full max-w-md rounded-4xl bg-canvas p-6 shadow-xl">
         <h2 className="text-lg font-semibold text-ink">Import shared plan</h2>
 

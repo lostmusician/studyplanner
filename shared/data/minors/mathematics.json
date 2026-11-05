@@ -5,17 +5,21 @@
   "mcTarget": 20,
   "requirements": [
     {
-      "name": "Level-1000 module, 8 MC (MA1xxx except MA1301/MA1301X, MA20xx, or CS1231/CS1231S)",
+      "name": "8 units of MA1xxx / MA20xx or CS1231 / CS1231S",
       "fulfilledBy": [
         "MA1*",
         "MA20*",
         "CS1231",
         "CS1231S"
       ],
-      "count": 2
+      "excludedCodes": [
+        "MA1301",
+        "MA1301X"
+      ],
+      "minUnits": 8
     },
     {
-      "name": "Level-2000 modules (2): Linear Algebra II, Multivariable Calculus/MA22xx, Mathematical Analysis I, or Probability",
+      "name": "Two approved level-2000 courses",
       "fulfilledBy": [
         "MA2101",
         "MA2101S",
@@ -26,20 +30,58 @@
         "MA2108S",
         "MA2116",
         "MA2116T",
-        "MA2216",
         "ST2131",
         "ST2334"
+      ],
+      "excludedCodes": [
+        "MA2288*",
+        "MA2289*"
       ],
       "count": 2
     },
     {
-      "name": "Level-3000 module (any MA32xx, ST3236, or PC3274A)",
+      "name": "One approved advanced course",
       "fulfilledBy": [
         "MA32*",
         "ST3236",
         "PC3274A"
       ],
-      "count": 1
+      "excludedCodes": [
+        "MA3288*",
+        "MA3289*"
+      ]
+    },
+    {
+      "name": "At least 20 approved units",
+      "fulfilledBy": [
+        "MA1*",
+        "MA20*",
+        "CS1231",
+        "CS1231S",
+        "MA2101",
+        "MA2101S",
+        "MA2104",
+        "MA2311",
+        "MA22*",
+        "MA2108",
+        "MA2108S",
+        "MA2116",
+        "MA2116T",
+        "ST2131",
+        "ST2334",
+        "MA32*",
+        "ST3236",
+        "PC3274A"
+      ],
+      "excludedCodes": [
+        "MA1301",
+        "MA1301X",
+        "MA2288*",
+        "MA2289*",
+        "MA3288*",
+        "MA3289*"
+      ],
+      "minUnits": 20
     }
   ],
   "moduleCatalog": {
@@ -123,5 +165,9 @@
       "name": "Mathematical Methods in Physics II",
       "mcs": 4
     }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "AY2021/22 onwards. Dummy MAx99x courses and cross-listed equivalents must not be counted twice. Check substitutions and residency with the department.",
+  "sourceUrl": "https://www.math.nus.edu.sg/wp-content/uploads/sites/4/2026/07/MAmin_2122_14102025.pdf",
+  "reviewedOn": "2026-11-05"
 }

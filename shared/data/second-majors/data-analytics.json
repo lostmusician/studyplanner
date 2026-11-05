@@ -46,21 +46,28 @@
       "count": 1
     },
     {
-      "name": "Calculus (MA1521, MA2002, MA1312, or MA1505)",
+      "name": "Calculus (MA1312 / MA1505 / MA1521 / MA2002, or MA1511 + MA1512)",
       "fulfilledBy": [
         "MA1521",
         "MA2002",
         "MA1312",
         "MA1505"
       ],
-      "count": 1
+      "count": 1,
+      "altGroups": [
+        [
+          "MA1511",
+          "MA1512"
+        ]
+      ]
     },
     {
-      "name": "Linear Algebra (MA1522, MA2001, or MA1508E)",
+      "name": "Linear algebra (MA1508E / MA1513 / MA1522 / MA2001)",
       "fulfilledBy": [
         "MA1522",
         "MA2001",
-        "MA1508E"
+        "MA1508E",
+        "MA1513"
       ],
       "count": 1
     },
@@ -75,15 +82,87 @@
       "count": 1
     },
     {
-      "name": "Advanced electives (CS3244/CS3264, DSA4211, DSA4212, ST3131)",
+      "name": "Advanced electives: 8 units (CS3244 or CS3264 counts once; DSA4211 / DSA4212 / ST3131)",
       "fulfilledBy": [
         "CS3244",
-        "CS3264",
         "DSA4211",
         "DSA4212",
-        "ST3131"
+        "ST3131",
+        "CS3264"
       ],
-      "count": 2
+      "count": 2,
+      "allocationGroup": "advanced-electives",
+      "minUnits": 8,
+      "excludedCodes": [],
+      "equivalentGroups": [
+        [
+          "CS3244",
+          "CS3264"
+        ]
+      ]
+    },
+    {
+      "name": "Additional advanced elective when using 2-unit MA1513",
+      "fulfilledBy": [
+        "CS3244",
+        "DSA4211",
+        "DSA4212",
+        "ST3131",
+        "CS3264"
+      ],
+      "allocationGroup": "advanced-electives",
+      "whenCourse": "MA1513",
+      "excludedCodes": [],
+      "equivalentGroups": [
+        [
+          "CS3244",
+          "CS3264"
+        ]
+      ]
+    },
+    {
+      "name": "At least 40 units of programme courses",
+      "fulfilledBy": [
+        "CS2040",
+        "CS2040C",
+        "CS2040DE",
+        "CS2040S",
+        "CS3244",
+        "DBA3701",
+        "DSA1101",
+        "DSA2101",
+        "DSA2102",
+        "DSA3102",
+        "DSA4211",
+        "DSA4212",
+        "MA1312",
+        "MA1505",
+        "MA1508E",
+        "MA1513",
+        "MA1521",
+        "MA1522",
+        "MA2001",
+        "MA2002",
+        "MA2116",
+        "MA2116T",
+        "MA3236",
+        "MA3252",
+        "ST2131",
+        "ST2132",
+        "ST3131",
+        "CS3264"
+      ],
+      "excludedCodes": [
+        "ST328*",
+        "ST4288"
+      ],
+      "minUnits": 40,
+      "equivalentGroups": [
+        [
+          "CS3244",
+          "CS3264"
+        ]
+      ]
     }
   ],
   "moduleCatalog": {
@@ -221,6 +300,28 @@
       "code": "ST3131",
       "name": "Regression Analysis",
       "mcs": 4
+    },
+    "MA1513": {
+      "code": "MA1513",
+      "name": "Linear Algebra with Differential Equations",
+      "mcs": 2
+    },
+    "MA1511": {
+      "code": "MA1511",
+      "name": "Engineering Calculus",
+      "mcs": 2
+    },
+    "MA1512": {
+      "code": "MA1512",
+      "name": "Differential Equations for Engineering",
+      "mcs": 2
     }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "AY2021/22 onwards. Engineering-only alternatives and course preclusions still require department review. At least 60% must be read at NUS; overlap is limited to 16 units. CS3244 and CS3264 count as one elective option.",
+  "sourceUrl": "https://www.stat.nus.edu.sg/wp-content/uploads/sites/8/2026/07/DA2MJ-AY21-22-after_updated-July-2026.pdf",
+  "reviewedOn": "2026-11-05",
+  "excludedPrimaryIds": [
+    "business-analytics-nusc"
+  ]
 }

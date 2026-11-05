@@ -64,5 +64,7 @@
     "EC3101": { "code": "EC3101", "name": "Microeconomic Analysis II", "mcs": 4 },
     "EC3102": { "code": "EC3102", "name": "Macroeconomic Analysis II", "mcs": 4 },
     "EC3303": { "code": "EC3303", "name": "Econometrics I", "mcs": 4 }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "Course checks are a planning aid. Check cohort-specific substitutions, residency, eligibility and overlap with the host department."
 }

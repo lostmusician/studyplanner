@@ -123,14 +123,14 @@ describe('computeRequirements', () => {
     expect(mce.fulfilled).toBe(false);
   });
 
-  it('counts GEx as one Making Connections slot when the special programme is selected', () => {
+  it('does not grant MCE credit merely from selecting GEx', () => {
     const sems = semesters([]);
     const [, mce] = computeRequirements(source, sems, [], {}, 'gex');
-    expect(mce.have).toBe(1);
+    expect(mce.have).toBe(0);
     expect(mce.fulfilled).toBe(false);
   });
 
-  it('counts SEP as two Making Connections slots and reduces HSS/ST minimums to 1', () => {
+  it('counts only approved placed courses when SEP is selected', () => {
     const mceSource = {
       requirements: [
         {
@@ -141,7 +141,7 @@ describe('computeRequirements', () => {
         },
       ],
     };
-    // 4 courses on plan (2 HSS, 2 ST) + 2 credited by SEP = 6 total
+    // Four actual courses remain four courses; selecting SEP does not add two more.
     const sems = semesters([
       { code: 'NHS2001', name: 'HSS 1', mcs: 4, categoryId: 'nus-college', year: 2, sem: 1 },
       { code: 'NFC2001', name: 'HSS 2', mcs: 4, categoryId: 'nus-college', year: 2, sem: 2 },
@@ -149,8 +149,8 @@ describe('computeRequirements', () => {
       { code: 'NFB2001', name: 'ST 2', mcs: 4, categoryId: 'nus-college', year: 3, sem: 2 },
     ]);
     const [mce] = computeRequirements(mceSource, sems, [], {}, 'sep');
-    expect(mce.have).toBe(6);
-    expect(mce.fulfilled).toBe(true);
+    expect(mce.have).toBe(4);
+    expect(mce.fulfilled).toBe(false);
     expect(mce.info).toBeUndefined();
   });
 
@@ -178,7 +178,7 @@ describe('computeRequirements', () => {
     expect(nocFulfilled.fulfilled).toBe(true);
   });
 
-  it('recognizes NFC/NHT as HSS and NFB as ST for Making Connections domain balance', () => {
+  it('recognizes NFB as HSS and NFC as ST without treating Creative as HSS', () => {
     const mceSource = {
       requirements: [
         {
@@ -196,8 +196,8 @@ describe('computeRequirements', () => {
       { code: 'NST2001', name: 'ST 2', mcs: 4, categoryId: 'nus-college', year: 3, sem: 2 },
     ]);
     const [mce] = computeRequirements(mceSource, sems);
-    expect(mce.fulfilled).toBe(true);
-    expect(mce.info).toBeUndefined();
+    expect(mce.fulfilled).toBe(false);
+    expect(mce.info).toContain('1 HSS, 2 ST');
   });
 
   it('counts a manually mapped code only while it is actually placed', () => {
@@ -545,18 +545,18 @@ describe('applyNocAdjustment', () => {
     expect(applyNocAdjustment(major, undefined)).toBe(major);
   });
 
-  it('waives 2 Making Connections electives and appends NOC category for a 6-month NOC', () => {
+  it('waives 2 Making Connections electives without altering faculty targets for a 6-month NOC', () => {
     const adjusted = applyNocAdjustment(major, '6-month');
     expect(adjusted.requirements[0].count).toBe(4);
     expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(44);
-    expect(adjusted.categories.find((c) => c.id === 'noc')?.mcTarget).toBe(12);
+    expect(adjusted.categories.find((c) => c.id === 'noc')).toBeUndefined();
   });
 
-  it('waives 4 Making Connections electives and appends NOC category for a 1-year NOC', () => {
+  it('waives 4 Making Connections electives without altering faculty targets for a 1-year NOC', () => {
     const adjusted = applyNocAdjustment(major, '1-year');
     expect(adjusted.requirements[0].count).toBe(2);
     expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(36);
-    expect(adjusted.categories.find((c) => c.id === 'noc')?.mcTarget).toBe(36);
+    expect(adjusted.categories.find((c) => c.id === 'noc')).toBeUndefined();
   });
 
   it('never touches soc-common (NOC waives NUSC requirements only)', () => {
@@ -573,7 +573,7 @@ describe('applyNocAdjustment', () => {
     expect(applyNocAdjustment(noNusCollege, '1-year')).toBe(noNusCollege);
   });
 
-  it('freed MC is not redistributed to unrestricted-electives when missing, but noc category is still appended', () => {
+  it('keeps categories unchanged when there is no UE category to redistribute to', () => {
     const noUnrestricted: Major = {
       ...major,
       categories: major.categories.filter((c) => c.id !== 'unrestricted-electives'),
@@ -581,8 +581,8 @@ describe('applyNocAdjustment', () => {
     const adjusted = applyNocAdjustment(noUnrestricted, '6-month');
     expect(adjusted.categories.find((c) => c.id === 'nus-college')?.mcTarget).toBe(44);
     expect(adjusted.categories.find((c) => c.id === 'unrestricted-electives')).toBeUndefined();
-    expect(adjusted.categories.find((c) => c.id === 'noc')?.mcTarget).toBe(12);
-    expect(adjusted.categories).toHaveLength(2);
+    expect(adjusted.categories.find((c) => c.id === 'noc')).toBeUndefined();
+    expect(adjusted.categories).toHaveLength(1);
   });
 });
 

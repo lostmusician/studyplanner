@@ -43,5 +43,7 @@
     "ST2132": { "code": "ST2132", "name": "Mathematical Statistics", "mcs": 4 },
     "ST2137": { "code": "ST2137", "name": "Statistical Computing and Programming", "mcs": 4 },
     "ST3131": { "code": "ST3131", "name": "Regression Analysis", "mcs": 4 }
-  }
+  },
+  "requirementStatus": "partial",
+  "notes": "Course checks are a planning aid. Check cohort-specific substitutions, residency, eligibility and overlap with the host department."
 }

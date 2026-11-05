@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Major, MajorCategory, Module, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import type { ConstraintStatus, FocusAreaStatus, RequirementStatus, Stats } from '../lib/studyPlan';
-import { computeBreadthDepth, computeFocusAreas, computeProgrammeElectives, matchesFulfiller } from '../lib/studyPlan';
+import { computeBreadthDepth, computeFocusAreas, computeProgrammeElectives, computeUeTarget, matchesFulfiller } from '../lib/studyPlan';
 import { FocusAreaExplorer } from './FocusAreaExplorer';
 import { ProgrammeElectivesExplorer } from './ProgrammeElectivesExplorer';
 import { MUTED } from '../lib/colors';
@@ -35,10 +35,7 @@ export const StatsSummary = ({
   const effectiveTotalMc = stats.totalMc + apcUnits;
   const remainingDegreeMc = Math.max(0, major.totalMcTarget - effectiveTotalMc);
 
-  const otherCategoriesTargetSum = major.categories
-    .filter((cat) => cat.id !== 'unrestricted-electives')
-    .reduce((sum, cat) => sum + (cat.mcTarget ?? 0), 0);
-  const dynamicUeTarget = Math.max(0, major.totalMcTarget - otherCategoriesTargetSum);
+  const dynamicUeTarget = computeUeTarget(major);
 
   return (
     <div className="flex flex-col gap-3 w-full">
@@ -177,7 +174,7 @@ const StatCard = ({
       </div>
       <div className="text-base font-bold text-ink leading-tight mt-0.5">
         {value}
-        {target && <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>}
+        {target !== undefined && <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>}
       </div>
       {pct !== null && (
         <div className="h-1 rounded-full bg-ink/10 overflow-hidden mt-1.5">

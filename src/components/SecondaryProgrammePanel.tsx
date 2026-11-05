@@ -30,16 +30,20 @@ export const SecondaryProgrammePanel = ({ programme, semesters, waivedModules }:
         <h3 className="text-sm font-semibold text-ink">
           {programme.label} <span className="font-normal text-muted">&middot; {kindLabel}</span>
         </h3>
-        <div className="flex items-center gap-2">
+        {requirements.length > 0 && <div className="flex items-center gap-2">
           <span className="text-xs text-muted">
             {fulfilled}/{requirements.length}
           </span>
           <ConstraintChip constraint={doubleCountConstraint} />
-        </div>
+        </div>}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
+        {programme.requirementStatus !== 'verified' && <span>{requirements.length ? 'Partial checklist' : 'Manual review'}</span>}
+        {programme.sourceUrl && <a href={programme.sourceUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">NUS requirements ↗</a>}
+      </div>
       {requirements.length === 0 ? (
-        <p className="text-xs text-muted">No requirements defined for this programme.</p>
+        <p className="text-xs text-muted">Course checklist unavailable.</p>
       ) : (
         <ul className="grid gap-2 sm:grid-cols-2">
           {requirements.map((req) => (

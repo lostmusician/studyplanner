@@ -19,6 +19,7 @@ interface Props {
   waivedModules: WaivedModule[];
   requirements: RequirementStatus[];
   onClose: () => void;
+  onOpenPathways?: () => void;
   /** Optional profile year ("Year 2") used to mark earlier years completed. */
   studentYear?: string;
 }
@@ -31,6 +32,7 @@ export const CompetencyExplorer = ({
   waivedModules,
   requirements,
   onClose,
+  onOpenPathways,
   studentYear,
 }: Props) => {
   const [activeView, setActiveView] = useState<ExplorerView>('graph');
@@ -55,6 +57,7 @@ export const CompetencyExplorer = ({
   const mappedNodes = graph.nodes.filter((node) => node.status !== 'unplaced');
   const mappedMc = mappedNodes.reduce((sum, node) => sum + node.mcs, 0);
   const prerequisiteLinks = graph.links.filter((link) => link.kind === 'prerequisite').length;
+  const missingRequirements = requirements.filter(requirement => !requirement.fulfilled);
   const requirementsMet = requirements.filter((requirement) => requirement.fulfilled).length;
   const unplacedNodes = graph.nodes.filter((node) => node.status === 'unplaced').length;
 
@@ -108,7 +111,7 @@ export const CompetencyExplorer = ({
             className="flex items-center gap-1.5 rounded-xl border border-ink/15 bg-canvas px-3 py-1.5 text-[11px] font-medium text-ink transition-colors hover:bg-paper"
           >
             <span aria-hidden="true">←</span>
-            <span>Back to Grid</span>
+            <span>Back to Home</span>
           </button>
         </div>
       </header>
@@ -164,6 +167,17 @@ export const CompetencyExplorer = ({
         </div>
       </div>
 
+      {missingRequirements.length > 0 && (
+        <details className="rounded-xl border border-ink/10 bg-canvas/70 px-3 py-2 text-xs text-muted">
+          <summary className="cursor-pointer font-medium text-ink">{missingRequirements.length} requirement{missingRequirements.length === 1 ? '' : 's'} still to plan{missingRequirements.length === 1 ? ` · ${missingRequirements[0].name.startsWith('Global Pathways') ? 'Choose a Global Pathway' : missingRequirements[0].name}` : ''}</summary>
+          <ul className="mt-2 space-y-2">{missingRequirements.map(req => <li key={req.name}>
+            <span className="font-medium text-ink">{req.name}</span>
+            {req.info && <p className="mt-1">{req.info}</p>}
+            {req.name.startsWith('Global Pathways') && onOpenPathways && <button type="button" onClick={onOpenPathways} className="mt-2 rounded-lg bg-ink px-3 py-2 font-medium text-canvas">Choose pathways</button>}
+          </li>)}</ul>
+        </details>
+      )}
+
       <div className="h-[480px] shrink-0 lg:h-auto lg:min-h-0 lg:flex-1">
         {graph.nodes.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-ink/20 bg-[#f8f5ee]/55 px-6 text-center">
@@ -178,7 +192,7 @@ export const CompetencyExplorer = ({
               onClick={onClose}
               className="rounded-xl bg-ink px-3 py-1.5 text-xs font-medium text-canvas transition-opacity hover:opacity-85"
             >
-              Return to Semester Grid
+              Return to Home
             </button>
           </div>
         ) : activeView === 'graph' ? (

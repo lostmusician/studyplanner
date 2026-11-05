@@ -1,0 +1,67 @@
+{
+  "id": "sociology",
+  "label": "Sociology",
+  "kind": "second-major",
+  "mcTarget": 40,
+  "requirementStatus": "partial",
+  "sourceUrl": "https://fass.nus.edu.sg/socanth/second-major-sociology/",
+  "reviewedOn": "2026-11-05",
+  "notes": "AY2021/22 onwards. Department-approved recognised courses and substitutions require manual review; the checklist counts the published subject-coded route. Residency and preclusions are not automatically checked.",
+  "moduleCatalog": {
+    "SC1101E": {
+      "code": "SC1101E",
+      "name": "Making Sense of Society",
+      "mcs": 4
+    },
+    "SC2101": {
+      "code": "SC2101",
+      "name": "Methods of Social Research",
+      "mcs": 4
+    },
+    "SC3101": {
+      "code": "SC3101",
+      "name": "Social Thought and Social Theory",
+      "mcs": 4
+    }
+  },
+  "requirements": [
+    {
+      "name": "Making Sense of Society",
+      "fulfilledBy": [
+        "SC1101E"
+      ]
+    },
+    {
+      "name": "Methods of Social Research",
+      "fulfilledBy": [
+        "SC2101"
+      ]
+    },
+    {
+      "name": "Social Thought and Social Theory",
+      "fulfilledBy": [
+        "SC3101"
+      ]
+    },
+    {
+      "name": "At least 16 units at level 3000 or above",
+      "fulfilledBy": [
+        "SC3*",
+        "SC4*",
+        "SC5*",
+        "SC6*"
+      ],
+      "minUnits": 16
+    },
+    {
+      "name": "At least 40 programme units",
+      "fulfilledBy": [
+        "SC*",
+        "SC1101E",
+        "SC2101",
+        "SC3101"
+      ],
+      "minUnits": 40
+    }
+  ]
+}

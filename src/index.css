@@ -9,6 +9,19 @@
   --muted: 90 89 86;
   --line: 199 191 176;
   --accent: 96 92 78;
+  --mobile-nav-height: calc(72px + env(safe-area-inset-bottom, 0px));
+  --sidebar-width: 15rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --sidebar-width: 16rem;
+  }
+}
+
+.sidebar-collapsed,
+.planner-shell.sidebar-collapsed {
+  --sidebar-width: 4rem !important;
 }
 
 html {
@@ -67,5 +80,100 @@ select {
 @media print {
   @page {
     margin: 1.5cm;
+  }
+}
+/* Phone controls retain readable labels and space for touch without squeezing the profile. */
+button, a, [role="button"] { touch-action: manipulation; }
+@media (max-width: 1023px) {
+  .header-actions button { min-height: 44px; }
+  .header-profile { text-align: right; }
+  .header-profile > div { justify-content: flex-end; }
+}
+@media (pointer: coarse) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
+/* Settings content opens as a full-height panel on desktop (adjacent to the
+   left sidebar) and becomes a sheet above the compact bar on narrow
+   screens. The panel body scrolls internally so long sections never overflow. */
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 54;
+  background: rgba(20, 20, 19, 0.28);
+}
+.settings-panel {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgb(var(--paper));
+  border: 1px solid rgb(var(--line));
+  box-shadow: 0 18px 40px rgba(20, 20, 19, 0.12);
+}
+
+/* The advisor overlays the plan until the full three-column desktop layout fits. */
+@media (max-width: 1023px) {
+  .advisor-drawer {
+    top: 0;
+    height: 100dvh;
+    max-width: none;
+  }
+}
+@media (max-width: 767px) {
+  .planner-shell { padding-bottom: var(--mobile-nav-height); }
+  .header-actions { display: flex; justify-content: flex-end; padding-top: 0; border-top: 0; gap: 4px; }
+  .mobile-navigation {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 55;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 8px max(10px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+    border-top: 1px solid rgb(var(--line));
+    background: rgb(var(--canvas));
+  }
+  .mobile-navigation button { user-select: none; -webkit-user-select: none; }
+  .advisor-drawer {
+    top: 0;
+    bottom: var(--mobile-nav-height);
+    height: calc(100dvh - var(--mobile-nav-height));
+    max-width: none;
+  }
+  .settings-panel {
+    inset: 0 0 var(--mobile-nav-height);
+    border: 0;
+    border-radius: 0;
+  }
+  .settings-panel__header { padding-top: max(12px, env(safe-area-inset-top, 0px)); }
+  header { padding-top: max(10px, env(safe-area-inset-top, 0px)); }
+  .advisor-drawer > div { padding-top: env(safe-area-inset-top, 0px); }
+  .app-toast { bottom: calc(var(--mobile-nav-height) + 16px); }
+}
+
+@media (min-width: 768px) {
+  .settings-panel {
+    top: 0;
+    bottom: 0;
+    left: var(--sidebar-width);
+    width: 24rem;
+    height: 100vh;
+    height: 100dvh;
+    max-width: calc(100vw - var(--sidebar-width) - 2rem);
+    max-height: none;
+    border-radius: 0;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 1px solid rgb(var(--line));
+    box-shadow: 12px 0 32px rgba(20, 20, 19, 0.08);
+    transition: left 200ms ease-in-out;
+  }
+}
+@media (min-width: 1024px) {
+  .settings-panel {
+    width: 26rem;
   }
 }

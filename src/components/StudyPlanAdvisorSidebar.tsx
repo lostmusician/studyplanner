@@ -221,30 +221,30 @@ export const StudyPlanAdvisorSidebar = ({
   };
 
   const field =
-    'rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent w-full';
+    'rounded-xl bg-canvas border border-line/40 px-3 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent w-full';
 
   return (
     <aside
-      className={`transition-[width,opacity] duration-300 ease-in-out shrink-0 overflow-hidden bg-paper/60 backdrop-blur-sm sticky top-[49px] h-[calc(100vh-49px)] z-30 ${
+      className={`advisor-drawer transition-[width,opacity] duration-300 ease-in-out shrink-0 overflow-hidden bg-paper/60 backdrop-blur-sm sticky top-[49px] h-[calc(100vh-49px)] z-30 ${
         isOpen
           ? 'w-80 sm:w-96 border-l border-line/20 opacity-100 pointer-events-auto'
           : 'w-0 border-0 opacity-0 pointer-events-none'
-      } max-sm:fixed max-sm:inset-y-0 max-sm:right-0 max-sm:z-50 max-sm:w-full max-sm:max-w-sm max-sm:bg-paper max-sm:shadow-2xl ${
-        isOpen ? 'max-sm:translate-x-0' : 'max-sm:translate-x-full'
+      } max-lg:fixed max-lg:inset-y-0 max-lg:right-0 max-lg:z-50 max-lg:w-full max-lg:max-w-sm max-lg:bg-paper max-lg:shadow-2xl ${
+        isOpen ? 'max-lg:translate-x-0' : 'max-lg:translate-x-full'
       }`}
     >
-      <div className="w-[320px] sm:w-[384px] shrink-0 h-full flex flex-col">
+      <div className="w-full sm:w-[384px] shrink-0 h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-line/20 shrink-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-xs font-bold text-ink uppercase tracking-wider">
+              <h2 className="text-sm font-bold text-ink uppercase tracking-wider">
                 Study Plan Advisor
               </h2>
               {messages.length > 0 && (
                 <button
                   type="button"
                   onClick={handleStartOver}
-                  className="text-[10px] text-muted hover:text-ink transition-colors underline underline-offset-2 ml-1"
+                  className="text-xs text-muted hover:text-ink transition-colors underline underline-offset-2 ml-1"
                 >
                   Reset
                 </button>
@@ -253,7 +253,7 @@ export const StudyPlanAdvisorSidebar = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/10 text-xs font-bold text-ink transition-colors hover:bg-ink/20"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-ink/10 text-sm font-bold text-ink transition-colors hover:bg-ink/20"
               aria-label="Close advisor"
             >
               ✕
@@ -262,26 +262,26 @@ export const StudyPlanAdvisorSidebar = ({
 
           {isLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <div className="h-7 w-7 animate-spin rounded-full border-2 border-ink border-t-transparent mb-3 opacity-60" />
-              <span className="text-xs font-medium text-ink">Analyzing courses...</span>
+              <div className="h-11 w-11 animate-spin rounded-full border-2 border-ink border-t-transparent mb-3 opacity-60" />
+              <span className="text-sm font-medium text-ink">Analyzing courses...</span>
             </div>
           ) : messages.length > 0 ? (
             /* Conversational Iteration View */
             <div className="flex-1 flex flex-col min-h-0">
               {/* Message History Stream */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
                 {messages.map((m) => (
                   <div
                     key={m.id}
                     className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}
                   >
                     {m.role === 'user' ? (
-                      <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-ink text-canvas px-3.5 py-2 text-xs leading-relaxed shadow-xs">
+                      <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-ink text-canvas px-3.5 py-2 text-sm leading-relaxed shadow-xs">
                         {m.content}
                       </div>
                     ) : (
                       <div className="w-full space-y-3">
-                        <div className="max-w-[95%] rounded-2xl rounded-tl-sm bg-canvas border border-line/30 p-3 text-xs leading-relaxed text-ink shadow-2xs">
+                        <div className="max-w-[95%] rounded-2xl rounded-tl-sm bg-canvas border border-line/30 p-3 text-sm leading-relaxed text-ink shadow-2xs">
                           {m.content}
                         </div>
 
@@ -289,11 +289,11 @@ export const StudyPlanAdvisorSidebar = ({
                         {m.result && (
                           <div className="rounded-2xl bg-white/70 p-3.5 border border-line/30 shadow-xs space-y-2.5">
                             <div>
-                              <span className="text-[10px] font-semibold uppercase tracking-wider text-ink/70 bg-ink/5 px-2 py-0.5 rounded-full inline-block mb-1">
+                              <span className="text-xs font-semibold uppercase tracking-wider text-ink/70 bg-ink/5 px-2 py-0.5 rounded-full inline-block mb-1">
                                 Pathway
                               </span>
-                              <h4 className="text-xs font-bold text-ink">{m.result.trackTitle}</h4>
-                              <p className="text-[11px] text-muted leading-tight mt-1">
+                              <h4 className="text-sm font-bold text-ink">{m.result.trackTitle}</h4>
+                              <p className="text-sm text-muted leading-tight mt-1">
                                 {m.result.trackRationale}
                               </p>
                             </div>
@@ -301,17 +301,17 @@ export const StudyPlanAdvisorSidebar = ({
                             {/* Electives */}
                             {m.result.recommendedElectives.length > 0 && (
                               <div className="pt-1.5 border-t border-line/20 space-y-1">
-                                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block">
+                                <span className="text-xs font-semibold text-muted uppercase tracking-wider block">
                                   Suggested Courses
                                 </span>
                                 <div className="space-y-1">
                                   {m.result.recommendedElectives.map((e) => (
                                     <div
                                       key={e.code}
-                                      className="rounded-lg bg-canvas px-2 py-1 border border-line/20 text-[11px] flex items-center justify-between"
+                                      className="rounded-lg bg-canvas px-2 py-1 border border-line/20 text-sm flex items-center justify-between"
                                     >
                                       <span className="font-semibold text-ink">{e.code}</span>
-                                      <span className="text-[10px] text-muted truncate max-w-[170px]">
+                                      <span className="text-xs text-muted truncate max-w-[170px]">
                                         {e.reason}
                                       </span>
                                     </div>
@@ -324,7 +324,7 @@ export const StudyPlanAdvisorSidebar = ({
                             <button
                               type="button"
                               onClick={() => handleApplyClick(m.result)}
-                              className="w-full mt-1 rounded-xl bg-ink py-2 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity flex items-center justify-center shadow-xs"
+                              className="w-full mt-1 rounded-xl bg-ink py-2 text-sm font-medium text-canvas hover:bg-ink/90 transition-opacity flex items-center justify-center shadow-xs"
                             >
                               Apply to Plan
                             </button>
@@ -336,9 +336,9 @@ export const StudyPlanAdvisorSidebar = ({
                 ))}
 
                 {isIterating && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted py-1">
+                  <div className="flex items-center gap-1.5 text-sm text-muted py-1">
                     <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink border-t-transparent opacity-50" />
-                    <span className="text-[11px]">Adjusting study plan...</span>
+                    <span className="text-sm">Adjusting study plan...</span>
                   </div>
                 )}
                 <div ref={chatBottomRef} />
@@ -355,7 +355,7 @@ export const StudyPlanAdvisorSidebar = ({
                         type="button"
                         disabled={isIterating}
                         onClick={() => handleSendMessage(sug)}
-                        className="whitespace-nowrap rounded-lg bg-canvas border border-line/30 px-2 py-1 text-[10px] font-medium text-ink/75 hover:bg-paper hover:text-ink transition-colors disabled:opacity-40 shrink-0"
+                        className="whitespace-nowrap rounded-lg bg-canvas border border-line/30 px-2 py-1 text-xs font-medium text-ink/75 hover:bg-paper hover:text-ink transition-colors disabled:opacity-40 shrink-0"
                       >
                         + {sug}
                       </button>
@@ -376,12 +376,12 @@ export const StudyPlanAdvisorSidebar = ({
                       disabled={isIterating}
                       onChange={(e) => setInputDraft(e.target.value)}
                       placeholder="Request adjustments (e.g. 'Swap CS4243 for an NLP course')..."
-                      className="flex-1 rounded-xl bg-canvas border border-line/40 px-3 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+                      className="flex-1 rounded-xl bg-canvas border border-line/40 px-3 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
                     />
                     <button
                       type="submit"
                       disabled={isIterating || !inputDraft.trim()}
-                      className="rounded-xl bg-ink px-3 py-1.5 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity disabled:opacity-30 shrink-0"
+                      className="rounded-xl bg-ink px-3 py-2.5 text-sm font-medium text-canvas hover:bg-ink/90 transition-opacity disabled:opacity-30 shrink-0"
                     >
                       Send
                     </button>
@@ -392,7 +392,7 @@ export const StudyPlanAdvisorSidebar = ({
                   <button
                     type="button"
                     onClick={handleStartOver}
-                    className="w-full rounded-xl bg-ink py-2 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity"
+                    className="w-full rounded-xl bg-ink py-2 text-sm font-medium text-canvas hover:bg-ink/90 transition-opacity"
                   >
                     Back to Survey
                   </button>
@@ -401,14 +401,14 @@ export const StudyPlanAdvisorSidebar = ({
             </div>
           ) : (
             /* Initial Survey Form */
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
               <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
-                <h3 className="mb-3 text-xs font-semibold text-ink uppercase tracking-wide">
+                <h3 className="mb-3 text-sm font-semibold text-ink">
                   Current Standing
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide text-muted font-medium">
+                    <span className="text-sm text-muted font-medium">
                       Year
                     </span>
                     <select
@@ -425,7 +425,7 @@ export const StudyPlanAdvisorSidebar = ({
                   </label>
 
                   <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide text-muted font-medium">
+                    <span className="text-sm text-muted font-medium">
                       Semester
                     </span>
                     <select
@@ -440,7 +440,7 @@ export const StudyPlanAdvisorSidebar = ({
                 </div>
 
                 <div className="mt-3">
-                  <span className="text-[10px] uppercase tracking-wide text-muted font-medium block mb-1.5">
+                  <span className="text-sm text-muted font-medium block mb-1.5">
                     Target Workload
                   </span>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -449,7 +449,7 @@ export const StudyPlanAdvisorSidebar = ({
                         key={mcs}
                         type="button"
                         onClick={() => setTargetMcs(mcs)}
-                        className={`rounded-xl py-1.5 text-center text-xs font-medium transition-colors border ${
+                        className={`rounded-xl py-1.5 text-center text-sm font-medium transition-colors border ${
                           targetMcs === mcs
                             ? 'bg-ink text-canvas border-ink'
                             : 'bg-canvas text-ink border-line/40 hover:border-line'
@@ -463,7 +463,7 @@ export const StudyPlanAdvisorSidebar = ({
               </section>
 
               <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
-                <h3 className="mb-2 text-xs font-semibold text-ink uppercase tracking-wide">
+                <h3 className="mb-2 text-sm font-semibold text-ink">
                   Interests
                 </h3>
                 <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-0.5">
@@ -474,7 +474,7 @@ export const StudyPlanAdvisorSidebar = ({
                         key={topic}
                         type="button"
                         onClick={() => toggleInterest(topic)}
-                        className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all border ${
+                        className={`rounded-lg px-2.5 py-1 text-sm font-medium transition-all border ${
                           selected
                             ? 'bg-ink text-canvas border-ink shadow-2xs'
                             : 'bg-canvas text-ink/80 border-line/30 hover:border-line'
@@ -489,12 +489,12 @@ export const StudyPlanAdvisorSidebar = ({
               </section>
 
               <section className="rounded-2xl bg-white/70 p-4 border border-line/30 shadow-xs">
-                <h3 className="mb-3 text-xs font-semibold text-ink uppercase tracking-wide">
+                <h3 className="mb-3 text-sm font-semibold text-ink">
                   Career & Minors
                 </h3>
-                <div className="flex flex-col gap-2.5">
+                <div className="flex flex-col gap-3">
                   <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide text-muted font-medium">
+                    <span className="text-sm text-muted font-medium">
                       Career Direction
                     </span>
                     <select
@@ -511,7 +511,7 @@ export const StudyPlanAdvisorSidebar = ({
                   </label>
 
                   <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide text-muted font-medium">
+                    <span className="text-sm text-muted font-medium">
                       Optional Minor
                     </span>
                     <select
@@ -529,7 +529,7 @@ export const StudyPlanAdvisorSidebar = ({
                   </label>
 
                   <label className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase tracking-wide text-muted font-medium">
+                    <span className="text-sm text-muted font-medium">
                       Notes (Optional)
                     </span>
                     <input
@@ -546,7 +546,7 @@ export const StudyPlanAdvisorSidebar = ({
               <button
                 type="button"
                 onClick={handleInitialGenerate}
-                className="w-full rounded-2xl bg-ink px-4 py-2.5 text-xs font-medium text-canvas hover:bg-ink/90 transition-opacity flex items-center justify-center shadow-xs"
+                className="w-full rounded-2xl bg-ink px-4 py-2.5 text-sm font-medium text-canvas hover:bg-ink/90 transition-opacity flex items-center justify-center shadow-xs"
               >
                 Generate Plan
               </button>
