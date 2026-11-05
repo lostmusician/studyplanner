@@ -135,7 +135,8 @@ export const StudyPlanAdvisorSidebar = ({
           result: res,
         },
       ]);
-    } catch {
+    } catch (err) {
+      console.error('Study plan generation failed:', err);
       setCurrentResult(null);
       setMessages([
         {
@@ -193,7 +194,8 @@ export const StudyPlanAdvisorSidebar = ({
           result: updatedResult,
         },
       ]);
-    } catch {
+    } catch (err) {
+      console.error('Study plan iteration failed:', err);
       setMessages((prev) => [
         ...prev,
         {
