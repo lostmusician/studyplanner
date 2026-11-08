@@ -125,23 +125,33 @@ npm run dev
 
 ## Ideas on Where to Start
 
-If you are looking for ways to contribute, here are a few areas that are always welcome:
+If you are looking for ways to contribute, here are a few high-impact areas across the app:
 
-### 1. Curriculum Coverage & Updates
-* **Missing Minors & Second Majors:** While we have many popular programmes covered, NUS has dozens more across CDE, CHS, Business, and Science. Adding new JSON definitions via `admin/` is a great first contribution.
-* **Non-NUSC Sample Plans:** Currently, default sample plans focus heavily on NUS College tracks. Adding complete, 4-year standard SoC sample plans (Standard CS, BZA, InfoSec without NUSC) would help a huge portion of the student body.
-* **Curriculum Year Adjustments:** NUS occasionally tweaks graduation requirements, course codes, or preclusion rules across academic cohorts. Keeping requirement rules aligned with the latest bulletins is high impact.
-* **Realistic Pathway Templates:** Alternative study plan templates—such as plans tailored for early 6-month internships, specific CS focus areas, or winter exchanges.
+### 1. Study Plan Advisor & AI Features
+* **Explainable Recommendations:** Enhance the advisor prompt and logic so it explains *why* it suggests a course (e.g. prerequisite chain unlocks, career pathway relevance, or semester workload compatibility).
+* **Common Student Query Presets:** Add one-click quick prompts for common scenarios, such as "Can I graduate in 3.5 years?", "How do I fit a 6-month NOC without delaying graduation?", or "Suggest a balanced elective for a heavy core semester".
+* **Workload-Aware Advice:** Feed NUSMods workload data (lecture, lab, and project hours) into the prompt context so the advisor avoids pairing notoriously time-intensive modules in the same semester.
+* **Proactive Gap Analysis:** Teach the advisor to detect missing requirement groups and propose complete, semester-by-semester roadmaps to cover them.
 
-### 2. Planning Logic & Validation
-* **CS Focus Area Tracking:** Building automated checks for Computer Science breadth and depth focus area requirements (e.g., ensuring 3 electives within one area with at least one at level 4000).
-* **Same-Semester Prerequisite Warnings:** Surfacing an alert when a prerequisite course is scheduled in the same semester as a course that depends on it.
-* **S/U Option Tracking:** A lightweight calculator or badge to track how many S/U-eligible modular credits have been exercised out of the student's allowance.
+### 2. UI, UX & Interaction Polish
+* **Command Palette (`Cmd+K`):** A fast keyboard-driven palette to search any NUS course, add it to a specific semester, or switch navigation views without leaving the keyboard.
+* **Mobile & Tablet Gestures:** Polish touch interactions on mobile devices, such as long-press drag initiation, swipe gestures, or improved drag-and-drop handles.
+* **Enhanced Prerequisite Tracing:** Improve visual dependency cues on the planner grid, such as subtle connection lines or numbered prerequisite sequence indicators.
+* **Dark / Night Parchment Theme:** Design a scholarly dark theme that preserves the high-density paper-and-ink aesthetic without turning into a harsh, generic dark mode.
+* **Grid Ergonomics:** Introduce swap-in-place mechanics when dragging a course card over an occupied slot, or support moving multiple selected courses at once.
 
-### 3. User Experience & Tooling
-* **Quick-Add / Command Palette:** Keyboard shortcuts (such as `Cmd+K` or `/`) to quickly search and insert modules into specific semesters.
-* **Export Formats:** Additional export targets, such as generating clean printable PDFs, markdown degree summaries, or semester milestone reminders.
-* **Admin Tool Enhancements:** Improving the `admin/` data builder UI to make creating complex requirement groups and prerequisite checks even faster.
+### 3. New Feature Opportunities
+* **Plan Branching & Comparison:** Allow students to maintain and compare two plan scenarios side-by-side (e.g. "Plan A: SEP in Year 3" vs "Plan B: NOC in Year 3") before committing.
+* **Degree Audit Report Export:** Generate a clean, formatted PDF or Markdown graduation audit checklist ready to bring to academic counseling sessions.
+* **Semester Workload Meter:** Visual indicators calculating estimated weekly hours based on NUSMods workload data (lectures, tutorials, labs, and self-study).
+* **Offline Backup & Restore:** Simple JSON file import and export to back up student plans, settings, and allocation preferences across devices.
+
+### 4. Curriculum Coverage & Engine Rules
+* **Missing Minors & Second Majors:** Add JSON definitions for remaining NUS programmes across CDE, CHS, Business, and Science using the `admin/` tool.
+* **Standard (Non-NUSC) Sample Plans:** Create complete 4-year default study plans for standard SoC tracks (CS, BZA, InfoSec without NUS College modules).
+* **CS Focus Area Tracking:** Build automated graduation checks for Computer Science breadth and depth focus area requirements.
+* **Same-Semester Prerequisite Warnings:** Surface an alert if a prerequisite course is scheduled in the exact same semester as a course that depends on it.
+* **S/U Option Calculator:** Track exercised S/U credits against remaining first-year and senior allowances.
 
 Have another idea? Feel free to open an issue or draft PR to discuss it before building.
 
