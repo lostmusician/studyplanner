@@ -315,7 +315,7 @@ export const StudyPlan = ({
   return (
     <>
       <div className={`planner-shell min-h-screen bg-canvas print:hidden ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <div className="app-frame flex min-h-screen min-w-0">
+        <div className="app-frame flex min-h-screen min-w-0 transition-[padding-left] duration-200 ease-in-out md:pl-[var(--sidebar-width)]">
           <AppSidebar
             active={activePage}
             onNavigate={navigateToPage}
