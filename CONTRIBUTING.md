@@ -123,6 +123,30 @@ npm run dev
 
 ---
 
+## Ideas on Where to Start
+
+If you are looking for ways to contribute, here are a few areas that are always welcome:
+
+### 1. Curriculum Coverage & Updates
+* **Missing Minors & Second Majors:** While we have many popular programmes covered, NUS has dozens more across CDE, CHS, Business, and Science. Adding new JSON definitions via `admin/` is a great first contribution.
+* **Non-NUSC Sample Plans:** Currently, default sample plans focus heavily on NUS College tracks. Adding complete, 4-year standard SoC sample plans (Standard CS, BZA, InfoSec without NUSC) would help a huge portion of the student body.
+* **Curriculum Year Adjustments:** NUS occasionally tweaks graduation requirements, course codes, or preclusion rules across academic cohorts. Keeping requirement rules aligned with the latest bulletins is high impact.
+* **Realistic Pathway Templates:** Alternative study plan templates—such as plans tailored for early 6-month internships, specific CS focus areas, or winter exchanges.
+
+### 2. Planning Logic & Validation
+* **CS Focus Area Tracking:** Building automated checks for Computer Science breadth and depth focus area requirements (e.g., ensuring 3 electives within one area with at least one at level 4000).
+* **Same-Semester Prerequisite Warnings:** Surfacing an alert when a prerequisite course is scheduled in the same semester as a course that depends on it.
+* **S/U Option Tracking:** A lightweight calculator or badge to track how many S/U-eligible modular credits have been exercised out of the student's allowance.
+
+### 3. User Experience & Tooling
+* **Quick-Add / Command Palette:** Keyboard shortcuts (such as `Cmd+K` or `/`) to quickly search and insert modules into specific semesters.
+* **Export Formats:** Additional export targets, such as generating clean printable PDFs, markdown degree summaries, or semester milestone reminders.
+* **Admin Tool Enhancements:** Improving the `admin/` data builder UI to make creating complex requirement groups and prerequisite checks even faster.
+
+Have another idea? Feel free to open an issue or draft PR to discuss it before building.
+
+---
+
 ## Before Opening a Pull Request
 
 Run these checks from the project root:
