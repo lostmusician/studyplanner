@@ -1,12 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Major, StudentSemester, WaivedModule } from '@shared/types';
+import type { Major, StudentSemester, WaivedModule, SecondaryProgramme } from '@shared/types';
 import {
   generateMockRecommendation,
   generateAiStudyPlanRecommendation,
   iterateAiStudyPlanRecommendation,
+  iterateMockRecommendation,
+  cleanJsonResponse,
   type SurveyInput,
+  type RecommendationResult,
 } from './aiPlanner';
 import * as soclaas from './soclaas';
+import * as nusmods from '@shared/nusmods';
 
 describe('aiPlanner', () => {
   const dummyMajor: Major = {
@@ -73,8 +77,16 @@ describe('aiPlanner', () => {
     nocDuration: null,
   };
 
+  const emptyResult = (): RecommendationResult => ({
+    trackTitle: 'Existing track', trackRationale: 'Existing rationale', recommendedMinorId: null,
+    recommendedElectives: [], updatedSemesters: initialSemesters.map(s => ({ ...s, modules: s.modules.map(m => ({ ...m })) })),
+    addedModules: [], warnings: [], usedMock: true,
+  });
+
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.spyOn(nusmods, 'getCachedModuleDetail').mockReturnValue(undefined);
+    vi.spyOn(nusmods, 'fetchNusModsModuleDetail').mockImplementation(async code => ({ acadYear: '2026-2027', detail: { moduleCode: code, title: code, moduleCredit: '4', semesterData: [{ semester: 1 }, { semester: 2 }] } }));
   });
 
   it('freezes past semesters and only updates future semesters', () => {
@@ -115,21 +127,12 @@ describe('aiPlanner', () => {
         trackTitle: 'Artificial Intelligence & Machine Learning',
         trackRationale: 'Updated with NLP focus.',
         recommendedElectives: [{ code: 'CS4248', title: 'NLP', reason: 'Focus on language models' }],
-        updatedSemesters: initialSemesters.map((s, idx) => ({
-          ...s,
-          modules: idx === 2 ? [{ code: 'CS4248', name: 'NLP', mcs: 4, categoryId: 'breadth-depth' }] : s.modules,
-        })),
+        futureSemesterPlacements: [{ year: 2, sem: 1, moduleCodes: ['CS4248'] }],
         reply: "I've added CS4248 Natural Language Processing to your Year 2 Semester 1 schedule.",
       }),
     );
 
-    const initialResult = generateMockRecommendation(
-      dummyMajor,
-      initialSemesters,
-      waivedModules,
-      survey,
-      [],
-    );
+    const initialResult = emptyResult();
 
     const iteration = await iterateAiStudyPlanRecommendation(
       dummyMajor,
@@ -147,4 +150,191 @@ describe('aiPlanner', () => {
     const allCodes = iteration.result.updatedSemesters.flatMap((s) => s.modules.map((m) => m.code));
     expect(allCodes).toContain('CS4248');
   });
+
+  it('cleanJsonResponse strips markdown code fences correctly', () => {
+    expect(cleanJsonResponse('{"key": "value"}')).toBe('{"key": "value"}');
+    expect(cleanJsonResponse('```json\n{"key": "value"}\n```')).toBe('{"key": "value"}');
+    expect(cleanJsonResponse('```\n{"key": "value"}\n```')).toBe('{"key": "value"}');
+  });
+
+  it('preserves pre-existing modules in future semesters during AI generation', async () => {
+    // Semester 2 in initialSemesters is Y2S1. Let's pre-place CS2100 in it.
+    const customSemesters: StudentSemester[] = initialSemesters.map((s, idx) => {
+      if (idx === 2) {
+        return {
+          ...s,
+          modules: [{ code: 'CS2100', name: 'Computer Organisation', mcs: 4, categoryId: 'cs-foundation' }],
+        };
+      }
+      return s;
+    });
+
+    vi.spyOn(soclaas, 'callSoclaasChat').mockResolvedValue(
+      '```json\n' +
+      JSON.stringify({
+        trackTitle: 'Artificial Intelligence',
+        trackRationale: 'AI track with CS3243',
+        recommendedElectives: [{ code: 'CS3243', title: 'Intro to AI', reason: 'Gateway module' }],
+        futureSemesterPlacements: [
+          { year: 2, sem: 1, moduleCodes: ['CS3243'] },
+        ],
+      }) +
+      '\n```'
+    );
+
+    const result = await generateAiStudyPlanRecommendation(
+      dummyMajor,
+      customSemesters,
+      waivedModules,
+      survey,
+      [],
+    );
+
+    // Y2S1 should contain BOTH the pre-existing CS2100 AND the proposed CS3243
+    const y2s1Codes = result.updatedSemesters[2].modules.map((m) => m.code);
+    expect(y2s1Codes).toContain('CS2100');
+    expect(y2s1Codes).toContain('CS3243');
+    // Added modules should specifically record CS3243, not CS2100
+    expect(result.addedModules).toEqual([{ code: 'CS3243', year: 2, sem: 1 }]);
+  });
+
+  const dummyMinor: SecondaryProgramme = {
+    id: 'minor-economics',
+    label: 'Economics Minor',
+    kind: 'minor',
+    mcTarget: 20,
+    school: 'CHS',
+    requirements: [],
+    moduleCatalog: {},
+  };
+
+  it('handles offline / mock deterministic iteration correctly', () => {
+    const initialResult = generateMockRecommendation(
+      dummyMajor,
+      initialSemesters,
+      waivedModules,
+      survey,
+      [dummyMinor],
+    );
+
+    // Test NLP adjustment
+    const nlpIter = iterateMockRecommendation(
+      dummyMajor,
+      initialResult,
+      initialSemesters,
+      waivedModules,
+      'Can we add NLP?',
+      [],
+      { year: survey.standingYear, sem: survey.standingSem },
+    );
+    expect(nlpIter.reply).toContain('CS4248');
+    expect(nlpIter.result.updatedSemesters.flatMap((s) => s.modules.map((m) => m.code))).toContain('CS4248');
+
+    // Test Minor adjustment
+    const minorIter = iterateMockRecommendation(
+      dummyMajor,
+      initialResult,
+      initialSemesters,
+      waivedModules,
+      'Add an Economics minor please',
+      [dummyMinor],
+      { year: survey.standingYear, sem: survey.standingSem },
+    );
+    expect(minorIter.reply).toContain('Economics');
+    expect(minorIter.result.recommendedMinorId).toBe('minor-economics');
+
+    // Test specific course code placement
+    const codeIter = iterateMockRecommendation(
+      dummyMajor,
+      initialResult,
+      initialSemesters,
+      waivedModules,
+      'I would like to take CS3219',
+      [],
+      { year: survey.standingYear, sem: survey.standingSem },
+    );
+    expect(codeIter.reply).toContain('CS3219');
+    expect(codeIter.result.updatedSemesters.flatMap((s) => s.modules.map((m) => m.code))).toContain('CS3219');
+  });
+  it('does not duplicate a course already placed in a later future semester', async () => {
+    const original = initialSemesters.map(s => ({ ...s, modules: [...s.modules] }));
+    const course = { code: 'CS2100', name: 'Existing course', mcs: 4, categoryId: 'cs-foundation', allocationPreferences: { 'minor:test': { row: 'include' as const } } };
+    original[3].modules.push(course);
+    vi.spyOn(soclaas, 'callSoclaasChat').mockResolvedValue(JSON.stringify({ futureSemesterPlacements: [{ year: 2, sem: 1, moduleCodes: ['CS2100'] }] }));
+    const result = await generateAiStudyPlanRecommendation({ ...dummyMajor, moduleCatalog: { CS2100: course } }, original, [], survey);
+    expect(result.updatedSemesters.flatMap(s => s.modules).filter(m => m.code === 'CS2100')).toEqual([course]);
+    expect(result.updatedSemesters[3].modules).toContainEqual(course);
+    expect(result.addedModules).toEqual([]);
+  });
+
+  it('does not duplicate a later recommendation when iterating', async () => {
+    const current = emptyResult();
+    current.updatedSemesters[3].modules.push({ code: 'CS4248', name: 'NLP', mcs: 4, categoryId: 'breadth-depth' });
+    vi.spyOn(soclaas, 'callSoclaasChat').mockResolvedValue(JSON.stringify({ futureSemesterPlacements: [{ year: 2, sem: 1, moduleCodes: ['CS4248'] }] }));
+    const iteration = await iterateAiStudyPlanRecommendation(dummyMajor, current, initialSemesters, [], 'Move NLP earlier', [], [], { year: 2, sem: 1 });
+    expect(iteration.result.updatedSemesters.flatMap(s => s.modules).filter(m => m.code === 'CS4248')).toHaveLength(1);
+    expect(iteration.result.updatedSemesters[3].modules[0].code).toBe('CS4248');
+    expect(iteration.reply).toContain('placements were kept');
+  });
+
+  it.each([null, [], { futureSemesterPlacements: 'bad' }, { futureSemesterPlacements: [{ year: 2, sem: 1, moduleCodes: [123] }] }])('rejects malformed response %j', async response => {
+    vi.spyOn(soclaas, 'callSoclaasChat').mockResolvedValue(JSON.stringify(response));
+    await expect(generateAiStudyPlanRecommendation(dummyMajor, initialSemesters, [], survey)).rejects.toThrow('Invalid advisor');
+  });
+
+  it('honours an explicit null minor when iterating', async () => {
+    const current = { ...emptyResult(), recommendedMinorId: 'minor-economics' };
+    vi.spyOn(soclaas, 'callSoclaasChat').mockResolvedValue(JSON.stringify({ recommendedMinorId: null }));
+    const result = await iterateAiStudyPlanRecommendation(dummyMajor, current, initialSemesters, [], 'No minor', [], [dummyMinor], { year: 2, sem: 1 });
+    expect(result.result.recommendedMinorId).toBeNull();
+  });
+
+  it('does not invent offline changes for unsupported or negated requests', () => {
+    for (const request of ['Lighter workload in Year 2', 'Plan for SEP', 'Do not add NLP', 'Remove CS4248']) {
+      const current = emptyResult();
+      const result = iterateMockRecommendation(dummyMajor, current, initialSemesters, [], request, [], { year: 2, sem: 1 });
+      expect(result.result.updatedSemesters).toEqual(current.updatedSemesters);
+      expect(result.reply).not.toMatch(/I.ve (added|redistributed|refined)/);
+    }
+  });
+
+  it('distinguishes a full timetable from an already placed course', () => {
+    const current = emptyResult();
+    current.updatedSemesters[2].modules = [{ code: 'FULL1', name: 'Full', mcs: 20, categoryId: 'breadth-depth' }];
+    current.updatedSemesters[3].modules = [{ code: 'FULL2', name: 'Full', mcs: 20, categoryId: 'breadth-depth' }];
+    const result = iterateMockRecommendation(dummyMajor, current, initialSemesters, [], 'Add NLP', [], { year: 2, sem: 1 });
+    expect(result.reply).toContain('No suitable future semester');
+    expect(result.result.updatedSemesters).toEqual(current.updatedSemesters);
+    expect(result.result.recommendedElectives).toEqual([]);
+  });
+
+  it('does not recommend an unsolicited minor or guess a different named minor', () => {
+    expect(generateMockRecommendation(dummyMajor, initialSemesters, [], survey, [dummyMinor]).recommendedMinorId).toBeNull();
+    const result = iterateMockRecommendation(dummyMajor, emptyResult(), initialSemesters, [], 'Add an astronomy minor', [dummyMinor], { year: 2, sem: 1 });
+    expect(result.result.recommendedMinorId).toBeNull();
+  });
+
+  it('warns when offline course details have not been verified', () => {
+    const result = iterateMockRecommendation(dummyMajor, emptyResult(), initialSemesters, [], 'Add CS4248', [], { year: 2, sem: 1 });
+    expect(result.result.warnings).toContain('CS4248: course details unavailable; verify credits, prerequisites and semester availability.');
+  });
+
+  it('respects cached prerequisites and actual course credits in offline placement', () => {
+    vi.mocked(nusmods.getCachedModuleDetail).mockImplementation(code => code === 'CS4248' ? {
+      moduleCode: code, title: 'NLP', moduleCredit: '6', prereqTree: 'CS3244', semesterData: [{ semester: 2 }],
+    } : undefined);
+    const current = emptyResult();
+    current.updatedSemesters[2].modules.push({ code: 'CS3244', name: 'ML', mcs: 4, categoryId: 'breadth-depth' });
+    const result = iterateMockRecommendation(dummyMajor, current, initialSemesters, [], 'Add NLP', [], { year: 2, sem: 1 });
+    expect(result.result.updatedSemesters[2].modules.some(m => m.code === 'CS4248')).toBe(false);
+    expect(result.result.updatedSemesters[3].modules).toContainEqual(expect.objectContaining({ code: 'CS4248', mcs: 6 }));
+  });
+
+  it('does not overshoot the selected load when generating offline suggestions', () => {
+    const current = initialSemesters.map(s => s.year === 2 ? { ...s, modules: [{ code: `FULL${s.sem}`, name: 'Existing', mcs: 18, categoryId: 'breadth-depth' }] } : s);
+    const result = generateMockRecommendation(dummyMajor, current, [], survey);
+    expect(result.addedModules).toEqual([]);
+    expect(result.updatedSemesters.filter(s => s.year === 2).every(s => s.modules.reduce((sum, m) => sum + m.mcs, 0) <= 20)).toBe(true);
+  });
+
 });

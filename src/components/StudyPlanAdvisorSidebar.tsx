@@ -3,6 +3,8 @@ import type { Major, SecondaryProgramme, StudentSemester, WaivedModule } from '@
 import {
   generateAiStudyPlanRecommendation,
   iterateAiStudyPlanRecommendation,
+  generateMockRecommendation,
+  iterateMockRecommendation,
   type SurveyInput,
   type RecommendationResult,
   type ChatTurn,
@@ -51,9 +53,9 @@ const CAREER_GOALS = [
 ];
 
 const SUGGESTIONS = [
-  'Swap for NLP elective',
-  'Plan for SEP in Year 3',
-  'Lighter workload in Year 2',
+  'Add an NLP elective',
+  'Add a security elective',
+  'Add a distributed systems elective',
   'Add Economics Minor',
 ];
 
@@ -89,6 +91,16 @@ export const StudyPlanAdvisorSidebar = ({
   const [currentResult, setCurrentResult] = useState<RecommendationResult | null>(null);
   const [inputDraft, setInputDraft] = useState('');
 
+  const requestId = useRef(0);
+  useEffect(() => {
+    requestId.current++;
+    setCurrentResult(null);
+    setMessages([]);
+    setIsLoading(false);
+    setIsIterating(false);
+    return () => { requestId.current++; };
+  }, [major.id]);
+
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,6 +116,8 @@ export const StudyPlanAdvisorSidebar = ({
   };
 
   const handleInitialGenerate = async () => {
+    if (isLoading) return;
+    const request = ++requestId.current;
     setIsLoading(true);
     try {
       const survey: SurveyInput = {
@@ -126,33 +140,67 @@ export const StudyPlanAdvisorSidebar = ({
         minors,
       );
 
+      if (request !== requestId.current) return;
       setCurrentResult(res);
       setMessages([
         {
           id: 'init',
           role: 'assistant',
-          content: `I've prepared a recommended pathway tailored to ${careerGoal || 'your aspirations'}. You can apply it directly to your planner, or reply below to adjust courses, semesters, or workload pacing.`,
+          content: `I've prepared a recommended pathway tailored to ${careerGoal || 'your aspirations'}. Apply it to your planner, or reply to add courses or explore a minor.`,
           result: res,
         },
       ]);
     } catch (err) {
-      console.error('Study plan generation failed:', err);
-      setCurrentResult(null);
-      setMessages([
-        {
-          id: 'init-unavailable',
-          role: 'assistant',
-          content: 'The advisor will be available soon.',
-        },
-      ]);
+      if (request !== requestId.current) return;
+      console.warn('AI advisor unavailable, falling back to deterministic engine:', err);
+      try {
+        const survey: SurveyInput = {
+          standingYear,
+          standingSem,
+          interests: interests.length > 0 ? interests : ['Software Engineering & Fullstack'],
+          careerGoal,
+          targetMcsPerSem: targetMcs,
+          selectedMinorId: selectedMinorId || null,
+          interestedInNoc: false,
+          nocDuration: null,
+          customNotes: customNotes.trim() || undefined,
+        };
+        const fallbackRes = generateMockRecommendation(
+          major,
+          semesters,
+          waivedModules,
+          survey,
+          minors,
+        );
+        setCurrentResult(fallbackRes);
+        setMessages([
+          {
+            id: 'init-fallback',
+            role: 'assistant',
+            content: `Here are course suggestions based on your interests.`,
+            result: fallbackRes,
+          },
+        ]);
+      } catch (fallbackErr) {
+        console.error('Study plan fallback failed:', fallbackErr);
+        setCurrentResult(null);
+        setMessages([
+          {
+            id: 'init-unavailable',
+            role: 'assistant',
+            content: 'The advisor could not generate a plan. Please try again.',
+          },
+        ]);
+      }
     } finally {
-      setIsLoading(false);
+      if (request === requestId.current) setIsLoading(false);
     }
   };
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend ?? inputDraft).trim();
-    if (!text || isIterating) return;
+    if (!text || isIterating || isLoading) return;
+    const request = ++requestId.current;
 
     setInputDraft('');
     const userMsgId = `user-${Date.now()}`;
@@ -184,6 +232,7 @@ export const StudyPlanAdvisorSidebar = ({
         { year: standingYear, sem: standingSem },
       );
 
+      if (request !== requestId.current) return;
       setCurrentResult(updatedResult);
       setMessages((prev) => [
         ...prev,
@@ -195,17 +244,42 @@ export const StudyPlanAdvisorSidebar = ({
         },
       ]);
     } catch (err) {
-      console.error('Study plan iteration failed:', err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `asst-${Date.now()}`,
-          role: 'assistant',
-          content: 'The advisor will be available soon.',
-        },
-      ]);
+      if (request !== requestId.current) return;
+      console.warn('AI iteration unavailable, falling back to deterministic iteration:', err);
+      try {
+        if (!currentResult) throw new Error('No active plan');
+        const fallbackIter = iterateMockRecommendation(
+          major,
+          currentResult,
+          semesters,
+          waivedModules,
+          text,
+          minors,
+          { year: standingYear, sem: standingSem },
+        );
+        setCurrentResult(fallbackIter.result);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `asst-${Date.now()}`,
+            role: 'assistant',
+            content: fallbackIter.reply,
+            result: fallbackIter.result,
+          },
+        ]);
+      } catch (fallbackErr) {
+        console.error('Deterministic iteration failed:', fallbackErr);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `asst-${Date.now()}`,
+            role: 'assistant',
+            content: 'Sorry, I could not process that adjustment. Please try rephrasing or selecting a quick suggestion.',
+          },
+        ]);
+      }
     } finally {
-      setIsIterating(false);
+      if (request === requestId.current) setIsIterating(false);
     }
   };
 
@@ -216,6 +290,9 @@ export const StudyPlanAdvisorSidebar = ({
   };
 
   const handleStartOver = () => {
+    requestId.current++;
+    setIsLoading(false);
+    setIsIterating(false);
     setCurrentResult(null);
     setMessages([]);
   };
@@ -289,14 +366,50 @@ export const StudyPlanAdvisorSidebar = ({
                         {m.result && (
                           <div className="rounded-2xl bg-white/70 p-3.5 border border-line/30 shadow-xs space-y-2.5">
                             <div>
-                              <span className="text-xs font-semibold uppercase tracking-wider text-ink/70 bg-ink/5 px-2 py-0.5 rounded-full inline-block mb-1">
-                                Pathway
-                              </span>
+                              <div className="flex items-center justify-between gap-1 mb-1.5 flex-wrap">
+                                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full inline-block ${
+                                  m.result.usedMock
+                                    ? 'bg-ink/5 text-muted'
+                                    : 'bg-emerald-500/10 text-emerald-700'
+                                }`}>
+                                  {m.result.usedMock ? 'Basic suggestions' : 'AI suggestions'}
+                                </span>
+                                {m.result.recommendedMinorId && (
+                                  <span className="text-[11px] font-medium text-muted bg-ink/5 px-2 py-0.5 rounded-full">
+                                    Minor: {minors.find((min) => min.id === m.result?.recommendedMinorId)?.label || m.result.recommendedMinorId}
+                                  </span>
+                                )}
+                              </div>
                               <h4 className="text-sm font-bold text-ink">{m.result.trackTitle}</h4>
                               <p className="text-sm text-muted leading-tight mt-1">
                                 {m.result.trackRationale}
                               </p>
+                              {m.result.recommendedMinorRationale && (
+                                <p className="text-xs text-muted/80 leading-tight mt-1 italic">
+                                  {m.result.recommendedMinorRationale}
+                                </p>
+                              )}
                             </div>
+
+                            {/* Prerequisite & Availability Warnings */}
+                            {m.result.warnings.length > 0 && (
+                              <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-900 space-y-1">
+                                <span className="font-semibold flex items-center gap-1">
+                                  Plan notes ({m.result.warnings.length})
+                                </span>
+                                <ul className="list-disc pl-4 space-y-0.5 text-[11px] leading-tight">
+                                  {m.result.warnings.slice(0, 3).map((w, idx) => (
+                                    <li key={idx}>{w}</li>
+                                  ))}
+                                  {m.result.warnings.length > 3 && (
+                                    <li className="list-none pt-0.5"><details>
+                                      <summary className="cursor-pointer text-muted">+{m.result.warnings.length - 3} more</summary>
+                                      <ul className="mt-1 list-disc pl-4 space-y-0.5">{m.result.warnings.slice(3).map((warning, i) => <li key={i}>{warning}</li>)}</ul>
+                                    </details></li>
+                                  )}
+                                </ul>
+                              </div>
+                            )}
 
                             {/* Electives */}
                             {m.result.recommendedElectives.length > 0 && (
@@ -315,6 +428,25 @@ export const StudyPlanAdvisorSidebar = ({
                                         {e.reason}
                                       </span>
                                     </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Placements Summary */}
+                            {m.result.addedModules && m.result.addedModules.length > 0 && (
+                              <div className="pt-1.5 border-t border-line/20 space-y-1">
+                                <span className="text-xs font-semibold text-muted uppercase tracking-wider block">
+                                  Placements Summary
+                                </span>
+                                <div className="flex flex-wrap gap-1">
+                                  {m.result.addedModules.map((a, i) => (
+                                    <span
+                                      key={`${a.code}-${a.year}-${a.sem}-${i}`}
+                                      className="rounded-md bg-canvas px-1.5 py-0.5 border border-line/30 text-[11px] font-medium text-ink"
+                                    >
+                                      <strong className="text-ink">{a.code}</strong> → Y{a.year}S{a.sem}
+                                    </span>
                                   ))}
                                 </div>
                               </div>
