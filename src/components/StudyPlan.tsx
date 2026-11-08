@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Major, PlacedModule, StudentSemester, WaivedModule, SecondaryProgramme, NocDuration, SpecialProgramme } from '@shared/types';
 import type { RequirementStatus, Stats, PlanTemplate } from '../lib/studyPlan';
-import { computeTripleCountedCodes } from '../lib/studyPlan';
+import { allocateRequirements } from '../lib/requirementAllocation';
+import { RequirementAllocationPanel } from './RequirementAllocationPanel';
 import { APP_DESTINATION_LABELS, type AppDestination } from '../lib/navigation';
 import { MUTED } from '../lib/colors';
 import { buildShareLink } from '@shared/share';
@@ -15,8 +16,8 @@ import { StatsSummary } from './StatsSummary';
 import { SemesterGrid } from './SemesterGrid';
 import { BatchBadge } from './BatchBadge';
 import { AppDialog } from './AppDialog';
+import { ModuleDialog } from './ModuleDialog';
 import { Dropdown } from './Dropdown';
-import { SecondaryProgrammePanel } from './SecondaryProgrammePanel';
 import { PrintView } from './PrintView';
 import { CompetencyExplorer } from './competency/CompetencyExplorer';
 import { StudyPlanAdvisorSidebar } from './StudyPlanAdvisorSidebar';
@@ -50,7 +51,8 @@ interface Props {
   deleteModule: (code: string, year?: number, sem?: number) => void;
   updateModule: (
     oldCode: string,
-    updates: { code: string; name: string; mcs: number; categoryId: string },
+    updates: PlacedModule,
+    destination?: { year: number; sem: number },
   ) => { ok: true } | { ok: false; error: string };
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
@@ -95,7 +97,6 @@ export const StudyPlan = ({
   semesters,
   waivedModules,
   stats,
-  requirements,
   switchMajor,
   addOrMoveModule,
   deleteModule,
@@ -139,7 +140,7 @@ export const StudyPlan = ({
   const [pendingMajorId, setPendingMajorId] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [selectedResetTemplate, setSelectedResetTemplate] = useState<PlanTemplate | 'scratch'>('standard');
-  const [secondaryPanelsOpen, setSecondaryPanelsOpen] = useState(false);
+  const [managedProgrammeKey, setManagedProgrammeKey] = useState<string | null>(null);
   const [advisorOpen, setAdvisorOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -293,8 +294,18 @@ export const StudyPlan = ({
     ? secondMajors.find((item) => item.id === secondMajorId) ?? null
     : null;
   const declaredMinors = minors.filter((item) => minorIds.includes(item.id));
-  const declaredSecondaries = declaredSecondMajor ? [declaredSecondMajor, ...declaredMinors] : declaredMinors;
-  const tripleCountedCodes = computeTripleCountedCodes(declaredSecondaries, semesters, waivedModules);
+  const declaredSecondaries = useMemo(() => {
+    const second = secondMajors.find(item => item.id === secondMajorId);
+    return [...(second ? [second] : []), ...minors.filter(item => minorIds.includes(item.id))];
+  }, [secondMajors, minors, secondMajorId, minorIds]);
+  const allocation = useMemo(() => allocateRequirements(major, declaredSecondaries, semesters, waivedModules, requirementMappings, specialProgrammes),
+    [major, declaredSecondaries, semesters, waivedModules, requirementMappings, specialProgrammes]);
+  const allocationModules = [...new Map([...semesters.flatMap(s => s.modules), ...waivedModules].map(m => [m.code, m])).values()];
+  const allocatedPrimaryRequirements = allocation.programmes[0].rows.filter(row => row.id.startsWith('requirement:'));
+  const managedProgramme = declaredSecondaries.find(source => `${source.kind}:${source.id}` === managedProgrammeKey);
+  const managedAllocation = allocation.programmes.find(programme => programme.key === managedProgrammeKey);
+  const programmeIssues = allocation.programmes.filter(programme => allocation.manualIssues.some(issue => issue.includes(programme.label))).map(programme => programme.key);
+
   const mobileActive: MobileDestination = settingsOpen
     ? 'settings'
     : advisorOpen
@@ -442,9 +453,13 @@ export const StudyPlan = ({
                         <StatsSummary
                           major={major}
                           stats={stats}
+                          programmeAllocations={allocation.programmes}
+                          onOpenProgrammeAllocation={setManagedProgrammeKey}
+                          activeProgrammeKey={managedProgrammeKey}
+                          programmeIssues={programmeIssues}
                           semesters={semesters}
                           waivedModules={waivedModules}
-                          requirements={requirements}
+                          requirements={allocatedPrimaryRequirements}
                           requirementMappings={requirementMappings}
                           addRequirementMapping={addRequirementMapping}
                           removeRequirementMapping={removeRequirementMapping}
@@ -454,58 +469,6 @@ export const StudyPlan = ({
                     </div>
 
                     {doubleDegreeId && <div className="px-4 py-4 sm:px-6"><DoubleDegreePanel id={doubleDegreeId} majorId={majorId} totalUnits={stats.totalMc} /></div>}
-
-                    {(declaredSecondMajor || declaredMinors.length > 0) && (
-                      <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(20,20,19,0.08)' }}>
-                        <div className="max-w-[2560px] mx-auto w-full flex flex-col gap-4">
-                          <button
-                            type="button"
-                            onClick={() => setSecondaryPanelsOpen((open) => !open)}
-                            className="flex items-center gap-2 text-left text-sm font-semibold text-ink"
-                            aria-expanded={secondaryPanelsOpen}
-                          >
-                            <span>{secondaryPanelsOpen ? '▾' : '▸'}</span>
-                            <span>Second Major &amp; Minor Progress</span>
-                            {tripleCountedCodes.length > 0 && (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
-                                Triple-counting warning
-                              </span>
-                            )}
-                          </button>
-
-                          {secondaryPanelsOpen && (
-                            <>
-                              {tripleCountedCodes.length > 0 && (
-                                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
-                                  <strong className="font-semibold">Triple-counting warning:</strong>{' '}
-                                  {tripleCountedCodes.join(', ')}{' '}
-                                  {tripleCountedCodes.length === 1 ? 'is' : 'are'} being counted toward your primary
-                                  major and 2 or more secondary programmes at once &mdash; NUS does not allow this;
-                                  one programme will need a different module.
-                                </div>
-                              )}
-                              <div className="grid gap-4 sm:grid-cols-2">
-                                {declaredSecondMajor && (
-                                  <SecondaryProgrammePanel
-                                    programme={declaredSecondMajor}
-                                    semesters={semesters}
-                                    waivedModules={waivedModules}
-                                  />
-                                )}
-                                {declaredMinors.map((item) => (
-                                  <SecondaryProgrammePanel
-                                    key={item.id}
-                                    programme={item}
-                                    semesters={semesters}
-                                    waivedModules={waivedModules}
-                                  />
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
 
                     <div className="max-w-[2560px] mx-auto px-4 sm:px-6 py-6 w-full">
                       <div className="flex min-w-0 flex-col gap-5">
@@ -533,7 +496,7 @@ export const StudyPlan = ({
                       major={major}
                       semesters={semesters}
                       waivedModules={waivedModules}
-                      requirements={requirements}
+                      requirements={allocatedPrimaryRequirements}
                       studentYear={studentYear}
                       onClose={() => navigateToPage('home')}
                       onOpenPathways={openPathwaysSettings}
@@ -738,13 +701,17 @@ export const StudyPlan = ({
           </AppDialog>
         )}
       </div>
+      {managedProgramme && managedAllocation && <ModuleDialog title={managedProgramme.label} onClose={() => setManagedProgrammeKey(null)}>
+        <RequirementAllocationPanel key={managedAllocation.key} source={managedProgramme} allocation={managedAllocation} report={allocation} modules={allocationModules} onUpdateModule={updateModule} />
+      </ModuleDialog>}
       <PrintView
         studentName={studentName}
         matricNumber={matricNumber}
         studentYear={studentYear}
         major={major}
         stats={stats}
-        requirements={requirements}
+        requirements={allocatedPrimaryRequirements}
+        allocation={allocation}
         semesters={semesters}
         waivedModules={waivedModules}
         secondMajors={secondMajors}

@@ -1,3 +1,4 @@
+import type { AllocationReport } from '../lib/requirementAllocation';
 import { DoubleDegreePanel } from './DoubleDegreePanel';
 import type {
   Major,
@@ -17,6 +18,7 @@ interface Props {
   major: Major;
   stats: Stats;
   requirements: RequirementStatus[];
+  allocation?: AllocationReport;
   semesters: StudentSemester[];
   waivedModules: WaivedModule[];
   secondMajors: SecondaryProgramme[];
@@ -36,6 +38,7 @@ export const PrintView = ({
   major,
   stats,
   requirements,
+  allocation,
   semesters,
   waivedModules,
   secondMajors,
@@ -163,10 +166,11 @@ export const PrintView = ({
             <h3 className="mb-1 text-xs font-semibold text-muted">{category.label}</h3>
             <ul className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs">
               {rows.map((r) => (
-                <li key={r.name} className="flex items-baseline gap-1.5">
+                <li key={r.name} className="flex flex-wrap items-baseline gap-1.5">
                   <span>{r.fulfilled ? '✓' : '○'}</span>
                   <span>{r.name}</span>
                   {r.need > 1 && <span className="text-muted">({r.have}/{r.need})</span>}
+                  {'codes' in r && <span className="text-muted">{(r.codes as string[]).join(', ')}</span>}
                 </li>
               ))}
             </ul>
@@ -179,7 +183,7 @@ export const PrintView = ({
           <h2 className="mb-2 text-sm font-semibold">{depthTitle}</h2>
           <ul className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs">
             {depthConfig.constraints.map((c) => (
-              <li key={c.id} className="flex items-baseline gap-1.5">
+              <li key={c.id} className="flex flex-wrap items-baseline gap-1.5">
                 <span>{c.fulfilled ? '✓' : '○'}</span>
                 <span>{c.label}</span>
                 {c.detail && <span className="text-muted">({c.detail})</span>}
@@ -194,19 +198,21 @@ export const PrintView = ({
         <section className="mb-5">
           <h2 className="mb-2 text-sm font-semibold">Second Major &amp; Minor Progress</h2>
           {declaredSecondaries.map((programme) => {
-            const progReqs = computeRequirements(programme, semesters, waivedModules);
+            const programmeAllocation = allocation?.programmes.find(p => p.kind === programme.kind && p.id === programme.id);
+            const progReqs = programmeAllocation?.rows ?? computeRequirements(programme, semesters, waivedModules);
             return (
               <div key={programme.id} className="mb-3">
                 <h3 className="mb-1 text-xs font-semibold text-muted">
                   {programme.label} ({programme.kind === 'second-major' ? 'Second Major' : 'Minor'})
                 </h3>
-                {programme.requirementStatus !== 'verified' && <p className="mb-2 text-xs">{programme.requirements.length ? 'Partial course checks; manual review required.' : 'Requirements require manual review.'} {programme.sourceUrl && <a href={programme.sourceUrl}>NUS requirements</a>}</p>}
+                {programmeAllocation && <p className="mb-2 text-xs">{programmeAllocation.sharedMc}/{programmeAllocation.capMc} MC shared with other programmes.</p>}
                 <ul className="grid grid-cols-2 gap-x-6 gap-y-0.5 text-xs">
                   {progReqs.map((r) => (
-                    <li key={r.name} className="flex items-baseline gap-1.5">
+                    <li key={r.name} className="flex flex-wrap items-baseline gap-1.5">
                       <span>{r.fulfilled ? '✓' : '○'}</span>
                       <span>{r.name}</span>
                       {r.need > 1 && <span className="text-muted">({r.have}/{r.need})</span>}
+                      {'codes' in r && <span className="text-muted">{(r.codes as string[]).join(', ')}</span>}
                     </li>
                   ))}
                 </ul>
