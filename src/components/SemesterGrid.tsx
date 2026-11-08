@@ -14,6 +14,7 @@ import {
 import type { NusModsModuleSummary } from '@shared/nusmods';
 import { autoCategoryId, semesterLabel } from '../lib/studyPlan';
 import { ModuleDialog } from './ModuleDialog';
+import type { CourseSharingProps } from './CourseSharingBadge';
 import { ModuleCard } from './ModuleCard';
 import { WaivedCourses } from './WaivedCourses';
 import { AppDialog } from './AppDialog';
@@ -23,7 +24,7 @@ const UNDERLOAD_MCS = 18;
 const OVERLOAD_MCS = 20;
 const YEAR_ONE_MAX_MCS = 26;
 
-interface Props {
+interface Props extends CourseSharingProps {
   semesters: StudentSemester[];
   major: Major;
   waivedModules: WaivedModule[];
@@ -53,6 +54,8 @@ export const SemesterGrid = ({
   getCompletedCodes,
   addSpecialTerm,
   deleteSpecialTerm,
+  allocation,
+  onManageProgramme,
 }: Props) => {
   const [activeDrag, setActiveDrag] = useState<PlacedModule | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
@@ -297,6 +300,8 @@ export const SemesterGrid = ({
                   getHighlightMode={getHighlightMode}
                   onHoverModule={setHoveredModuleCode}
                   allPlacedModules={allPlacedModules}
+                  allocation={allocation}
+                  onManageProgramme={onManageProgramme}
                   selectedModuleCode={selectedModuleCode}
                   onSelectModule={handleSelectModule}
                 />
@@ -352,6 +357,8 @@ export const SemesterGrid = ({
                 getHighlightMode={getHighlightMode}
                 onHoverModule={setHoveredModuleCode}
                 allPlacedModules={allPlacedModules}
+                allocation={allocation}
+                onManageProgramme={onManageProgramme}
                 selectedModuleCode={selectedModuleCode}
                 onSelectModule={handleSelectModule}
               />
@@ -418,7 +425,7 @@ interface ModuleDropData {
   moduleCode: string;
 }
 
-interface ColumnProps {
+interface ColumnProps extends CourseSharingProps {
   semester: StudentSemester;
   major: Major;
   addOrMoveModule: (year: number, sem: number, module: PlacedModule, insertBeforeCode?: string) => void;
@@ -458,6 +465,8 @@ const SemesterColumn = ({
   allPlacedModules,
   selectedModuleCode,
   onSelectModule,
+  allocation,
+  onManageProgramme,
 }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -573,6 +582,8 @@ const SemesterColumn = ({
             onSelectModule={onSelectModule}
             onHoverModule={onHoverModule}
             allPlacedModules={allPlacedModules}
+            allocation={allocation}
+            onManageProgramme={onManageProgramme}
           />
         ))}
         {isOver && (
@@ -892,6 +903,8 @@ const SemesterRow = ({
   allPlacedModules,
   selectedModuleCode,
   onSelectModule,
+  allocation,
+  onManageProgramme,
 }: ColumnProps) => {
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
@@ -1005,6 +1018,8 @@ const SemesterRow = ({
               onSelectModule={onSelectModule}
               onHoverModule={onHoverModule}
               allPlacedModules={allPlacedModules}
+              allocation={allocation}
+              onManageProgramme={onManageProgramme}
             />
           </div>
         ))}

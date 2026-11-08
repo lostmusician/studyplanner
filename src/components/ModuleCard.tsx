@@ -14,9 +14,10 @@ import { useMediaQuery } from '../hooks/useMediaQuery';
 import { ModuleDialog } from './ModuleDialog';
 import { Dropdown } from './Dropdown';
 import { isModuleLocked } from '../lib/studyPlan';
+import { CourseSharingBadge, type CourseSharingProps } from './CourseSharingBadge';
 import { FOCUS_RING } from '../lib/colors';
 
-interface Props {
+interface Props extends CourseSharingProps {
   module: PlacedModule;
   major: Major;
   completedCodes: string[];
@@ -54,6 +55,8 @@ export const ModuleCard = ({
   onSelectModule,
   onHoverModule,
   allPlacedModules = [],
+  allocation,
+  onManageProgramme,
 }: Props) => {
   const { setNodeRef: setDraggableNodeRef, listeners, attributes, transform, isDragging } = useDraggable({
     id: module.code,
@@ -71,6 +74,7 @@ export const ModuleCard = ({
   const [showTooltip, setShowTooltip] = useState(false);
 
   const [showDetail, setShowDetail] = useState(false);
+  const [showSharingDetails, setShowSharingDetails] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editCode, setEditCode] = useState(module.code);
   const [editName, setEditName] = useState(module.name);
@@ -107,10 +111,10 @@ export const ModuleCard = ({
   }, [module.code, completedStr, fromSem, isOverlay]);
 
   useEffect(() => {
-    if (showDetail || editing || showDeleteConfirm || isDragging) {
+    if (showDetail || showSharingDetails || editing || showDeleteConfirm || isDragging) {
       setShowTooltip(false);
     }
-  }, [showDetail, editing, showDeleteConfirm, isDragging]);
+  }, [showDetail, showSharingDetails, editing, showDeleteConfirm, isDragging]);
 
   const category = major.categories.find((c) => c.id === module.categoryId);
 
@@ -203,7 +207,7 @@ export const ModuleCard = ({
         onSelectModule?.(module.code);
       }}
       onMouseEnter={() => {
-        if (showDetail || editing || showDeleteConfirm || isTouch) return;
+        if (showDetail || showSharingDetails || editing || showDeleteConfirm || isTouch) return;
         onHoverModule?.(module.code);
         const rect = cardRef.current?.getBoundingClientRect();
         if (rect) {
@@ -267,6 +271,7 @@ export const ModuleCard = ({
         <div className="flex items-center justify-between gap-1 mt-1 font-mono text-[9px] sm:text-[10px]">
           <div className="flex shrink-0 items-center gap-1">
             <span className="text-ink/80 font-semibold">{module.mcs} MC</span>
+            {!isOverlay && <CourseSharingBadge code={module.code} allocation={allocation} onManageProgramme={onManageProgramme} onInteract={() => setShowTooltip(false)} onDetailsChange={setShowSharingDetails} />}
           </div>
           <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
             {category && (

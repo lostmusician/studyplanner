@@ -1,3 +1,5 @@
+import { CourseSharingBadge } from '../components/CourseSharingBadge';
+import { withAllocationChoice } from '@shared/allocationPreferences';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -66,5 +68,29 @@ describe('allocation interface integration', () => {
     }));
     expect(text(markup)).toContain('4/8 MC shared with other programmes.');
     expect(text(markup)).toContain('A, D, E, F, G');
+  });
+});
+
+
+describe('grid sharing badges', () => {
+  it('labels courses used by multiple programmes', () => {
+    const markup = renderToStaticMarkup(createElement(CourseSharingBadge, { code: 'A', allocation }));
+    expect(markup).toContain('Shared course A');
+    expect(markup).toContain('aria-haspopup="dialog"');
+  });
+
+  it('leaves primary-only and minor-only courses unlabelled', () => {
+    expect(renderToStaticMarkup(createElement(CourseSharingBadge, { code: 'B', allocation }))).toBe('');
+    expect(renderToStaticMarkup(createElement(CourseSharingBadge, { code: 'D', allocation }))).toBe('');
+    expect(renderToStaticMarkup(createElement(CourseSharingBadge, { code: 'MISSING', allocation }))).toBe('');
+  });
+
+  it('marks a real over-allowance assignment as a conflict', () => {
+    const constrained = { ...secondary, mcTarget: 8, requirements: [{ name: 'Required pair', fulfilledBy: ['A', 'D'], count: 2 }] };
+    const pinned = modules.map(module => module.code === 'A'
+      ? withAllocationChoice(module, 'minor:statistics', 'requirement:Required pair', 'include') : module);
+    const report = allocateRequirements(primary, [constrained], [{ year: 1, sem: 1, modules: pinned }]);
+    expect(report.programmes[1].sharedMc).toBeGreaterThan(report.programmes[1].capMc!);
+    expect(renderToStaticMarkup(createElement(CourseSharingBadge, { code: 'A', allocation: report }))).toContain('Conflict course A');
   });
 });

@@ -473,6 +473,8 @@ export const StudyPlan = ({
                     <div className="max-w-[2560px] mx-auto px-4 sm:px-6 py-6 w-full">
                       <div className="flex min-w-0 flex-col gap-5">
                         <SemesterGrid
+                          allocation={allocation}
+                          onManageProgramme={setManagedProgrammeKey}
                           semesters={semesters}
                           major={major}
                           waivedModules={waivedModules}
