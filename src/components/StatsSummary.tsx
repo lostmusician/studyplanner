@@ -1,3 +1,4 @@
+import type { ProgrammeAllocation } from '../lib/requirementAllocation';
 import { useEffect, useRef, useState } from 'react';
 import type { Major, MajorCategory, Module, PlacedModule, StudentSemester, WaivedModule } from '@shared/types';
 import type { ConstraintStatus, FocusAreaStatus, RequirementStatus, Stats } from '../lib/studyPlan';
@@ -7,6 +8,10 @@ import { ProgrammeElectivesExplorer } from './ProgrammeElectivesExplorer';
 import { MUTED } from '../lib/colors';
 
 interface Props {
+  programmeAllocations?: ProgrammeAllocation[];
+  onOpenProgrammeAllocation?: (programmeKey: string) => void;
+  activeProgrammeKey?: string | null;
+  programmeIssues?: string[];
   major: Major;
   stats: Stats;
   semesters: StudentSemester[];
@@ -28,6 +33,10 @@ export const StatsSummary = ({
   addRequirementMapping,
   removeRequirementMapping,
   polytechnicApcUnits = 0,
+  programmeAllocations = [],
+  onOpenProgrammeAllocation,
+  activeProgrammeKey,
+  programmeIssues = [],
 }: Props) => {
   const [openId, setOpenId] = useState<string | null>(null);
   const openCategory = major.categories.find((cat) => cat.id === openId) ?? null;
@@ -48,7 +57,11 @@ export const StatsSummary = ({
         />
         {major.categories.map((cat) => {
           const isUe = cat.id === 'unrestricted-electives';
-          const baseValue = stats.byCategory[cat.id] ?? 0;
+          const programmeAllocation = programmeAllocations.find(p => p.kind !== 'primary' && `${p.kind}-${p.id}` === cat.id);
+          const needsReview = programmeAllocation && (!programmeAllocation.rows.length || programmeAllocation.rows.some(row => !row.fulfilled) ||
+            programmeAllocation.sharedMc > (programmeAllocation.capMc ?? Infinity) || programmeIssues.includes(programmeAllocation.key) ||
+            programmeAllocation.usedCodes.some(code => programmeAllocations.filter(p => p.usedCodes.includes(code)).length > 2));
+          const baseValue = programmeAllocation?.usedMc ?? stats.byCategory[cat.id] ?? 0;
           const displayValue = isUe ? baseValue + apcUnits : baseValue;
           const target = isUe ? dynamicUeTarget : cat.mcTarget;
 
@@ -59,10 +72,12 @@ export const StatsSummary = ({
               value={displayValue}
               target={target}
               color={cat.color}
-              isOpen={openId === cat.id}
-              controlsId={`category-panel-${cat.id}`}
-              badge={isUe && apcUnits > 0 ? `+${apcUnits} APC` : undefined}
-              onClick={() => setOpenId((current) => (current === cat.id ? null : cat.id))}
+              isOpen={programmeAllocation ? activeProgrammeKey === programmeAllocation.key : openId === cat.id}
+              controlsId={programmeAllocation ? undefined : `category-panel-${cat.id}`}
+              opensDialog={Boolean(programmeAllocation && onOpenProgrammeAllocation)}
+              detail={programmeAllocation ? `MC assigned · ${programmeAllocation.sharedMc}/${programmeAllocation.capMc} shared` : undefined}
+              badge={programmeAllocation ? (needsReview ? 'Review' : undefined) : isUe && apcUnits > 0 ? `+${apcUnits} APC` : undefined}
+              onClick={() => programmeAllocation && onOpenProgrammeAllocation ? onOpenProgrammeAllocation(programmeAllocation.key) : setOpenId((current) => (current === cat.id ? null : cat.id))}
             />
           );
         })}
@@ -144,6 +159,8 @@ const StatCard = ({
   isOpen = false,
   controlsId,
   badge,
+  detail,
+  opensDialog = false,
   onClick,
 }: {
   label: string;
@@ -153,6 +170,8 @@ const StatCard = ({
   isOpen?: boolean;
   controlsId?: string;
   badge?: string;
+  detail?: string;
+  opensDialog?: boolean;
   onClick?: () => void;
 }) => {
   const pct = target ? Math.min(100, (value / target) * 100) : null;
@@ -176,6 +195,7 @@ const StatCard = ({
         {value}
         {target !== undefined && <span className="text-xs font-normal text-ink/60 ml-1">/ {target}</span>}
       </div>
+      {detail && <p className="mt-1 text-[10px] font-medium text-ink/70">{detail}</p>}
       {pct !== null && (
         <div className="h-1 rounded-full bg-ink/10 overflow-hidden mt-1.5">
           <div
@@ -200,7 +220,8 @@ const StatCard = ({
       type="button"
       className={className}
       style={style}
-      aria-expanded={isOpen}
+      aria-expanded={opensDialog ? undefined : isOpen}
+      aria-haspopup={opensDialog ? 'dialog' : undefined}
       aria-controls={controlsId}
       onClick={onClick}
     >

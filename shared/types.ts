@@ -134,8 +134,15 @@ export interface DefaultPlanEntry {
 }
 
 export interface PlacedModule extends Module {
+  /** Secondary programmes explicitly not using this course. Omitted means automatic eligibility. */
+  excludedProgrammeIds?: string[];
+  /** Per-programme, per-requirement choices. Missing entries let the allocator choose. */
+  allocationPreferences?: AllocationPreferences;
   categoryId: string;
 }
+
+export type AllocationChoice = 'include' | 'exclude';
+export type AllocationPreferences = Record<string, Record<string, AllocationChoice>>;
 
 export type WaivedModule = PlacedModule;
 

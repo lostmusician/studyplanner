@@ -295,3 +295,19 @@ describe('readImportFromHash', () => {
     expect(readImportFromHash(`#${SHORT_IMPORT_HASH_KEY}=garbage!!!`)).toBeNull();
   });
 });
+
+describe('allocation choices in shared plans', () => {
+  it('keeps row choices and programme exclusions in compact links, including waived courses', () => {
+    const module = {
+      ...basePayload.plan.semesters[0].modules[0],
+      excludedProgrammeIds: ['statistics'],
+      allocationPreferences: { 'primary:computer-science-nusc': { 'requirement:Programming': 'include' as const }, 'minor:mathematics': { 'programme-total': 'exclude' as const } },
+    };
+    const payload = { ...basePayload, plan: { ...basePayload.plan, semesters: [{ year: 1, sem: 1, modules: [module] }], waivedModules: [module] } };
+    const catalog = { [module.code]: module };
+    const result = decodeCompactPlan(encodeCompactPlan(payload, catalog));
+    expect(result?.plan.semesters[0].modules[0]).toEqual(module);
+    expect(result?.plan.waivedModules[0]).toEqual(module);
+    expect(decodePlan(encodePlan(payload))?.plan.semesters[0].modules[0]).toEqual(module);
+  });
+});

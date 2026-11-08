@@ -42,7 +42,7 @@ export const AppSidebar = ({
   onToggleCollapse,
 }: Props) => (
   <aside
-    className={`app-sidebar sticky top-0 z-30 hidden h-screen shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r border-ink/10 bg-paper/45 transition-[width] duration-200 ease-in-out md:flex print:hidden ${
+    className={`app-sidebar fixed inset-y-0 left-0 z-30 hidden h-dvh shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r border-ink/10 bg-paper/45 transition-[width] duration-200 ease-in-out md:flex print:hidden ${
       isCollapsed ? 'w-16 items-center' : 'w-60 lg:w-64'
     }`}
   >

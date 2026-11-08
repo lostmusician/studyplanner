@@ -10,12 +10,23 @@ import {
   checkSemesterAvailability,
   getCachedModuleDetail,
 } from '@shared/nusmods';
+import { autoCategoryId } from './studyPlan';
 import { callSoclaasChat } from './soclaas';
 import {
   collectCandidateCourseCodes,
   enrichCandidateModules,
-  type EnrichedModuleInfo,
 } from './recommendationData';
+
+/**
+ * Strips markdown code blocks (e.g. ```json ... ```) from LLM output.
+ */
+export const cleanJsonResponse = (text: string): string => {
+  let cleaned = text.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  }
+  return cleaned;
+};
 
 export interface SurveyInput {
   standingYear: number;
@@ -54,6 +65,63 @@ const isSemesterPast = (
   if (year < standingYear) return true;
   if (year === standingYear && sem < standingSem) return true;
   return false;
+};
+
+interface AdvisorResponse {
+  trackTitle?: string;
+  trackRationale?: string;
+  recommendedMinorId?: string | null;
+  recommendedMinorRationale?: string;
+  recommendedElectives?: RecommendationResult['recommendedElectives'];
+  futureSemesterPlacements?: Array<{ year: number; sem: number; moduleCodes: string[] }>;
+}
+
+const parseAdvisorResponse = (raw: string): AdvisorResponse => {
+  const value = JSON.parse(cleanJsonResponse(raw));
+  if (!value || typeof value !== 'object' || Array.isArray(value) || !['futureSemesterPlacements', 'recommendedElectives', 'recommendedMinorId', 'trackTitle'].some(key => key in value)) throw new Error('Invalid advisor response');
+  if (value.futureSemesterPlacements !== undefined && (!Array.isArray(value.futureSemesterPlacements) || value.futureSemesterPlacements.some((p: unknown) =>
+    !p || typeof p !== 'object' || !Number.isInteger((p as { year: number }).year) || !Number.isInteger((p as { sem: number }).sem) ||
+    !Array.isArray((p as { moduleCodes: unknown }).moduleCodes) || (p as { moduleCodes: unknown[] }).moduleCodes.some(code => typeof code !== 'string')))) {
+    throw new Error('Invalid advisor placements');
+  }
+  for (const key of ['trackTitle', 'trackRationale', 'recommendedMinorRationale']) {
+    if (value[key] !== undefined && typeof value[key] !== 'string') throw new Error(`Invalid advisor ${key}`);
+  }
+  if (value.recommendedMinorId !== undefined && value.recommendedMinorId !== null && typeof value.recommendedMinorId !== 'string') throw new Error('Invalid advisor minor');
+  if (value.recommendedElectives !== undefined && (!Array.isArray(value.recommendedElectives) || value.recommendedElectives.some((e: unknown) =>
+    !e || typeof e !== 'object' || ['code', 'title', 'reason'].some(key => typeof (e as Record<string, unknown>)[key] !== 'string')))) throw new Error('Invalid advisor electives');
+  return value;
+};
+
+const auditPlan = (updated: StudentSemester[], original: StudentSemester[], waived: WaivedModule[], standing: { year: number; sem: number }) => {
+  const addedModules: RecommendationResult['addedModules'] = [];
+  const warnings: string[] = [];
+  const completed = new Set(waived.map(m => m.code));
+  for (const sem of [...updated].sort((a, b) => a.year - b.year || a.sem - b.sem)) {
+    if (!isSemesterPast(sem.year, sem.sem, standing.year, standing.sem)) {
+      const originalCodes = new Set(original.flatMap(s => s.modules.map(m => m.code)));
+      for (const module of sem.modules) {
+        if (!originalCodes.has(module.code)) addedModules.push({ code: module.code, year: sem.year, sem: sem.sem });
+        const detail = getCachedModuleDetail(module.code);
+        if (!detail) {
+          warnings.push(`${module.code}: course details unavailable; verify credits, prerequisites and semester availability.`);
+          continue;
+        }
+        const assessment = assessPrerequisiteConflict(detail, completed);
+        if (assessment.missingRequirement) warnings.push(`${module.code} in Y${sem.year}S${sem.sem} is missing: ${assessment.missingRequirement}`);
+        const available = checkSemesterAvailability(detail, sem.sem);
+        if (!available.isAvailable && available.warning) warnings.push(`${module.code}: ${available.warning}`);
+      }
+      if (sem.year === 1 && sem.sem === 1 && sem.modules.reduce((sum, m) => sum + m.mcs, 0) > 26) warnings.push('Y1S1 exceeds the 26 MC limit.');
+    }
+    sem.modules.forEach(m => completed.add(m.code));
+  }
+  return { addedModules, warnings: [...new Set(warnings)] };
+};
+
+const loadPlanDetails = async (plan: StudentSemester[], standing: { year: number; sem: number }) => {
+  const codes = [...new Set(plan.filter(s => !isSemesterPast(s.year, s.sem, standing.year, standing.sem)).flatMap(s => s.modules.map(m => m.code)))];
+  await enrichCandidateModules(codes.filter(code => !getCachedModuleDetail(code)));
 };
 
 /**
@@ -161,7 +229,7 @@ export const generateMockRecommendation = (
   // Determine Minor
   const recommendedMinor = survey.selectedMinorId
     ? minors.find((m) => m.id === survey.selectedMinorId)
-    : minors.find((m) => m.id.includes('economics') || m.id.includes('management') || m.id.includes('statistics'));
+    : undefined;
 
   // Build updated semesters preserving past semesters
   const updatedSemesters: StudentSemester[] = currentSemesters.map((s) => {
@@ -173,7 +241,6 @@ export const generateMockRecommendation = (
   });
 
   const addedModules: Array<{ code: string; year: number; sem: number }> = [];
-  const warnings: string[] = [];
 
   // Distribute candidate electives that aren't already taken into future semesters
   const electivesToPlace = candidateElectives.filter((e) => !pastCodes.has(e.code));
@@ -192,12 +259,13 @@ export const generateMockRecommendation = (
         const placed: PlacedModule = {
           code: elective.code,
           name: elective.title,
-          mcs: 4,
-          categoryId: major.categories[1]?.id ?? major.categories[0]?.id ?? 'unrestricted-electives',
+          mcs: major.moduleCatalog[elective.code]?.mcs ?? (Number(getCachedModuleDetail(elective.code)?.moduleCredit) || 4),
+          categoryId: autoCategoryId(major, elective.code),
         };
+        if (currentMcs + placed.mcs > survey.targetMcsPerSem) break;
         sem.modules.push(placed);
         addedModules.push({ code: elective.code, year: sem.year, sem: sem.sem });
-        currentMcs += 4;
+        currentMcs += placed.mcs;
       }
       electiveIdx++;
     }
@@ -213,7 +281,7 @@ export const generateMockRecommendation = (
     recommendedElectives: candidateElectives,
     updatedSemesters,
     addedModules,
-    warnings,
+    warnings: auditPlan(updatedSemesters, currentSemesters, waivedModules, { year: survey.standingYear, sem: survey.standingSem }).warnings,
     usedMock: true,
   };
 };
@@ -249,7 +317,7 @@ Given a student's degree rules, academic standing, survey responses, and candida
 1. Recommended Track / Specialisation with personalized justification.
 2. Recommended Minor or Secondary Programme (if appropriate).
 3. 3-5 curated Electives with specific rationales tied to their syllabus.
-4. A sequence of modules to place into their REMAINING future semesters, respecting prerequisites and semester availability.
+4. Additional courses for their REMAINING future semesters, respecting prerequisites and semester availability. Keep existing course placements fixed. Use only the supplied candidate or degree catalogue; do not propose moving or removing courses.
 
 OUTPUT JSON FORMAT ONLY:
 {
@@ -274,6 +342,10 @@ OUTPUT JSON FORMAT ONLY:
       id: major.id,
       label: major.label,
       totalMcTarget: major.totalMcTarget,
+      categories: major.categories,
+      requirements: major.requirements,
+      breadthDepth: major.breadthDepth,
+      programmeElectives: major.programmeElectives,
     },
     studentStanding: {
       currentYear: survey.standingYear,
@@ -314,20 +386,22 @@ OUTPUT JSON FORMAT ONLY:
       temperature: 0.2,
     });
 
-    const parsed = JSON.parse(rawContent) as {
-      trackTitle?: string;
-      trackRationale?: string;
-      recommendedMinorId?: string | null;
-      recommendedMinorRationale?: string;
-      recommendedElectives?: Array<{ code: string; title: string; reason: string }>;
-      futureSemesterPlacements?: Array<{ year: number; sem: number; moduleCodes: string[] }>;
-    };
+    const parsed = parseAdvisorResponse(rawContent);
+
+    // Track placed modules across all semesters to prevent duplicates
+    const globallyPlacedCodes = new Set<string>([...waivedCodes, ...currentSemesters.flatMap(s => s.modules.map(m => m.code))]);
 
     // Reconcile and validate against ModStack's studyPlan rules
+    // Non-destructive merge: preserve existing user modules, fill/slot proposed electives
     const updatedSemesters: StudentSemester[] = currentSemesters.map((s) => {
-      // Past semester: freeze
+      // Past semester: freeze exactly as-is
       if (isSemesterPast(s.year, s.sem, survey.standingYear, survey.standingSem)) {
         return { ...s, modules: [...s.modules] };
+      }
+
+      const existingModules = [...s.modules];
+      for (const m of existingModules) {
+        globallyPlacedCodes.add(m.code);
       }
 
       // Check if SoCLaaS proposed modules for this semester
@@ -335,58 +409,43 @@ OUTPUT JSON FORMAT ONLY:
         (p) => p.year === s.year && p.sem === s.sem,
       );
 
-      if (!proposed || proposed.moduleCodes.length === 0) {
-        return { ...s, modules: [...s.modules] };
+      if (!proposed || !Array.isArray(proposed.moduleCodes) || proposed.moduleCodes.length === 0) {
+        return { ...s, modules: existingModules };
       }
 
-      const newModules: PlacedModule[] = proposed.moduleCodes.map((code) => {
+      const mergedModules = [...existingModules];
+      for (const rawCode of proposed.moduleCodes) {
+        const code = (rawCode || '').trim().toUpperCase();
+        if (!code || globallyPlacedCodes.has(code) || (!enrichedModules.some(m => m.code === code) && !major.moduleCatalog[code] && !minors.some(minor => minor.moduleCatalog[code]))) continue;
+
         const enriched = enrichedModules.find((e) => e.code === code);
         const existing = s.modules.find((m) => m.code === code);
-        return {
+        const placed: PlacedModule = {
           code,
-          name: existing?.name ?? enriched?.title ?? code,
-          mcs: existing?.mcs ?? enriched?.mcs ?? 4,
-          categoryId: existing?.categoryId ?? major.categories[1]?.id ?? major.categories[0]?.id ?? 'unrestricted-electives',
+          name: existing?.name ?? major.moduleCatalog[code]?.name ?? enriched?.title ?? minors.find(m => m.moduleCatalog[code])?.moduleCatalog[code]?.name ?? code,
+          mcs: existing?.mcs ?? major.moduleCatalog[code]?.mcs ?? enriched?.mcs ?? minors.find(m => m.moduleCatalog[code])?.moduleCatalog[code]?.mcs ?? 4,
+          categoryId: existing?.categoryId ?? autoCategoryId(major, code),
         };
-      });
+        mergedModules.push(placed);
+        globallyPlacedCodes.add(code);
+      }
 
       return {
         ...s,
-        modules: newModules,
+        modules: mergedModules,
       };
     });
 
-    const addedModules: Array<{ code: string; year: number; sem: number }> = [];
-    const warnings: string[] = [];
-
-    // Run prerequisite and semester availability checks on future semesters
-    const completedSoFar = new Set<string>([...waivedCodes, ...pastModules]);
-    for (const sem of updatedSemesters) {
-      if (!isSemesterPast(sem.year, sem.sem, survey.standingYear, survey.standingSem)) {
-        for (const mod of sem.modules) {
-          addedModules.push({ code: mod.code, year: sem.year, sem: sem.sem });
-          const detail = getCachedModuleDetail(mod.code);
-          if (detail) {
-            const prereqCheck = assessPrerequisiteConflict(detail, completedSoFar);
-            if (prereqCheck.missingRequirement) {
-              warnings.push(`${mod.code} in Y${sem.year}S${sem.sem} is missing prerequisite: ${prereqCheck.missingRequirement}`);
-            }
-            const semCheck = checkSemesterAvailability(detail, sem.sem);
-            if (!semCheck.isAvailable && semCheck.warning) {
-              warnings.push(`${mod.code}: ${semCheck.warning}`);
-            }
-          }
-        }
-      }
-      for (const mod of sem.modules) {
-        completedSoFar.add(mod.code);
-      }
-    }
+    await loadPlanDetails(updatedSemesters, { year: survey.standingYear, sem: survey.standingSem });
+    const { addedModules, warnings } = auditPlan(updatedSemesters, currentSemesters, waivedModules, { year: survey.standingYear, sem: survey.standingSem });
+    const skipped = (parsed.futureSemesterPlacements ?? []).flatMap(p => p.moduleCodes).map(code => code.trim().toUpperCase())
+      .filter(code => code && !globallyPlacedCodes.has(code));
+    if (skipped.length) warnings.push(`Not placed: ${[...new Set(skipped)].join(', ')}. Choose a course from the catalogue and an existing future semester.`);
 
     return {
       trackTitle: parsed.trackTitle || 'Recommended Specialisation Track',
       trackRationale: parsed.trackRationale || 'Custom plan generated based on your interests.',
-      recommendedMinorId: parsed.recommendedMinorId ?? null,
+      recommendedMinorId: minors.some(m => m.id === parsed.recommendedMinorId) ? parsed.recommendedMinorId : null,
       recommendedMinorRationale: parsed.recommendedMinorRationale,
       recommendedElectives: parsed.recommendedElectives ?? [],
       updatedSemesters,
@@ -436,7 +495,7 @@ export const iterateAiStudyPlanRecommendation = async (
 
   const systemPrompt = `You are the NUS School of Computing academic advising engine pair-planning with a student.
 The student is continuing a dialogue to iterate on their study plan.
-Incorporate their requested changes, respect NUS SoC prerequisites, and maintain a realistic workload.
+Suggest additional courses while keeping all existing placements fixed. Use only supplied candidates. Moving, removing courses or redistributing workload requires manual editing; explain this limitation instead of claiming it was done.
 Output JSON only:
 {
   "assistantMessage": "string explaining exactly what changes were made in response to the student's request",
@@ -482,67 +541,58 @@ ${enrichedModules.slice(0, 30).map((m) => `${m.code}: ${m.title} (Sem ${m.semest
       temperature: 0.2,
     });
 
-    const parsed = JSON.parse(raw) as {
-      assistantMessage?: string;
-      reply?: string;
-      trackTitle?: string;
-      trackRationale?: string;
-      recommendedMinorId?: string | null;
-      recommendedMinorRationale?: string;
-      recommendedElectives?: Array<{ code: string; title: string; reason: string }>;
-      futureSemesterPlacements?: Array<{ year: number; sem: number; moduleCodes: string[] }>;
-    };
+    const parsed = parseAdvisorResponse(raw);
+
+    const globallyPlacedCodes = new Set<string>([...waivedCodes, ...currentSemesters.flatMap(s => s.modules.map(m => m.code)), ...currentResult.updatedSemesters.flatMap(s => s.modules.map(m => m.code))]);
 
     const updatedSemesters: StudentSemester[] = currentResult.updatedSemesters.map((s) => {
       if (isSemesterPast(s.year, s.sem, standing.year, standing.sem)) {
-        return { ...s, modules: [...s.modules] };
+        return { ...s, modules: [...(currentSemesters.find(original => original.year === s.year && original.sem === s.sem)?.modules ?? s.modules)] };
       }
-      const proposed = parsed.futureSemesterPlacements?.find((p) => p.year === s.year && p.sem === s.sem);
-      if (!proposed) return { ...s, modules: [...s.modules] };
 
-      const newModules: PlacedModule[] = proposed.moduleCodes.map((code) => {
+      const existingModules = [...s.modules];
+      for (const m of existingModules) {
+        globallyPlacedCodes.add(m.code);
+      }
+
+      const proposed = parsed.futureSemesterPlacements?.find((p) => p.year === s.year && p.sem === s.sem);
+      if (!proposed || !Array.isArray(proposed.moduleCodes) || proposed.moduleCodes.length === 0) {
+        return { ...s, modules: existingModules };
+      }
+
+      const mergedModules = [...existingModules];
+      for (const rawCode of proposed.moduleCodes) {
+        const code = (rawCode || '').trim().toUpperCase();
+        if (!code || globallyPlacedCodes.has(code) || (!enrichedModules.some(m => m.code === code) && !major.moduleCatalog[code] && !minors.some(minor => minor.moduleCatalog[code]))) continue;
+
         const enriched = enrichedModules.find((e) => e.code === code);
         const existing = s.modules.find((m) => m.code === code);
-        return {
+        const placed: PlacedModule = {
           code,
-          name: existing?.name ?? enriched?.title ?? code,
-          mcs: existing?.mcs ?? enriched?.mcs ?? 4,
-          categoryId: existing?.categoryId ?? major.categories[1]?.id ?? major.categories[0]?.id ?? 'unrestricted-electives',
+          name: existing?.name ?? major.moduleCatalog[code]?.name ?? enriched?.title ?? minors.find(m => m.moduleCatalog[code])?.moduleCatalog[code]?.name ?? code,
+          mcs: existing?.mcs ?? major.moduleCatalog[code]?.mcs ?? enriched?.mcs ?? minors.find(m => m.moduleCatalog[code])?.moduleCatalog[code]?.mcs ?? 4,
+          categoryId: existing?.categoryId ?? autoCategoryId(major, code),
         };
-      });
+        mergedModules.push(placed);
+        globallyPlacedCodes.add(code);
+      }
 
-      return { ...s, modules: newModules };
+      return { ...s, modules: mergedModules };
     });
 
-    const addedModules: Array<{ code: string; year: number; sem: number }> = [];
-    const warnings: string[] = [];
-    const completedSoFar = new Set<string>([...waivedCodes, ...pastModules]);
-
-    for (const sem of updatedSemesters) {
-      if (!isSemesterPast(sem.year, sem.sem, standing.year, standing.sem)) {
-        for (const mod of sem.modules) {
-          addedModules.push({ code: mod.code, year: sem.year, sem: sem.sem });
-          const detail = getCachedModuleDetail(mod.code);
-          if (detail) {
-            const prereqCheck = assessPrerequisiteConflict(detail, completedSoFar);
-            if (prereqCheck.missingRequirement) {
-              warnings.push(`${mod.code} in Y${sem.year}S${sem.sem} is missing: ${prereqCheck.missingRequirement}`);
-            }
-          }
-        }
-      }
-      for (const mod of sem.modules) {
-        completedSoFar.add(mod.code);
-      }
-    }
+    await loadPlanDetails(updatedSemesters, standing);
+    const { addedModules, warnings } = auditPlan(updatedSemesters, currentSemesters, waivedModules, standing);
+    const skipped = (parsed.futureSemesterPlacements ?? []).flatMap(p => p.moduleCodes).map(code => code.trim().toUpperCase())
+      .filter(code => code && !globallyPlacedCodes.has(code));
+    if (skipped.length) warnings.push(`Not placed: ${[...new Set(skipped)].join(', ')}. Choose a course from the catalogue and an existing future semester.`);
 
     return {
-      reply: parsed.assistantMessage || parsed.reply || 'I have updated your study plan according to your feedback.',
+      reply: addedModules.length ? `The recommendation includes ${addedModules.map(m => m.code).join(', ')}. Existing course placements were kept.` : 'No new courses were placed. Existing course placements were kept.',
       result: {
         trackTitle: parsed.trackTitle || currentResult.trackTitle,
         trackRationale: parsed.trackRationale || currentResult.trackRationale,
-        recommendedMinorId: parsed.recommendedMinorId ?? currentResult.recommendedMinorId,
-        recommendedMinorRationale: parsed.recommendedMinorRationale ?? currentResult.recommendedMinorRationale,
+        recommendedMinorId: parsed.recommendedMinorId === null ? null : minors.some(m => m.id === parsed.recommendedMinorId) ? parsed.recommendedMinorId : currentResult.recommendedMinorId,
+        recommendedMinorRationale: parsed.recommendedMinorId === null ? undefined : parsed.recommendedMinorRationale ?? currentResult.recommendedMinorRationale,
         recommendedElectives: parsed.recommendedElectives ?? currentResult.recommendedElectives,
         updatedSemesters,
         addedModules,
@@ -553,4 +603,64 @@ ${enrichedModules.slice(0, 30).map((m) => `${m.code}: ${m.title} (Sem ${m.semest
   } catch (error) {
     throw error;
   }
+};
+
+/**
+ * Deterministic iteration engine when offline or when SoCLaaS is not configured.
+ * Adjusts study plan electives, minors, and workload according to student feedback.
+ */
+export const iterateMockRecommendation = (
+  major: Major,
+  currentResult: RecommendationResult,
+  currentSemesters: StudentSemester[],
+  waivedModules: WaivedModule[],
+  userPrompt: string,
+  minors: SecondaryProgramme[] = [],
+  standing: { year: number; sem: number } = { year: 1, sem: 1 },
+): IterationResult => {
+  const normalized = userPrompt.toLowerCase();
+  const updatedSemesters = currentResult.updatedSemesters.map(s => ({ ...s, modules: [...(isSemesterPast(s.year, s.sem, standing.year, standing.sem)
+    ? currentSemesters.find(original => original.year === s.year && original.sem === s.sem)?.modules ?? s.modules : s.modules)] }));
+  let reply = 'Offline adjustments support adding a course or recommending a named minor. Move courses or change workloads in the grid.';
+  let recommendedMinorId = currentResult.recommendedMinorId;
+  let recommendedMinorRationale = currentResult.recommendedMinorRationale;
+  const recommendedElectives = [...currentResult.recommendedElectives];
+  const pastCodes = new Set(waivedModules.map(m => m.code));
+  currentSemesters.filter(s => isSemesterPast(s.year, s.sem, standing.year, standing.sem)).forEach(s => s.modules.forEach(m => pastCodes.add(m.code)));
+
+  const place = (code: string, title: string) => {
+    if (pastCodes.has(code) || updatedSemesters.some(s => s.modules.some(m => m.code === code))) {
+      reply = `${code} is already in your study plan or completed.`;
+      return;
+    }
+    const detail = getCachedModuleDetail(code);
+    const mcs = major.moduleCatalog[code]?.mcs ?? (Number(detail?.moduleCredit) || 4);
+    const target = [...updatedSemesters].sort((a, b) => a.year - b.year || a.sem - b.sem).find(sem =>
+      !isSemesterPast(sem.year, sem.sem, standing.year, standing.sem) &&
+      sem.modules.reduce((sum, m) => sum + m.mcs, 0) + mcs <= 20 &&
+      (!detail || (!assessPrerequisiteConflict(detail, new Set([...pastCodes, ...updatedSemesters.filter(s => isSemesterPast(s.year, s.sem, sem.year, sem.sem)).flatMap(s => s.modules.map(m => m.code))])).missingRequirement && checkSemesterAvailability(detail, sem.sem).isAvailable)));
+    if (!target) { reply = `No suitable future semester has room for ${code}. Choose a semester manually or free up credits first.`; return; }
+    target.modules.push({ code, name: major.moduleCatalog[code]?.name ?? detail?.title ?? title, mcs, categoryId: autoCategoryId(major, code) });
+    if (!recommendedElectives.some(e => e.code === code)) recommendedElectives.push({ code, title, reason: 'Requested course' });
+    reply = `Added ${code} to Y${target.year}S${target.sem} in the recommendation.`;
+  };
+
+  // Do not interpret a request to remove/avoid a course as an instruction to add it.
+  if (!/\b(remove|drop|avoid|without|swap|replace|lighter|reduce|redistribute|move|sep|exchange)\b|\bno\b|\bnot\b|don['’]?t|do not/i.test(userPrompt)) {
+    const code = userPrompt.match(/\b([A-Z]{2,4}\d{4}[A-Z]{0,2})\b/i)?.[1].toUpperCase();
+    if (code) place(code, code);
+    else if (/\bminor\b/.test(normalized)) {
+      const matched = minors.find(m => normalized.includes(m.label.toLowerCase()) || normalized.includes(m.id.toLowerCase()));
+      if (matched) {
+        recommendedMinorId = matched.id;
+        recommendedMinorRationale = 'Selected from your request.';
+        reply = `Recommended ${matched.label}. Course placements are unchanged; choose its courses in the planner.`;
+      } else reply = 'Which minor would you like? Name a minor from Settings.';
+    } else if (/nlp|natural language/.test(normalized)) place('CS4248', 'Natural Language Processing');
+    else if (/security|crypto/.test(normalized)) place('CS3235', 'Computer Security');
+    else if (/cloud|distributed/.test(normalized)) place('CS3210', 'Parallel Computing');
+  }
+  const audited = auditPlan(updatedSemesters, currentSemesters, waivedModules, standing);
+  return { reply, result: { ...currentResult, recommendedMinorId, recommendedMinorRationale, recommendedElectives, updatedSemesters,
+    addedModules: audited.addedModules, warnings: audited.warnings, usedMock: true } };
 };
