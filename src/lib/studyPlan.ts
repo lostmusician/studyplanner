@@ -140,7 +140,7 @@ export const renameModule = (
 ): StudentSemester[] =>
   semesters.map((s) => ({
     ...s,
-    modules: s.modules.map((m) => (m.code === oldCode ? { ...updates } : m)),
+    modules: s.modules.map((m) => (m.code === oldCode ? { ...m, ...updates } : m)),
   }));
 
 /** Moves a module and any same-semester linked modules together as one group.
@@ -199,7 +199,7 @@ export const recategorizeWaivedModule = (
 export const matchesFulfiller = (moduleCode: string, fulfiller: string): boolean =>
   fulfiller.endsWith('*') ? moduleCode.startsWith(fulfiller.slice(0, -1)) : moduleCode === fulfiller;
 
-const matchesAnyRequirement = (requirements: RequirementRule[], code: string): boolean =>
+export const matchesAnyRequirement = (requirements: RequirementRule[], code: string): boolean =>
   requirements.some((req) =>
     !(req.excludedCodes ?? []).some(pattern => matchesFulfiller(code, pattern)) &&
     (req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)) ||
@@ -315,16 +315,19 @@ export const computeUeTarget = (major: Major): number => {
 };
 
 export const computeRequirements = (
-  source: Pick<Major, 'requirements'>,
+  source: Pick<Major, 'requirements'> & { id?: string },
   semesters: StudentSemester[],
   waivedModules: WaivedModule[] = [],
   requirementMappings: Record<string, string[]> = {},
   pathways: SpecialProgramme[] | SpecialProgramme | null = [],
+  /** Exact course selections made by the allocation engine, keyed by row name. */
+  selections?: Record<string, string[]>,
 ): RequirementStatus[] => {
   const specialProgrammes = normalizeSpecialProgrammes(pathways, pathways);
   const nocDuration = getNocDuration(specialProgrammes);
-  const plannedCodes = semesters.flatMap((s) => s.modules.map((m) => m.code));
-  const waivedCodes = waivedModules.map((m) => m.code);
+  const eligible = (m: PlacedModule) => !source.id || !m.excludedProgrammeIds?.includes(source.id);
+  const plannedCodes = semesters.flatMap((s) => s.modules.filter(eligible).map((m) => m.code));
+  const waivedCodes = waivedModules.filter(eligible).map((m) => m.code);
   const allCodes = Array.from(new Set([...plannedCodes, ...waivedCodes]));
   const modulesByCode = new Map([...semesters.flatMap(s => s.modules), ...waivedModules].map(m => [m.code, m]));
   const allocated = new Map<string, Set<string>>();
@@ -332,15 +335,17 @@ export const computeRequirements = (
     // Scanning `allCodes` keeps a mapped-but-removed module dormant: the link
     // survives in the plan, but only counts while the module is placed/waived.
     const mappedCodes = requirementMappings[req.name] ?? [];
+    const selected = selections?.[req.name];
+    const rowCodes = selected === undefined ? allCodes : allCodes.filter(code => selected.includes(code));
     const used = req.allocationGroup ? allocated.get(req.allocationGroup) ?? new Set<string>() : new Set<string>();
-    let matchingCodes = allCodes.filter(
+    let matchingCodes = rowCodes.filter(
       (code) =>
         !used.has(code) && !(req.excludedCodes ?? []).some(pattern => matchesFulfiller(code, pattern)) &&
         (req.fulfilledBy.some((fulfiller) => matchesFulfiller(code, fulfiller)) || mappedCodes.includes(code)),
     );
     if (req.name === 'Making Connections') {
       // A placed NEX course is credit; choosing the GEx chip alone is not.
-      const gex = allCodes.find(code => /^NEX\d/.test(code));
+      const gex = rowCodes.find(code => /^NEX\d/.test(code));
       if (gex && !matchingCodes.includes(gex)) matchingCodes.push(gex);
       let gexCount = 0;
       matchingCodes = matchingCodes.filter(code => !code.startsWith('NEX') || ++gexCount <= 1);
@@ -380,8 +385,9 @@ export const computeRequirements = (
       if (req.allocationGroup) used.add(code);
     }
     if (req.allocationGroup) allocated.set(req.allocationGroup, used);
-    const codeSet = new Set(allCodes);
-    const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) => codeSet.has(code)));
+    const codeSet = new Set(rowCodes.filter(code => !used.has(code) || matchingCodes.includes(code)));
+    const altGroupSatisfied = (req.altGroups ?? []).some((group) => group.every((code) =>
+      codeSet.has(code) && !(req.excludedCodes ?? []).some(pattern => matchesFulfiller(code, pattern))));
     const have = matchCount;
     const isGlobalPathwayReq = req.name.toLowerCase().includes('global pathway');
     const globalPathwaySatisfied = isGlobalPathwayReq && specialProgrammes.length > 0;
@@ -430,7 +436,8 @@ export interface DoubleCountStatus {
   doubleCountedCodes: string[];
 }
 
-/** Whether each already-placed module (which belongs to the primary major by
+/** @deprecated Eligibility-only estimate. Use allocateRequirements for actual sharing.
+ * Whether each already-placed module (which belongs to the primary major by
  * construction) also satisfies the secondary programme's own requirements.
  * There is deliberately no `primary: Major` parameter here: many primary
  * categories (e.g. math-sciences, unrestricted electives) carry an MC target
@@ -449,6 +456,7 @@ export const computeDoubleCount = (
   // AND is booked to a primary major category (not Unrestricted Electives or a secondary container).
   const doubleCountedCodes = [...byCode.entries()]
     .filter(([code, m]) =>
+      !m.excludedProgrammeIds?.includes(secondary.id) &&
       m.categoryId !== 'unrestricted-electives' &&
       !m.categoryId.startsWith('second-major-') &&
       !m.categoryId.startsWith('minor-') &&
@@ -461,7 +469,8 @@ export const computeDoubleCount = (
   return { doubleCountMc, capMc, warn: doubleCountMc > capMc, doubleCountedCodes };
 };
 
-/** Codes that satisfy ≥1 requirement in 2 or more declared secondary
+/** @deprecated Eligibility-only estimate. Use AllocationReport.conflicts for actual conflicts.
+ * Codes that satisfy ≥1 requirement in 2 or more declared secondary
  * programmes at once (1 implicit primary count + 2 secondary counts = 3).
  * NUS explicitly forbids this. */
 export const computeTripleCountedCodes = (
@@ -472,7 +481,7 @@ export const computeTripleCountedCodes = (
   const allModules = [...semesters.flatMap((s) => s.modules), ...waivedModules];
   const codes = Array.from(new Set(allModules.map((m) => m.code)));
   return codes.filter(
-    (code) => secondaries.filter((secondary) => matchesAnyRequirement(secondary.requirements, code)).length >= 2,
+    (code) => secondaries.filter((secondary) => !allModules.find(m => m.code === code)?.excludedProgrammeIds?.includes(secondary.id) && matchesAnyRequirement(secondary.requirements, code)).length >= 2,
   );
 };
 

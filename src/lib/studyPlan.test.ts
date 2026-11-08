@@ -908,3 +908,52 @@ describe('getCompletedCodesUpTo', () => {
     expect(getCompletedCodesUpTo(sems, 2, 2)).toEqual(['CS1101S']);
   });
 });
+
+
+describe('secondary course assignments', () => {
+  const programme: SecondaryProgramme = {
+    id: 'statistics', label: 'Statistics', kind: 'minor', mcTarget: 20,
+    requirements: [{ name: 'Statistics credits', fulfilledBy: ['ST*'], minUnits: 12 }], moduleCatalog: {},
+  };
+  const shared = (code: string, excludedProgrammeIds?: string[]): PlacedModule => ({
+    code, name: code, mcs: 4, categoryId: 'math-sciences', excludedProgrammeIds,
+  });
+
+  it('resolves an exceeded cap and exposes the replacement credits needed', () => {
+    const plan = [{ year: 2, sem: 1, modules: [shared('ST2001'), shared('ST2002'), shared('ST2003')] }];
+    expect(computeDoubleCount(programme, plan).warn).toBe(true);
+    expect(computeRequirements(programme, plan)[0].fulfilled).toBe(true);
+    plan[0].modules[2].excludedProgrammeIds = ['statistics'];
+    expect(computeDoubleCount(programme, plan)).toMatchObject({ doubleCountMc: 8, warn: false });
+    expect(computeRequirements(programme, plan)[0]).toMatchObject({ have: 8, need: 12, fulfilled: false });
+  });
+
+  it('resolves cross-programme conflicts without removing a planned course', () => {
+    const other = { ...programme, id: 'other' };
+    const plan = [{ year: 2, sem: 1, modules: [shared('ST2001')] }];
+    expect(computeTripleCountedCodes([programme, other], plan)).toEqual(['ST2001']);
+    plan[0].modules[0].excludedProgrammeIds = ['other'];
+    expect(computeTripleCountedCodes([programme, other], plan)).toEqual([]);
+    expect(computeRequirements(programme, plan)[0].have).toBe(4);
+    expect(computeRequirements(other, plan)[0].have).toBe(0);
+    expect(computeRequirements({ requirements: programme.requirements }, plan)[0].have).toBe(4);
+  });
+
+  it('honors waived course assignments and restores automatic eligibility when cleared', () => {
+    const waived = [shared('ST2001', ['statistics'])];
+    expect(computeDoubleCount(programme, [], waived).doubleCountMc).toBe(0);
+    expect(computeRequirements(programme, [], waived)[0].have).toBe(0);
+    waived[0].excludedProgrammeIds = [];
+    expect(computeRequirements(programme, [], waived)[0].have).toBe(4);
+  });
+
+  it('preserves assignments when a course is edited, moved, and serialized', () => {
+    const plan = [{ year: 2, sem: 1, modules: [shared('ST2001', ['statistics'])] }, { year: 2, sem: 2, modules: [] }];
+    const renamed = renameModule(plan, 'ST2001', { code: 'ST2002', name: 'Updated', mcs: 4, categoryId: 'unrestricted-electives' });
+    const moved = upsertModule(renamed, 2, 2, renamed[0].modules[0]);
+    const restored = JSON.parse(JSON.stringify(moved));
+    expect(restored[0].modules).toEqual([]);
+    expect(restored[1].modules[0].excludedProgrammeIds).toEqual(['statistics']);
+    expect(computeRequirements(programme, restored)[0].have).toBe(0);
+  });
+});

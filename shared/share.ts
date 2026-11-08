@@ -1,5 +1,6 @@
+import { normalizeAllocationPreferences } from './allocationPreferences';
 import { normalizeSpecialProgrammes, isSpecialProgramme } from './pathways';
-import type { Module, PlacedModule, StudentSemester, WaivedModule, NocDuration, SpecialProgramme } from './types';
+import type { Module, PlacedModule, StudentSemester, WaivedModule, NocDuration, SpecialProgramme, AllocationPreferences } from './types';
 
 /** Personal identity carried in a share link. */
 export interface ShareProfile {
@@ -39,7 +40,8 @@ export const IMPORT_HASH_KEY = 'import';
 export const SHORT_IMPORT_HASH_KEY = 'i';
 
 type ModuleCatalog = Record<string, Module>;
-type CompactModule = [code: string, categoryId: string] | [code: string, categoryId: string, name: string, mcs: number];
+interface CompactModuleChoices { a?: AllocationPreferences; e?: string[] }
+type CompactModule = [code: string, categoryId: string] | [code: string, categoryId: string, name: string, mcs: number, choices?: CompactModuleChoices];
 type CompactSemester = [year: number, sem: number, modules: CompactModule[]];
 
 interface CompactSharePayload {
@@ -156,6 +158,11 @@ const isCatalogEquivalent = (module: PlacedModule, catalog?: ModuleCatalog): boo
 
 const compactModule = (module: PlacedModule, catalog?: ModuleCatalog): CompactModule => {
   const shortCategory = CATEGORY_MAP[module.categoryId] ?? module.categoryId;
+  const choices: CompactModuleChoices = {};
+  const preferences = normalizeAllocationPreferences(module.allocationPreferences);
+  if (preferences) choices.a = preferences;
+  if (module.excludedProgrammeIds?.length) choices.e = module.excludedProgrammeIds;
+  if (choices.a || choices.e) return [module.code, shortCategory, module.name, module.mcs, choices];
   return isCatalogEquivalent(module, catalog)
     ? [module.code, shortCategory]
     : [module.code, shortCategory, module.name, module.mcs];
@@ -163,13 +170,17 @@ const compactModule = (module: PlacedModule, catalog?: ModuleCatalog): CompactMo
 
 const expandModule = (module: unknown): PlacedModule | null => {
   if (!Array.isArray(module)) return null;
-  const [code, categoryId, name, mcs] = module;
+  const [code, categoryId, name, mcs, choices] = module;
   const normalizedCode = String(code ?? '').trim().toUpperCase();
   if (!normalizedCode) return null;
   const expandedCategory = REVERSE_CATEGORY_MAP[String(categoryId ?? '')] ?? String(categoryId ?? '');
   return {
     code: normalizedCode,
     categoryId: expandedCategory,
+    ...(choices && typeof choices === 'object' && !Array.isArray(choices) ? {
+      ...(normalizeAllocationPreferences(choices.a) ? { allocationPreferences: normalizeAllocationPreferences(choices.a) } : {}),
+      ...(Array.isArray(choices.e) ? { excludedProgrammeIds: choices.e.filter((id: unknown): id is string => typeof id === 'string') } : {}),
+    } : {}),
     name: typeof name === 'string' && name.trim() ? name : normalizedCode,
     mcs: Number.isFinite(Number(mcs)) ? Number(mcs) : 0,
   };
