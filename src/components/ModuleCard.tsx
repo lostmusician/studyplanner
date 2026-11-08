@@ -7,10 +7,11 @@ import {
   assessPrerequisiteConflict,
   checkSemesterAvailability,
 } from '@shared/nusmods';
-import { XIcon, EditIcon, LockIcon, MoveIcon } from './Icons';
+import { XIcon, EditIcon, LockIcon } from './Icons';
 import { CourseDetailModal } from './CourseDetailModal';
 import { AppDialog } from './AppDialog';
-import { useIsMobile } from '../hooks/useIsMobile';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import { ModuleDialog } from './ModuleDialog';
 import { Dropdown } from './Dropdown';
 import { isModuleLocked } from '../lib/studyPlan';
 import { FOCUS_RING } from '../lib/colors';
@@ -24,7 +25,8 @@ interface Props {
   onDelete: (code: string, year?: number, sem?: number) => void;
   onEditModule?: (
     oldCode: string,
-    updates: { code: string; name: string; mcs: number; categoryId: string },
+    updates: PlacedModule,
+    destination?: { year: number; sem: number },
   ) => { ok: true } | { ok: false; error: string };
   isOverlay?: boolean;
   moveTargets?: { year: number; sem: number; label: string }[];
@@ -67,7 +69,7 @@ export const ModuleCard = ({
   const [prereqWarning, setPrereqWarning] = useState<string | null>(null);
   const [semesterWarning, setSemesterWarning] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [tooltipUp, setTooltipUp] = useState(false);
+
   const [showDetail, setShowDetail] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editCode, setEditCode] = useState(module.code);
@@ -77,28 +79,11 @@ export const ModuleCard = ({
   const [editError, setEditError] = useState<string | null>(null);
   const completedStr = completedCodes.join(',');
   const cardRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const [showMoveMenu, setShowMoveMenu] = useState(false);
+  const isTouch = useMediaQuery('(hover: none), (pointer: coarse)');
+  const [touchControls, setTouchControls] = useState(false);
+  const [editDestination, setEditDestination] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isLocked = isModuleLocked(major, module.code);
-
-  useEffect(() => {
-    if (!showMoveMenu) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
-        setShowMoveMenu(false);
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowMoveMenu(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showMoveMenu]);
 
   useEffect(() => {
     if (isOverlay) return;
@@ -122,10 +107,10 @@ export const ModuleCard = ({
   }, [module.code, completedStr, fromSem, isOverlay]);
 
   useEffect(() => {
-    if (showDetail || editing || showDeleteConfirm || showMoveMenu || isDragging) {
+    if (showDetail || editing || showDeleteConfirm || isDragging) {
       setShowTooltip(false);
     }
-  }, [showDetail, editing, showDeleteConfirm, showMoveMenu, isDragging]);
+  }, [showDetail, editing, showDeleteConfirm, isDragging]);
 
   const category = major.categories.find((c) => c.id === module.categoryId);
 
@@ -135,6 +120,7 @@ export const ModuleCard = ({
     setEditMcs(String(module.mcs));
     setEditCategoryId(module.categoryId);
     setEditError(null);
+    setEditDestination(`${fromYear}:${fromSem}`);
     setEditing(true);
   };
 
@@ -158,7 +144,7 @@ export const ModuleCard = ({
       name: editName,
       mcs: parseInt(editMcs, 10),
       categoryId: editCategoryId,
-    });
+    }, editDestination !== `${fromYear}:${fromSem}` ? { year: Number(editDestination.split(':')[0]), sem: Number(editDestination.split(':')[1]) } : undefined);
     if (!result.ok) {
       setEditError(result.error);
       return;
@@ -197,7 +183,9 @@ export const ModuleCard = ({
   // group-focus-within keeps controls reachable by keyboard (tabbing into the card),
   // not just mouse hover.
   const controlVisibility =
-    'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150';
+    isTouch
+      ? (touchControls ? 'opacity-100' : 'opacity-0 pointer-events-none group-has-[:focus-visible]:opacity-100 group-has-[:focus-visible]:pointer-events-auto')
+      : 'opacity-0 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 transition-opacity duration-150';
   const showInsertBar = isDropTarget && !isDragging && !isOverlay;
 
   return (
@@ -209,8 +197,13 @@ export const ModuleCard = ({
       }}
       style={style}
       className="relative group rounded-xl p-2.5 select-none hover:z-50 focus-within:z-50"
+      onClick={() => {
+        if (isDragging || isOverlay) return;
+        if (isTouch) setTouchControls(open => !open);
+        onSelectModule?.(module.code);
+      }}
       onMouseEnter={() => {
-        if (showDetail) return;
+        if (showDetail || editing || showDeleteConfirm || isTouch) return;
         onHoverModule?.(module.code);
         const rect = cardRef.current?.getBoundingClientRect();
         if (rect) {
@@ -239,10 +232,7 @@ export const ModuleCard = ({
         {...attributes}
         className={isLocked ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'}
         style={{ userSelect: 'none' }}
-        onClick={() => {
-          if (isDragging) return;
-          onSelectModule?.(module.code);
-        }}
+
       >
         <div className="flex items-start justify-between gap-1">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -275,8 +265,10 @@ export const ModuleCard = ({
         </div>
         <p className="text-[10px] sm:text-[11px] text-ink/75 leading-tight mt-0.5 line-clamp-2">{module.name}</p>
         <div className="flex items-center justify-between gap-1 mt-1 font-mono text-[9px] sm:text-[10px]">
-          <span className="text-ink/80 font-semibold">{module.mcs} MC</span>
-          <div className="flex min-w-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="text-ink/80 font-semibold">{module.mcs} MC</span>
+          </div>
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
             {category && (
               <span className="truncate max-w-[68px] text-[9px] text-ink/70 font-sans font-medium">{category.label}</span>
             )}
@@ -285,87 +277,86 @@ export const ModuleCard = ({
                 <LockIcon className="h-3 w-3" />
               </span>
             )}
-            {!isOverlay && !isLocked && onEditModule && (
-              <button
-                className={`flex-shrink-0 rounded-full text-ink/60 ${controlVisibility} transition-opacity hover:text-ink ${FOCUS_RING}`}
-                onClick={(e) => { e.stopPropagation(); openEditor(); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                aria-label={`Edit ${module.code}`}
-                title="Edit module"
-              >
-                <EditIcon className="h-3 w-3" />
-              </button>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Re-bucket category — shown only while editing, outside the drag handle */}
+      {/* Portalled editor stays outside the grid layout and drag interaction. */}
       {!isOverlay && !isLocked && onEditModule && editing && (
-        <div
-          className="mt-1.5 flex flex-col gap-1"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <input
-            autoFocus
-            value={editCode}
-            onChange={(e) => setEditCode(e.target.value)}
-            placeholder="Code"
-            className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
-            aria-label={`Course code for ${module.code}`}
-          />
-          <input
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            placeholder="Name"
-            className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
-            aria-label={`Course name for ${module.code}`}
-          />
-          <input
-            type="number"
-            min="1"
-            max="20"
-            value={editMcs}
-            onChange={(e) => setEditMcs(e.target.value)}
-            placeholder="MCs"
-            className="w-full rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
-            aria-label={`MCs for ${module.code}`}
-          />
-          <Dropdown
-            variant="field"
-            ariaLabel={`Requirement bucket for ${module.code}`}
-            value={editCategoryId}
-            onChange={setEditCategoryId}
-            className="w-full cursor-pointer rounded-lg border border-ink/10 bg-paper/60 px-1.5 py-1 text-[10px] text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
-            options={major.categories.map((cat) => ({ value: cat.id, label: cat.label }))}
-          />
-          {editError && (
-            <p className="text-[10px] font-medium leading-snug text-red-700">{editError}</p>
-          )}
-          <div className="flex gap-1">
-            <button
-              type="button"
-              onClick={handleSaveEdit}
-              className="flex-1 rounded-lg bg-ink py-1 text-[10px] font-medium text-canvas"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEditing(false); setEditError(null); }}
-              className="flex-1 rounded-lg bg-ink/10 py-1 text-[10px] font-medium text-ink/70"
-            >
-              Cancel
-            </button>
+        <ModuleDialog title={`Edit ${module.code}`} onClose={() => setEditing(false)}>
+          <div
+            className="flex flex-col gap-3"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <label className="text-xs text-muted">Course code</label>
+            <input
+              autoFocus
+              value={editCode}
+              onChange={(e) => setEditCode(e.target.value)}
+              placeholder="Code"
+              className="w-full rounded-lg border border-ink/10 bg-paper/60 px-3 py-2.5 text-base text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+              aria-label={`Course code for ${module.code}`}
+            />
+            <label className="text-xs text-muted">Course name</label>
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Name"
+              className="w-full rounded-lg border border-ink/10 bg-paper/60 px-3 py-2.5 text-base text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+              aria-label={`Course name for ${module.code}`}
+            />
+            <label className="text-xs text-muted">MCs</label>
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={editMcs}
+              onChange={(e) => setEditMcs(e.target.value)}
+              placeholder="MCs"
+              className="w-full rounded-lg border border-ink/10 bg-paper/60 px-3 py-2.5 text-base text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+              aria-label={`MCs for ${module.code}`}
+            />
+            <label className="text-xs text-muted">Counts toward</label>
+            <Dropdown
+              variant="field"
+              ariaLabel={`Requirement bucket for ${module.code}`}
+              value={editCategoryId}
+              onChange={setEditCategoryId}
+              className="w-full cursor-pointer rounded-lg border border-ink/10 bg-paper/60 px-3 py-2.5 text-base text-ink/70 focus:outline-none focus:ring-1 focus:ring-ink/20"
+              options={major.categories.map((cat) => ({ value: cat.id, label: cat.label }))}
+            />
+            {onMove && moveTargets.length > 0 && <>
+              <label className="text-xs text-muted">Semester</label>
+              <Dropdown variant="field" ariaLabel="Semester" value={editDestination} onChange={setEditDestination} options={moveTargets.map(t => ({ value: `${t.year}:${t.sem}`, label: t.label }))} />
+            </>}
+            {editError && (
+              <p className="text-[10px] font-medium leading-snug text-red-700">{editError}</p>
+            )}
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                className="flex-1 rounded-lg bg-ink py-2.5 text-sm font-medium text-canvas"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => { setEditing(false); setEditError(null); }}
+                className="flex-1 rounded-lg bg-ink/10 py-2.5 text-sm font-medium text-ink/70"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
+        </ModuleDialog>
       )}
 
       {/* Delete button */}
       {!isOverlay && (
         <button
-          className={`absolute z-40 top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
+          className={`absolute z-40 top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink ${controlVisibility} transition-colors ${FOCUS_RING}`}
           onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
           onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Remove ${module.code}`}
@@ -391,7 +382,7 @@ export const ModuleCard = ({
       {/* Details button */}
       {!isOverlay && (
         <button
-          className={`absolute z-40 top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-[11px] font-serif italic text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
+          className={`absolute z-40 top-1 left-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/75 text-[11px] font-serif italic text-canvas hover:bg-ink ${controlVisibility} transition-colors ${FOCUS_RING}`}
           onClick={(e) => {
             e.stopPropagation();
             setShowTooltip(false);
@@ -453,46 +444,12 @@ export const ModuleCard = ({
         />
       )}
 
-      {/* Move button — keyboard/touch-reachable alternative to dragging */}
-      {!isOverlay && !isLocked && onMove && moveTargets.length > 0 && (
-        <div className="absolute z-40 bottom-1 right-1">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); setShowMoveMenu((open) => !open); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className={`flex h-5 w-5 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink ${controlVisibility} transition-all ${FOCUS_RING}`}
-            aria-haspopup="listbox"
-            aria-expanded={showMoveMenu}
-            aria-label={`Move ${module.code} to another semester`}
-            title="Move to another semester"
-          >
-            <MoveIcon className="h-3 w-3" />
-          </button>
-          {showMoveMenu && (
-            <ul
-              className="absolute z-40 bottom-6 right-0 max-h-52 w-40 overflow-y-auto rounded-2xl bg-ink shadow-soft"
-              role="listbox"
-            >
-              {moveTargets
-                .filter((target) => !(target.year === fromYear && target.sem === fromSem))
-                .map((target) => (
-                  <li key={`${target.year}-${target.sem}`}>
-                    <button
-                      type="button"
-                      className="w-full px-3 py-2 text-left text-xs text-canvas hover:bg-canvas/10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onMove(target.year, target.sem);
-                        setShowMoveMenu(false);
-                      }}
-                    >
-                      {target.label}
-                    </button>
-                  </li>
-                ))}
-            </ul>
-          )}
-        </div>
+      {!isOverlay && !isLocked && onEditModule && (
+        <button type="button" onClick={e => { e.stopPropagation(); openEditor(); }} onPointerDown={e => e.stopPropagation()}
+          className={`absolute z-40 bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/75 text-canvas hover:bg-ink ${controlVisibility} ${FOCUS_RING}`}
+          aria-label={`Edit ${module.code}`} title="Edit module">
+          <EditIcon className="h-3 w-3" />
+        </button>
       )}
     </div>
   );

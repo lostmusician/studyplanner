@@ -13,6 +13,7 @@ import {
 } from '@shared/nusmods';
 import type { NusModsModuleSummary } from '@shared/nusmods';
 import { autoCategoryId, semesterLabel } from '../lib/studyPlan';
+import { ModuleDialog } from './ModuleDialog';
 import { ModuleCard } from './ModuleCard';
 import { WaivedCourses } from './WaivedCourses';
 import { AppDialog } from './AppDialog';
@@ -30,7 +31,8 @@ interface Props {
   deleteModule: (code: string, year?: number, sem?: number) => void;
   updateModule: (
     oldCode: string,
-    updates: { code: string; name: string; mcs: number; categoryId: string },
+    updates: PlacedModule,
+    destination?: { year: number; sem: number },
   ) => { ok: true } | { ok: false; error: string };
   addWaivedModule: (module: WaivedModule) => void;
   deleteWaivedModule: (code: string) => void;
@@ -423,7 +425,8 @@ interface ColumnProps {
   deleteModule: (code: string, year?: number, sem?: number) => void;
   updateModule: (
     oldCode: string,
-    updates: { code: string; name: string; mcs: number; categoryId: string },
+    updates: PlacedModule,
+    destination?: { year: number; sem: number },
   ) => { ok: true } | { ok: false; error: string };
   completedCodes: string[];
   isMobile: boolean;
@@ -532,6 +535,7 @@ const SemesterColumn = ({
             year={semester.year}
             sem={semester.sem}
             error={addError}
+            onClose={() => setIsAdding(false)}
             onAdd={(year, sem, module) => {
               if (!canPlaceModule(semester, module)) {
                 setAddError('Y1S1 max is 26 MC.');
@@ -593,7 +597,9 @@ const SemesterAddModuleForm = ({
   sem,
   error,
   onAdd,
+  onClose,
 }: {
+  onClose: () => void;
   major: Major;
   year: number;
   sem: number;
@@ -695,6 +701,7 @@ const SemesterAddModuleForm = ({
   };
 
   return (
+    <ModuleDialog title={`Add module · ${semesterLabel(year, sem)}`} onClose={onClose}>
     <form ref={containerRef} onSubmit={handleSubmit} className="relative rounded-2xl bg-canvas/60 p-2">
       {!customMode && (
         <>
@@ -703,8 +710,8 @@ const SemesterAddModuleForm = ({
             value={form.query}
             onChange={(event) => handleQueryChange(event.target.value)}
             onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-            placeholder="Module code"
-            className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+            aria-label="Module code" placeholder="Module code or title"
+            className="w-full rounded-xl bg-paper border border-ink/10 px-3 py-2.5 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
             autoComplete="off"
           />
           {loading && <span className="absolute right-4 top-4 text-muted text-xs">...</span>}
@@ -719,20 +726,20 @@ const SemesterAddModuleForm = ({
                     onClick={() => handleSelectSuggestion(item)}
                   >
                     <span className="block text-xs font-mono font-bold text-canvas">{item.moduleCode}</span>
-                    <span className="block truncate text-[10px] text-canvas/60">{item.title}</span>
+                    <span className="block truncate text-xs text-canvas/60">{item.title}</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
 
-          {form.name && <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-muted">{form.name}</p>}
-          {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
+          {form.name && <p className="mt-1.5 line-clamp-2 text-xs leading-snug text-muted">{form.name}</p>}
+          {error && <p className="mt-1.5 text-xs font-medium leading-snug text-red-700">{error}</p>}
 
           <button
             type="button"
             onClick={() => handleToggleCustomMode(true)}
-            className="mt-1.5 text-[10px] font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
+            className="mt-1.5 text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
           >
             + Add custom module
           </button>
@@ -747,29 +754,29 @@ const SemesterAddModuleForm = ({
             onChange={(event) =>
               setForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))
             }
-            placeholder="Module code"
-            className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+            aria-label="Module code" placeholder="Module code or title"
+            className="w-full rounded-xl bg-paper border border-ink/10 px-3 py-2.5 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
             autoComplete="off"
           />
 
           <div className="mt-2 flex flex-col gap-1">
-            <label className="text-[10px] uppercase tracking-wide text-muted">Module Name</label>
+            <label className="text-xs uppercase tracking-wide text-muted">Module Name</label>
             <input
               type="text"
               value={form.name}
               onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
               placeholder="e.g. Special Topics in..."
-              className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
+              className="w-full rounded-xl bg-paper border border-ink/10 px-3 py-2.5 text-base text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ink/20"
               autoComplete="off"
             />
           </div>
 
-          {error && <p className="mt-1.5 text-[10px] font-medium leading-snug text-red-700">{error}</p>}
+          {error && <p className="mt-1.5 text-xs font-medium leading-snug text-red-700">{error}</p>}
 
           <button
             type="button"
             onClick={() => handleToggleCustomMode(false)}
-            className="mt-1.5 text-[10px] font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
+            className="mt-1.5 text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
           >
             ← Search instead
           </button>
@@ -777,14 +784,14 @@ const SemesterAddModuleForm = ({
       )}
 
       <div className="mt-2 flex flex-col gap-1">
-        <label className="text-[10px] uppercase tracking-wide text-muted">MCs</label>
+        <label className="text-xs uppercase tracking-wide text-muted">MCs</label>
         <input
           type="number"
           min="1"
           max="20"
           value={form.mcs}
           onChange={(event) => setForm((current) => ({ ...current, mcs: event.target.value }))}
-          className="w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+          className="w-full rounded-xl bg-paper border border-ink/10 px-3 py-2.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
         />
       </div>
 
@@ -793,7 +800,7 @@ const SemesterAddModuleForm = ({
         ariaLabel="Category"
         value={form.categoryId}
         onChange={(value) => setForm((current) => ({ ...current, categoryId: value }))}
-        className="mt-2 w-full rounded-xl bg-paper border border-ink/10 px-2 py-1.5 text-xs text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
+        className="mt-2 w-full rounded-xl bg-paper border border-ink/10 px-3 py-2.5 text-base text-ink focus:outline-none focus:ring-2 focus:ring-ink/20"
         options={[
           { value: AUTO_CATEGORY, label: `Auto → ${inferredLabel}` },
           ...major.categories.map((cat) => ({ value: cat.id, label: cat.label })),
@@ -808,6 +815,7 @@ const SemesterAddModuleForm = ({
         Add
       </button>
     </form>
+    </ModuleDialog>
   );
 };
 
@@ -964,6 +972,7 @@ const SemesterRow = ({
             year={semester.year}
             sem={semester.sem}
             error={addError}
+            onClose={() => setIsAdding(false)}
             onAdd={(year, sem, module) => {
               if (!canPlaceModule(semester, module)) {
                 setAddError('Y1S1 max is 26 MC.');
